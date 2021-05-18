@@ -11,7 +11,7 @@
 
 ;; Do not show temporary buffer after export org to html
 (setq org-export-show-temporary-export-buffer nil)
-;; Evaluate all codeblocks when export
+;; Evaluate codeblocks without confirmation when export
 (setq org-confirm-babel-evaluate nil)
 
 (defun httpd/blog (proc path &rest args)
