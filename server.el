@@ -7,7 +7,7 @@
 (require 'ox)
 (require 'ob-shell)
 
-;; (setq root-dir (directory-file-name (buffer-file-name)))
+(cd tbt-blog-path)
 
 ;; Do not show temporary buffer after export org to html
 (setq org-export-show-temporary-export-buffer nil)
