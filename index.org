@@ -1,11 +1,12 @@
 #+title: thebesttv's blog
 
 * 这是啥
-  我新的博客。
+  我的新博客。
+
   说是博客，不如说更像一个树洞，只是想记录一下无趣痛苦，但有时也很快乐的日常。
 
 * Emacs
-  想要在 Emacs 上跑这个博客，白嫖宿舍的公网ip还是很快乐的😉。
+  想要在 Emacs 上跑这个博客，毕竟白嫖宿舍的公网ip还是很快乐的😉。
 
 * 文件结构
 #+BEGIN_SRC sh :exports results :results code
@@ -27,5 +28,5 @@
     (print res))
 #+END_src
 
-  介是文章列表：
+  介是生成的文章列表：
 #+RESULTS: articles
