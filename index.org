@@ -8,6 +8,12 @@
 * Emacs
   想要在 Emacs 上跑这个博客，毕竟白嫖宿舍的公网ip还是很快乐的😉。
 
+  顺便这里就记录一下各种奇奇怪怪的问题&解决吧。
+
+** 中文断行
+   启用 auto-fill 模式后，中文断行在导出时会出现空格，就先直接抄人家的
+   代码啦： [[https://github.com/hick/emacs-chinese#%E4%B8%AD%E6%96%87%E6%96%AD%E8%A1%8C][Emacs相关中文问题以及解决方案]]。
+
 * 文件结构
 #+BEGIN_SRC sh :exports results :results code
   tree -I '*~'                    # ignore files ending with tilde
