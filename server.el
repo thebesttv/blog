@@ -30,6 +30,7 @@
       (let ((buffer (get-buffer-create "*tbt: org html*")))
         (with-temp-buffer
           (insert-file-contents path)
+          ;; (httpd-log `(inserted file contents under ,path))
           (org-export-to-buffer 'html buffer))
         (with-httpd-buffer proc "text/html"
           (insert-buffer buffer))))))
