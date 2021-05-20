@@ -1,13 +1,8 @@
-(require 'simple-httpd)
-
-(setq httpd-host "0.0.0.0")
-(httpd-start)
-
 (require 'org)
 (require 'ox)
 (require 'ob-shell)
 
-(cd tbt-blog-path)
+(setq eserver-blog (expand-file-name "blog" eserver-root))
 
 ;; Do not show temporary buffer after export org to html
 (setq org-export-show-temporary-export-buffer nil)
@@ -15,16 +10,19 @@
 (setq org-confirm-babel-evaluate nil)
 
 (defun httpd/blog (proc path &rest args)
-  (let ((available-files (directory-files-recursively
-                          "." (rx ".org" eos))))
+  (let* ((default-directory eserver-blog)
+         (available-files (directory-files-recursively
+                           ;; currently, only .org is allowed to visit
+                           "." (rx ".org" eos))))
     ;; if path ends with directory, then use index.org under path
     (if (string-suffix-p "/" path)
         (setq path (concat path "index.org")))
     (if (string-equal path "/blog")
         (setq path "/blog/index.org"))
     (setq path (concat "." (string-remove-prefix "/blog" path)))
-    (message (format "trying to get file %s" path))
+    (httpd-log `(getting file ,path))
     (if (not (member path available-files))
+        ;; file not exist or not allowed to visit
         (with-httpd-buffer proc "text/plain"
           (insert "ERROR: This file does not exist.\nAvailable files are:\n")
           (dolist (file available-files)
