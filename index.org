@@ -21,8 +21,8 @@
 
 #+NAME: articles
 #+BEGIN_SRC elisp :exports results :results output drawer
-  (directory-alist-to-org-link-list
-   (get-directory-alist eserver-blog) 0)
+  (directory-tree-to-org-link-list
+   (directory-tree eserver-blog) 0)
 #+END_SRC
 
 #+RESULTS: articles
