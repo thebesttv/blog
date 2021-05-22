@@ -40,7 +40,7 @@
        ;;           (string-prefix-p "." (file-name-base file))))))))
        (not (string-prefix-p "." (file-name-base file)))))))
 
-(defun httpd/blog (proc path &rest args)
+(defun httpd/blog (proc path parameters &rest args)
   (let* ((default-directory eserver-blog)
          (available-files (eserver-blog-available-files)))
     ;; if path ends with directory, then use index.org under path
@@ -62,13 +62,19 @@
           (httpd-send-file proc path)
         ;; if .org file, convert to html before sending
         (setq eserver-blog-current-path path)
-        (let ((buffer (get-buffer-create "*tbt: org html*")))
+        (let ((buffer (get-buffer-create "*tbt: org html*"))
+              (eserver-blog-image-dataurl
+               (or eserver-blog-image-dataurl ; from customization
+                   (equal '("t")              ; from url parameter
+                          (alist-get "dataurl" parameters nil nil 'string=)))))
           (with-temp-buffer
             (insert-file-contents path)
             ;; (httpd-log `(inserted file contents under ,path))
             (org-export-to-buffer 'html buffer))
           (with-httpd-buffer proc "text/html"
             (insert-buffer buffer)))))))
+
+;; Image Data URL encoding
 
 (defun base64-image-encode-cons (file)
   "Return a cons cell whose car is image type and cdr is base64 encoded string.
@@ -85,6 +91,7 @@ exist, it returns (nil . nil)."
               (buffer-string))))))
 
 (defun html-image-dataurl-src (source)
+  "Encode image from SOURCE to data url."
   (let* ((image-cons-cell
           (base64-image-encode-cons
            (expand-file-name source
@@ -120,3 +127,34 @@ a communication channel."
        attributes))
      info)))
 
+;; helper funtions
+
+(defun extract-function-from-file (file fun)
+  "Extract ELisp function(s) FUN from FILE.
+If FUN is a list, searches every function in it and return a list
+of function definitions. Otherwise return definition of FUN as a
+string."
+  (let ((extract-single-function
+         (lambda (fun)
+           (goto-char (point-min))
+           (search-forward (concat "(defun " (symbol-name fun)))
+           (let ((beg (match-beginning 0)))
+             (buffer-substring-no-properties beg (scan-sexps beg 1))))))
+    (with-temp-buffer
+      (insert-file-contents-literally file)
+      (if (not (listp fun))
+          ;; a single function, return definition as string
+          (funcall extract-single-function fun)
+        (mapcar (lambda (fun)
+                  (funcall extract-single-function fun))
+                fun)))))
+
+(defun extract-function-from-file-to-org (file fun)
+  "Extract Elisp function(s) FUN from FILE and return org formated code block"
+  (concat "#+BEGIN_SRC elisp\n"
+          (if (not (listp fun))
+              (extract-function-from-file file fun)
+            (cl-reduce (lambda (res src)
+                         (format "%s\n\n%s" res src))
+                       (extract-function-from-file file fun)))
+          "\n#+END_SRC"))
