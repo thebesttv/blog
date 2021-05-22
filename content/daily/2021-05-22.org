@@ -1,0 +1,26 @@
+#+title: 一个周六
+
+一个周六基本就在图书馆了，上午下午就弄弄 EServer，改改博客，吃晚饭前水
+壶正好喝空了，看来 2L 的水壶买得不错。
+
+一个白天的 commit，还挺欢乐的。
+#+BEGIN_SRC text
+  eserver:
+    add script restart-server.sh
+    minor update
+    add weibo to update.sh
+    add site descriptions & minor fixes
+    update .gitignore to ignore /weibo/
+
+  blog:
+    add (require 'htmlize) to server.el
+    update emacs/blog.org & minor fix
+    add content/emacs/blog.org
+    add dataurl support & function to extract function definition from .el file
+    add site description
+#+END_SRC
+
+可惜乐的时光总是那么短暂，到晚上了，又得看模电啥的了，呜呜。
+
+刚刚写了个小函数，能方便地预览写的博客了。发现 =eww= 打开 url 好快啊，
+妙。
