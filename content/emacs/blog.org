@@ -1,0 +1,72 @@
+#+title: 关于这整个 EServer 的 Emacs
+
+* EServer - 服务器主体
+* Blog - 博客
+** [[https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/Data_URIs][Data URLs]]
+   一开始弄 =blog/server.el= 的时候只让访问目录下的 =.org= 文件，结果
+   连图片都看不到，就想到了这个馊主意😉。不过最后还是让访问图片和文件
+   啥的了，于是就把 =dataurl= 的选项放到 URL parameter 里，如果
+   =dataurl=t= 的话，就把 =.org= 里的本地图片都变成 Data URL，酱整个
+   HTML 就变成 stand-alone 的啦。
+
+   =html-image-dataurl-src= 在 =blog/server.el= 里是这么写的，还用了个
+   =base64-image-encode-cons= 。（为了能从文件里输出这俩函数我还又写了
+   俩函数 =extract-function-from-file= 和
+   =extract-function-from-file-to-org= 😂，不过现在可以随便提取函数啦，
+   哦耶😃）
+
+   #+BEGIN_SRC elisp :exports results :results drawer
+     (extract-function-from-file-to-org (expand-file-name "server.el"
+                                                          eserver-blog)
+                                        '(base64-image-encode-cons
+                                          html-image-dataurl-src))
+   #+END_SRC
+
+   当然也可以故意在 =.org= 里嵌入 base64 编码的图片，这里就拿网站的
+   favicon 做个例子叭：
+
+   可以自己写：
+   #+BEGIN_SRC org
+     ,#+BEGIN_SRC elisp :exports results :results html
+       (with-temp-buffer
+         (insert-file-contents-literally (expand-file-name "favicon.ico"
+                                                           eserver-root))
+         (base64-encode-region (point-min) (point-max) t)
+         (format "<img src=\"data:image/jpg;base64,%s\">"
+                 (buffer-string)))
+     ,#+END_SRC
+  #+END_SRC
+
+
+  也可以用自己写的函数写😉：
+  #+BEGIN_SRC org
+    ,#+BEGIN_SRC elisp :exports results :results html
+      (format "<img src=\"%s\">"
+              (html-image-dataurl-src (expand-file-name "favicon.ico"
+                                                        eserver-root)))
+    ,#+END_SRC
+  #+END_SRC
+
+  结果都是酱的：
+  #+BEGIN_SRC elisp :exports results :results html
+    (format "<img src=\"%s\">"
+            (html-image-dataurl-src (expand-file-name "favicon.ico"
+                                                      eserver-root)))
+  #+END_SRC
+
+** 提取 =.el= 中函数定义
+
+   这就是刚刚为了 /显示两个生成 Data URL 的函数/ 而写的函数啦，基本就
+   是无脑用个 temp buffer 打开文件，然后再搜索一下，最后用个
+   =scan-sexps= 匹配一下表达式就能提取函数啦：
+   #+BEGIN_SRC elisp :exports results :results drawer
+     (extract-function-from-file-to-org (expand-file-name "server.el"
+                                                          eserver-blog)
+                                        '(extract-function-from-file
+                                          extract-function-from-file-to-org))
+   #+END_SRC
+
+   不过突然发现如果引用同一个文件内的函数多次的话，会开好几个 buffer，
+   感觉不太高效的样子，呜呜。
+
+* Weibo - 微博热搜历史
