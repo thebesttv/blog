@@ -9,9 +9,8 @@
   * [[http://www.hanselman.com/blog/why-the-askobama-tweet-was-garbled-on-screen-know-your-utf8-unicode-ascii-and-ansi-decoding-mr-president][Why the #AskObama Tweet was Garbled on Screen: Know your UTF-8,
     Unicode, ASCII and ANSI Decoding Mr. President]]
   * [[https://stackoverflow.com/questions/9254891/what-does-content-type-application-json-charset-utf-8-really-mean][What does “Content-type: application/json; charset=utf-8” really
-    mean?]]
-     =simple-httpd= 在 header 就忘了加 =charset=utf-8= ，花了我一
-    晚上才发现，呜呜😣
+    mean?]]  =simple-httpd= 在 header 就忘了加 =charset=utf-8= ，花了我
+    一晚上才发现，呜呜😣
 
 * 宝藏博主
   * [[https://idealclover.top/][翠翠 / Idealclover]]

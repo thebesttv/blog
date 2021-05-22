@@ -37,7 +37,6 @@
      ,#+END_SRC
   #+END_SRC
 
-
   也可以用自己写的函数写😉：
   #+BEGIN_SRC org
     ,#+BEGIN_SRC elisp :exports results :results html
@@ -68,5 +67,29 @@
 
    不过突然发现如果引用同一个文件内的函数多次的话，会开好几个 buffer，
    感觉不太高效的样子，呜呜。
+
+** =org-mode= 导出 html 时的语法高亮
+   原来 =org-mode= 是用 [[https://www.emacswiki.org/emacs/Htmlize][=htmlize.el=]] 来导出 html 的，我说咋一开始没语
+   法高亮来着😂。
+
+** UTF-8 支持
+   [[https://stackoverflow.com/questions/9254891/what-does-content-type-application-json-charset-utf-8-really-mean][What does “Content-type: application/json; charset=utf-8” really mean?]]
+
+   一开始用 =simple-httpd= 的时候花了一晚上把编码问题搞清楚，原来是
+   =Content-Type= 里忘加 =;charset=utf-8= 了🙃。
+
+   感觉现在的 fix 比较……暴力，不过能用，就先凑合着吧：
+   #+BEGIN_SRC elisp
+     ;; in simple-httpd.el
+     (defun httpd--stringify (designator)
+       "Turn a string designator into a string."
+       (let ((string (format "%s" designator)))
+         (if (keywordp designator)
+             (substring string 1)
+           ;; add utf-8 if designator starts with text
+           (if (string-prefix-p "text" string)
+               (concat string "; charset=utf-8")
+             string))))
+   #+END_SRC
 
 * Weibo - 微博热搜历史
