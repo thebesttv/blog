@@ -2,6 +2,9 @@
 (require 'ox)
 (require 'ob-shell)
 
+(eserver-register-site "/blog"
+                       "This is thebesttv's blog.")
+
 (defcustom eserver-blog (expand-file-name "blog" eserver-root)
   "Root directory of blog."
   :group 'eserver
