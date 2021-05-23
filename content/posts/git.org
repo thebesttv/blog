@@ -1,0 +1,99 @@
+#+title: Git CLI 笔记
+
+* =config=
+  配置的三个位置：
+  - system (=/etc/gitconfig=) :: 所有用户 (computer-specific 😉)
+  - global (=~/.gitconfig=) :: user-specific
+  - local (=[repo]/.git/config=) :: repo-specific
+
+
+  List all settings (under current repo) & their origins:
+  #+BEGIN_SRC sh
+    git config --list --show-origin
+  #+END_SRC
+
+  Set user name & email address:
+  #+BEGIN_SRC sh
+    git config --global user.name <NAME>
+    git config --global user.email <EMAIL>
+  #+END_SRC
+
+  Set default branch name to =main= （无聊的政治正确）:
+  #+BEGIN_SRC sh
+    git config --global init.defaultBranch main
+  #+END_SRC
+
+* =diff=
+  Changes not yet staged:
+  #+BEGIN_SRC sh
+    git diff
+  #+END_SRC
+
+  Changes staged to be committed:
+  #+BEGIN_SRC sh
+    git diff --staged | --cached
+  #+END_SRC
+
+* =commit=
+  Stage all *tracked* files & commit:
+  #+BEGIN_SRC sh
+    git commit -a [...]
+  #+END_SRC
+
+* =rm=
+  Only remove from staging area (keep file in working tree):
+  #+BEGIN_SRC sh
+    git rm --cached <FILE>
+  #+END_SRC
+
+* =log=
+  Show the difference (the patch output) introduced in the last 2
+  commits:
+  #+BEGIN_SRC sh
+    git log -p -2
+  #+END_SRC
+
+  Show abbreviated status for each commit:
+  #+BEGIN_SRC sh
+    git log --stat
+  #+END_SRC
+
+* =commit=
+  Amend last commit:
+  #+BEGIN_SRC sh
+    git commit -m <MESSAGE>
+    git add <FILE>
+    git commit --amend
+  #+END_SRC
+
+* =remote=
+  #+BEGIN_SRC sh
+    git remote -v
+    git remote add <SHORT NAME> <URL>
+
+    git fetch [origin]
+    git fetch <SHORT NAME>
+
+    git push <REMOTE> <BRANCH>
+    git push origin master
+  #+END_SRC
+
+  See more information about a particular remote:
+  #+BEGIN_SRC sh
+    git remote show <remote>
+    git remote show origin
+  #+END_SRC
+
+
+* others
+  Unstage a file (2 ways):
+  #+BEGIN_SRC sh
+    git restore --staged <FILE>
+    git reset HEAD <FILE>
+  #+END_SRC
+
+  Discard changes in working directory (2 ways):
+  #+BEGIN_SRC sh
+    git restore <FILE>
+    git checkout -- <FILE>
+  #+END_SRC
