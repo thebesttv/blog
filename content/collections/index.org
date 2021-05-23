@@ -5,6 +5,7 @@
 * 妙妙文章
   * [[https://idealclover.top/archives/627/][翠翠 - 2020 年年终总结：致即将 22 岁的自己]] 你工人爷爷的年终总结
   * [[https://qinyuanpei.github.io/posts/2136925853/][飞鸿踏雪 - 假如时间有温度]] 活着真好
+  * [[https://joelcalifa.com/blog/tiny-wins/][Tiny Wins - The big benefits of little changes.]] 胜利在小处
 ** 关于编码 - UTF-8 遍地开花
   * [[http://www.hanselman.com/blog/why-the-askobama-tweet-was-garbled-on-screen-know-your-utf8-unicode-ascii-and-ansi-decoding-mr-president][Why the #AskObama Tweet was Garbled on Screen: Know your UTF-8,
     Unicode, ASCII and ANSI Decoding Mr. President]]
