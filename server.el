@@ -160,13 +160,15 @@ string."
                        (extract-function-from-file file fun)))
           "\n#+END_SRC"))
 
-(defun eserver-blog-preview ()
-  (interactive)
+(defun eserver-blog-preview (browser)
+  (interactive "P")
   (if (not (string-prefix-p eserver-blog (buffer-file-name)))
       (message "This buffer is not under `eserver-blog'.")
     (save-buffer)
     (let ((url (format "http://localhost:8080/blog%s"
                        (string-remove-prefix eserver-blog (buffer-file-name)))))
-      (eww-browse-url url))))
+      (if (null browser)
+          (eww-browse-url url)
+        (browse-url url)))))
 
 (global-set-key (kbd "<f6>") 'eserver-blog-preview)
