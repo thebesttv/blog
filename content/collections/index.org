@@ -16,3 +16,4 @@
 * 宝藏博主
   * [[https://idealclover.top/][翠翠 / Idealclover]]
   * [[https://qinyuanpei.github.io/][飞鸿踏雪]]
+  * [[https://emacsninja.com/][Emacs ninja]]
