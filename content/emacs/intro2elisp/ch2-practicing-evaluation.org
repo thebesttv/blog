@@ -1,0 +1,47 @@
+#+title: Chapter 2 - Practicing Evaluation
+
+* buffer related functions
+
+#+BEGIN_SRC elisp
+  (buffer-name &optional BUFFER)
+  (buffer-file-name &optional BUFFER)
+  (current-buffer)
+#+END_SRC
+
+** =other-buffer=
+
+#+BEGIN_SRC elisp
+  (other-buffer &optional BUFFER VISIBLE-OK FRAME)
+#+END_SRC
+
+Return most recently selected buffer other than BUFFER.  Buffers *not
+visible* in windows are *preferred* to visible buffers, unless
+optional second argument VISIBLE-OK is non-nil.  Ignore the argument
+BUFFER unless it denotes a live buffer. (This means BUFFER is the
+buffer to *ignore*.)  If the optional third argument FRAME specifies a
+live frame, then use that frame’s buffer list instead of the selected
+frame’s buffer list.
+
+The buffer is found by scanning the selected or specified frame’s
+buffer list first, followed by the list of all buffers.  If no other
+buffer exists, return the buffer ‘*scratch*’ (creating it if
+necessary).
+
+Simply use =(other-buffer)= only returns most recent *non-visialbe*
+buffer.  However, only setting VISIBLE-OK to =t=, like =(other-buffer
+nil t)=, will return the current buffer.  So in order to ignore
+current buffer, pass =(current-buffer)= to BUFFER.
+
+#+BEGIN_SRC elisp
+  (other-buffer (current-buffer) t)
+#+END_SRC
+
+** =switch-to-buffer= & =set-buffer=
+
+The two functions have different intentions.  =switch-to-buffer= is
+for *the user*, who wants to *see* the buffer before working on it, so
+it (1) switch the buffer displayed in the window to the new buffer,
+and (2) switch Emacs's attention to it.  =set-buffer=, on the other
+hand, is intended for *lisp programs*, who can work on the buffer
+*without having to display it*, so it only does (2), i.e. switching
+Emacs's attention to the desired buffer.  See [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Switching-Buffers.html][the document]] for more.
