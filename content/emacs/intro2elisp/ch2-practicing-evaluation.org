@@ -6,7 +6,15 @@
   (buffer-name &optional BUFFER)
   (buffer-file-name &optional BUFFER)
   (current-buffer)
+
+  (buffer-size &optional BUFFER)
+  (point)
+  (point-min)
+  (point-max)
 #+END_SRC
+
+=current-buffer= returns the *active* buffer; it *may not be* the
+buffer that's visible on the screen.
 
 ** =other-buffer=
 
@@ -27,7 +35,7 @@ buffer list first, followed by the list of all buffers.  If no other
 buffer exists, return the buffer ‘*scratch*’ (creating it if
 necessary).
 
-Simply use =(other-buffer)= only returns most recent *non-visialbe*
+Simply use =(other-buffer)= only returns most recent *non-visible*
 buffer.  However, only setting VISIBLE-OK to =t=, like =(other-buffer
 nil t)=, will return the current buffer.  So in order to ignore
 current buffer, pass =(current-buffer)= to BUFFER.

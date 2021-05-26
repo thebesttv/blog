@@ -1,0 +1,134 @@
+#+title: Chapter 3 - How To Write Function Definitions
+
+* The =defun= macro
+
+Similar to =let=, in =defun=, the name used in an argument list is
+*private* to that particular definition.  Changing the value of such a
+symbol inside the body of function *does not* affect its value
+*outside* the function.
+
+* Documentation string
+
+The first line of the documentation string should be a complete
+sentence, since commands like =apropos= print only the first line of a
+multi-line documentation string.  For example:
+
+#+BEGIN_SRC elisp
+  (defmacro with-current-buffer (buffer-or-name &rest body)
+    "Execute the forms in BODY with BUFFER-OR-NAME temporarily current.
+  BUFFER-OR-NAME must be a buffer or the name of an existing buffer.
+  The value returned is the value of the last form in BODY.  See
+  also `with-temp-buffer'."
+    (declare (indent 1) (debug t))
+    `(save-current-buffer
+       (set-buffer ,buffer-or-name)
+       ,@body))
+#+END_SRC
+
+* =interactive= special form
+
+#+BEGIN_SRC elisp
+  (interactive &optional ARG-DESCRIPTOR)
+#+END_SRC
+
+Interactive functions have the special form =interactive= immediately
+after documentation string.  Emacs do not display their results in the
+echo area by default.
+
+Usually the argument of =interactive= is a string containing a code
+letter *followed optionally by a prompt*.  (Some code letters do not
+use I/O to get the argument and do not use prompts.)  To pass several
+arguments to the command, concatenate the individual strings,
+separating them by newline characters =\n=.
+
+The interactive form must be located *at top-level* in the function
+body, or in the function symbol’s /interactive-form property/ (see
+[[https://www.gnu.org/software/emacs/manual/html_node/elisp/Symbol-Properties.html][Symbol Properties]]).  It has its effect because the command loop looks
+for it *before calling the function* (see [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Interactive-Call.html][Interactive Call]]). Once the
+function is called, all its body forms are executed; at this time, if
+the interactive form occurs within the body, the form simply returns
+=nil= without even evaluating its argument.
+
+There are three possibilities for the argument /arg-descriptor/:
+- It may be omitted or nil; then the command is called with no
+  arguments.  This leads quickly to an error if the command requires
+  one or more arguments.
+
+- It may be a string; its contents are a sequence of elements
+  separated by newlines, one for each argument.
+
+- It may be a Lisp expression that is not a string; then it should be
+  a form that is *evaluated to get a list of arguments to pass to the
+  command*.
+
+Some available letters:
+- =c= -- Character (no input method is used).
+- =p= -- Prefix arg converted to number.  Does not do I/O.
+- =P= -- Prefix arg in raw form.  Does not do I/O.
+- =s= -- Any string.  Does not inherit the current input method.
+
+Example -- Old version of =zip-to-char=:
+
+#+BEGIN_SRC elisp
+    (defun zap-to-char (arg char)
+      (interactive "p\ncZap to char: ")
+      ...)
+#+END_SRC
+
+New version:
+
+#+BEGIN_SRC elisp
+  (defun zap-to-char (arg char)
+    (interactive (list (prefix-numeric-value current-prefix-arg)
+                       (read-char-from-minibuffer "Zap to char: "
+                                                  nil 'read-char-history)))
+    ...)
+#+END_SRC
+
+* =let= special form
+
+Just like symbols used in =defun='s argument list, =let= creates a
+name for a *local* variable that *overshadows* any use of the same
+name outside the =let= expression.  Such variable retain their value
+*only within* the =let= expression itself.  To put it another way, the
+binding of the symbol is visible only in functions called in the =let=
+form (dynamic scoping).
+
+* =save-excursion= special form
+
+#+BEGIN_SRC elisp
+  (save-excursion &rest BODY)
+#+END_SRC
+
+[[https://www.gnu.org/software/emacs/manual/html_node/eintr/Point-and-mark.html][Brief & great review of point & mark.]]
+
+Save *point*, and *current buffer*; execute BODY; restore those
+things.  The values of point and the current buffer are restored even
+in case of abnormal exit (throw or error).
+
+=save-excursion= is used only for its side effect -- restoring current
+point & buffer.
+
+* Equality & Comparison
+** ===, =eq=, =eql= & =equal=
+
+Test whether two objects are the same.  =equal= returns true if the
+two objects have a similar *structure and contents*, such as two
+copies of the same book.  On the other hand, =eq= returns true if both
+arguments are actually *the same object*.
+
+=== tests equality of numbers.
+
+=eql= returns =t= if the two args are =eq= or are *indistinguishable
+numbers*.  Floating-point values with the same *sign, exponent and
+fraction* are =eql=.  This differs from numeric comparison: =(eql 0.0
+-0.0)= returns =nil= and =(eql 0.0e+NaN 0.0e+NaN)= returns =t=,
+whereas === does the opposite.
+
+** =string<= & =string==
+
+=string<= is an alias for =string-lessp=.  =string== is an alias for
+=string-equal=.
+
+Both function allows *symbols* as arguments, in which case the /print
+names/ of symbols are used instead of the symbols themselves.
