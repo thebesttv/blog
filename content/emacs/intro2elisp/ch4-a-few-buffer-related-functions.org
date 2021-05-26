@@ -1,0 +1,403 @@
+#+title: A Few Buffer-Related Functions
+
+* =beginning-of-buffer=
+
+** Simplified version
+
+#+begin_src elisp
+  (defun simplified-beginning-of-buffer ()
+    "Move point to the beginning of buffer.
+  Leave mark at previous position."
+    (interactive)
+    (push-mark)                ; set mark at current point before moving
+    (goto-char (point-min)))
+#+end_src
+
+** Original definition
+
+#+begin_src elisp
+  (defun beginning-of-buffer (&optional arg)
+    "Move point to the beginning of the buffer.
+  With numeric arg N, put point N/10 of the way from the beginning.
+  If the buffer is narrowed, this command uses the beginning of the
+  accessible part of the buffer.
+
+  Push mark at previous position, unless either a \\[universal-argument] prefix
+  is supplied, or Transient Mark mode is enabled and the mark is active."
+    (declare (interactive-only "use `(goto-char (point-min))' instead."))
+    (interactive "^P")
+    (or (consp arg)
+        (region-active-p)
+        (push-mark))
+    (let ((size (- (point-max) (point-min))))
+      (goto-char (if (and arg (not (consp arg)))
+                     (+ (point-min) 1
+                        (/ (* size (prefix-numeric-value arg)) 10))
+                   (point-min))))
+    (if (and arg (not (consp arg)))
+        (forward-line 1)))
+#+end_src
+
+Here =\\[universal-argument]= indicates =C-u=.  When called with
+=C-u=, it does not push mark.
+
+First is the =declare=, TODO.
+
+
+#+begin_src elisp
+    (interactive "^P")
+#+end_src
+
+About the "=^=" in ="^P"=, the doc says:
+#+begin_quote
+If the string begins with ‘^’ and ‘shift-select-mode’ is non-nil,
+ Emacs first calls the function ‘handle-shift-selection’.
+#+end_quote
+
+I'll skip it for now since I don't really understand shift-selection
+right now.
+
+=P= in ="^P"= means "prefix arg in raw form.  Does not do I/O".  In
+=(interactive "P")=, when called with
+
+- no =C-u= prefix, =arg= is =nil=.
+
+- =C-u= without numeric argument, =arg= is cons cell =(4)= (or =(16)=,
+  =(64)=, depending on the number of =C-u=).
+
+- =C-u= with numeric argument (like =C-u 4=), =arg= is an integer.
+
+
+#+begin_src elisp
+    (or (consp arg)           ; [1]
+        (region-active-p)     ; [2]
+        (push-mark))          ; push mark at previous position
+#+end_src
+
+=(push-mark)= will only be called when both [1] and [2] evaluate to
+=nil=. [1] will be =nil= only if =arg= is not a cons cell, indicating
+the interactive command is called with either no prefix or a numeric
+prefix (for example, =M-x beginning-of-buffer= or =C-u 2 M-<=).  [2]
+will be =nil= when not in Transient Mark mode or mark is not active.
+
+
+#+begin_src elisp
+    (let ((size (- (point-max) (point-min))))
+      (goto-char (if (and arg (not (consp arg)))
+                     (+ (point-min) 1
+                        (/ (* size (prefix-numeric-value arg)) 10))
+                   (point-min))))
+#+end_src
+
+=(point-max)= and =(point-min)= act on the accessible / visible
+portion of the buffer, so =size= will be the size of the visible
+portion of the buffer.
+
+If =arg= is nil, =and= fails.  This will have the same effect as the
+simplified version of the code, i.e. =(goto-char (point-min))=.
+
+* =mark-whole-buffer=
+
+#+begin_src elisp
+  (defun mark-whole-buffer ()
+    "Put point at beginning and mark at end of buffer.
+  Also push mark at point before pushing mark at end of buffer.
+  If narrowing is in effect, uses only the accessible part of the buffer.
+  You probably should not use this function in Lisp programs;
+  it is usually a mistake for a Lisp function to use any subroutine
+  that uses or sets the mark."
+    (declare (interactive-only t))
+    (interactive)
+    (push-mark)                           ; [1]
+    (push-mark (point-max) nil t)         ; [2]
+    ;; This is really `point-min' in most cases, but if we're in the
+    ;; minibuffer, this is at the end of the prompt.
+    (goto-char (minibuffer-prompt-end)))  ; [3]
+#+end_src
+
+First look at =push-mark=:
+
+#+begin_quote
+#+begin_src elisp
+(push-mark &optional LOCATION NOMSG ACTIVATE)
+#+end_src
+
+Set mark at LOCATION (point, by default) and push old mark on mark ring.
+If the last global mark pushed was not in the current buffer,
+also push LOCATION on the global mark ring.
+Display ‘Mark set’ unless the optional second arg NOMSG is non-nil.
+
+Novice Emacs Lisp programmers often try to use the mark for the wrong
+purposes.  See the documentation of ‘set-mark’ for more information.
+
+In Transient Mark mode, activate mark if optional third arg ACTIVATE non-nil.
+#+end_quote
+
+[1] marks the current point position, as well as displaying a message
+saying "Mark set".  [2] marks the end of the buffer and also displays
+the message.  What's different is its =ACTIVE= argument is =t=,
+meaning the mark will activated.  Then [3] moves point to the
+beginning of buffer, so the highlighted region will be the whole
+buffer (when Transient Mark mode is on).
+
+The =mark-whole-buffer= command will push 2 marks, one at current
+position, one at buffer end.  The latter exists mainly to mark the
+whole buffer.  The former lets the user go back to the previous
+position after typing =C-u C-SPC= twice.
+
+
+At last, take a closer look at [3].
+
+#+begin_src elisp
+    ;; This is really `point-min' in most cases, but if we're in the
+    ;; minibuffer, this is at the end of the prompt.
+    (goto-char (minibuffer-prompt-end)))  ; [3]
+#+end_src
+
+See the document for =minibuffer-prompt-end=.
+
+#+begin_quote
+#+begin_src elisp
+  (minibuffer-prompt-end)
+#+end_src
+
+Return the buffer position of *the end of the minibuffer prompt*.
+Return =(point-min)= if current buffer is not a minibuffer.
+#+end_quote
+
+Using this instead of =point-min= will cause the command to skip the
+minibuffer prompt when marking in minibuffer. So if the buffer says
+=Eval: (...)=, it will only mark the expression after =Eval:= prompt.
+
+
+* =append-to-buffer=
+
+#+begin_src elisp
+  (defun append-to-buffer (buffer start end)
+    "Append to specified BUFFER the text of the region.
+  The text is inserted into that buffer before its point.
+  BUFFER can be a buffer or the name of a buffer; this
+  function will create BUFFER if it doesn't already exist.
+
+  When calling from a program, give three arguments:
+  BUFFER (or buffer name), START and END.
+  START and END specify the portion of the current buffer to be copied."
+    ;; [1]
+    (interactive
+     (list (read-buffer "Append to buffer: "
+                        (other-buffer (current-buffer) t))
+           (region-beginning)
+           (region-end)))
+    ;; [2]
+    (let* ((oldbuf (current-buffer))              ; origninal buffer
+           (append-to (get-buffer-create buffer)) ; buffer to append to
+           (windows (get-buffer-window-list append-to t t)) ; [3]
+           point)
+      (save-excursion
+        (with-current-buffer append-to
+          (setq point (point))                       ; [4]
+          (barf-if-buffer-read-only)
+          (insert-buffer-substring oldbuf start end) ; [5]
+          (dolist (window windows)                   ; [6]
+            (when (= (window-point window) point)
+              (set-window-point window (point))))))))
+#+end_src
+
+First, look at [1] -- the =interactive= expression.
+
+#+begin_src elisp
+  ;; [1]
+  (interactive
+   (list (read-buffer "Append to buffer: "               ; [1.1]
+                      (other-buffer (current-buffer) t)) ; [1.2]
+         (region-beginning)
+         (region-end)))
+#+end_src
+
+Originally, the ARG-DESCRIPTOR is a string:
+#+begin_src elisp
+  (interactive "BAppend to buffer: \nr")
+#+end_src
+
+#+begin_quote
+- =B= -- Name of buffer, possibly nonexistent.
+- =r= -- Region: *point* and *mark* as 2 numeric args, smallest first.  Does no I/O.
+#+end_quote
+
+But the default buffer for this expression is *not visible*, so the
+list representation was used instead.
+
+[1.1] & [1.2]:
+#+begin_quote
+#+begin_src elisp
+  (read-buffer PROMPT &optional DEFAULT REQUIRE-MATCH PREDICATE)
+#+end_src
+
+Read the name of a buffer and return it as a string.
+
+Prompt with PROMPT, which should be a string ending with a colon and a space.
+Provides completion on buffer names the user types.
+Optional second arg DEFAULT is value to return if user enters an empty line,
+ instead of that empty string.
+ If DEFAULT is a list of default values, return its first element.
+#+end_quote
+
+When called interactively, the =read-buffer= prompts with [1.1] --
+"Append to buffer: ", defaulting to buffer returned by [1.2] --
+=other-buffer= (including visible buffer but not current buffer).
+
+After [1], the =let*= expression in [2] assigns a series of variables
+in order, where =windows= in [3] is all windows displaying the
+=append-to= buffer, and =point= is later the =(point)= in one of the
+windows containing the buffer.
+
+I don't really know, if there're multiple windows showing the same
+buffer (=tbt= for example), and the point in all of the windows are
+all at different places (i.e. different value for =(point)=), then
+which value of =(point)= will be the one assigned to the variable
+=point= in [2]?
+
+-----
+
+It seems like most (I guess) functions trying to find a buffer
+eventually calls =get-buffer=.  And that function in turn gets buffer
+from a C variable (invisible to ELisp) =Vbuffer_alist= in file
+=buffer.c=.
+
+=with-current-buffer= calls =set-buffer=:
+
+#+begin_src elisp
+  (defmacro with-current-buffer (buffer-or-name &rest body)
+    (declare (indent 1) (debug t))
+    `(save-current-buffer
+       (set-buffer ,buffer-or-name)
+       ,@body))
+#+end_src
+
+In =buffer.c=, =set-buffer= (=Fset_buffer= in C) calls =get-buffer=
+(=Fget_buffer= in C):
+
+#+begin_src c
+  /* Alist of all buffer names vs the buffers.  This used to be
+     a Lisp-visible variable, but is no longer, to prevent lossage
+     due to user rplac'ing this alist or its elements.  */
+  Lisp_Object Vbuffer_alist;
+
+  /* ... */
+
+  DEFUN ("get-buffer", Fget_buffer, Sget_buffer, 1, 1, 0,
+         doc: /* Return the buffer named BUFFER-OR-NAME.
+  BUFFER-OR-NAME must be either a string or a buffer.  If BUFFER-OR-NAME
+  is a string and there is no buffer with that name, return nil.  If
+  BUFFER-OR-NAME is a buffer, return it as given.  */)
+    (register Lisp_Object buffer_or_name)
+  {
+    if (BUFFERP (buffer_or_name))
+      return buffer_or_name;
+    CHECK_STRING (buffer_or_name);
+
+    return Fcdr (assoc_ignore_text_properties (buffer_or_name, Vbuffer_alist));
+  }
+
+  DEFUN ("set-buffer", Fset_buffer, Sset_buffer, 1, 1, 0, doc: /* ...  */)
+    (register Lisp_Object buffer_or_name)
+  {
+    register Lisp_Object buffer;
+    buffer = Fget_buffer (buffer_or_name);
+    if (NILP (buffer))
+      nsberror (buffer_or_name);
+    if (!BUFFER_LIVE_P (XBUFFER (buffer)))
+      error ("Selecting deleted buffer");
+    set_buffer_internal (XBUFFER (buffer));
+    return buffer;
+  }
+#+end_src
+
+So I guess the first buffer in the C variable =Vbuffer_alist= that
+matches =buffer-or-name= will be returned.
+
+-----
+
+Anyway, get back to the =append-to-buffer= function.
+
+#+begin_src elisp
+  ;; [2]
+  (let* ((oldbuf (current-buffer))              ; origninal buffer
+         (append-to (get-buffer-create buffer)) ; buffer to append to
+         (windows (get-buffer-window-list append-to t t)) ; [3]
+         point)
+    (save-excursion
+      (with-current-buffer append-to
+        (setq point (point))                       ; [4]
+        (barf-if-buffer-read-only)
+        (insert-buffer-substring oldbuf start end) ; [5]
+        (dolist (window windows)                   ; [6]
+          (when (= (window-point window) point)
+            (set-window-point window (point))))))))
+#+end_src
+
+[4] saves the =append-to= buffer's point position to =point=. Then the
+function checks if the buffer is read only. [5] uses
+=insert-buffer-substring= to insert region (=strat= to =end=) of
+=oldbuf= to current =append-to= buffer.
+
+Again, check out doc for [5]:
+#+begin_quote
+#+begin_src elisp
+  (insert-buffer-substring BUFFER &optional START END)
+#+end_src
+
+Insert before point a substring of the contents of BUFFER.
+BUFFER may be a buffer or a buffer name.
+Arguments START and END are character positions specifying the substring.
+They default to the values of (point-min) and (point-max) in BUFFER.
+
+Point and before-insertion markers *move forward to end up after the
+inserted text*.
+Any other markers at the point of insertion remain before the text.
+#+end_quote
+
+This means if current buffer is:
+#+begin_src text
+  a b I c d
+#+end_src
+
+where =I= indicates point. Then after inserting =foo=, it should
+look like this:
+
+#+begin_src text
+  a b f o o I c d
+#+end_src
+
+That's what leads to [6].
+
+[6] uses a =dolist= to traverse all windows displaying the =append-to=
+buffer, and sync those whose point is still at =point= (meaning it did
+not move forward accordingly).
+
+In my attempt, all windows turned out to be out of sync after
+removing [6].  I don't really understand why non of them has point
+moving forward, but I'll leave that as it is for now.
+
+Before modifying =append-to-buffer=:
+
+#+attr_html: :width 100%
+[[./ch4-in-sync-before-append.png]]
+
+All windows seems to be in sync.
+
+#+attr_html: :width 100%
+[[./ch4-in-sync-after-append.png]]
+
+After modifying =append-to-buffer=:
+
+#+attr_html: :width 100%
+[[./ch4-out-of-sync-before-append.png]]
+
+All windows seems to be out of sync.
+
+#+attr_html: :width 100%
+[[./ch4-out-of-sync-after-append.png]]
+
+Regarding the function of [6], there's also some discussion here:
+[[https://emacs.stackexchange.com/questions/10904/what-is-the-purpose-of-this-code-in-append-to-buffer][What is the purpose of this code in `append-to-buffer`?]].
