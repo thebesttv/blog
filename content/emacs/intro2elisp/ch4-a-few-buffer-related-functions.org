@@ -13,6 +13,8 @@
     (goto-char (point-min)))
 #+end_src
 
+Not much to say here, a very simple implementation.
+
 ** Original definition
 
 #+begin_src elisp
@@ -24,38 +26,39 @@
 
   Push mark at previous position, unless either a \\[universal-argument] prefix
   is supplied, or Transient Mark mode is enabled and the mark is active."
-    (declare (interactive-only "use `(goto-char (point-min))' instead."))
-    (interactive "^P")
-    (or (consp arg)
+    (declare (interactive-only "use `(goto-char (point-min))' instead.")) ; [1]
+    (interactive "^P")                    ; [2]
+    (or (consp arg)                       ; [3]
         (region-active-p)
         (push-mark))
-    (let ((size (- (point-max) (point-min))))
+    (let ((size (- (point-max) (point-min)))) ; [4]
       (goto-char (if (and arg (not (consp arg)))
                      (+ (point-min) 1
                         (/ (* size (prefix-numeric-value arg)) 10))
                    (point-min))))
-    (if (and arg (not (consp arg)))
+    (if (and arg (not (consp arg)))       ; [5]
         (forward-line 1)))
 #+end_src
+
+*** [1]
 
 Here =\\[universal-argument]= indicates =C-u=.  When called with
 =C-u=, it does not push mark.
 
 First is the =declare=, TODO.
 
-
-#+begin_src elisp
-    (interactive "^P")
-#+end_src
+*** [2]
 
 About the "=^=" in ="^P"=, the doc says:
+
 #+begin_quote
 If the string begins with ‘^’ and ‘shift-select-mode’ is non-nil,
- Emacs first calls the function ‘handle-shift-selection’.
+Emacs first calls the function ‘handle-shift-selection’.
 #+end_quote
 
 I'll skip it for now since I don't really understand shift-selection
-right now.
+right now. TODO
+
 
 =P= in ="^P"= means "prefix arg in raw form.  Does not do I/O".  In
 =(interactive "P")=, when called with
@@ -67,26 +70,29 @@ right now.
 
 - =C-u= with numeric argument (like =C-u 4=), =arg= is an integer.
 
+*** [3]
 
 #+begin_src elisp
-    (or (consp arg)           ; [1]
-        (region-active-p)     ; [2]
-        (push-mark))          ; push mark at previous position
+  (or (consp arg)           ; [3.1]
+      (region-active-p)     ; [3.2]
+      (push-mark))          ; push mark at previous position
 #+end_src
 
-=(push-mark)= will only be called when both [1] and [2] evaluate to
-=nil=. [1] will be =nil= only if =arg= is not a cons cell, indicating
-the interactive command is called with either no prefix or a numeric
-prefix (for example, =M-x beginning-of-buffer= or =C-u 2 M-<=).  [2]
-will be =nil= when not in Transient Mark mode or mark is not active.
+=(push-mark)= will only be called when both [3.1] and [3.2] evaluate
+to =nil=. [3.1] will be =nil= only if =arg= is not a cons cell,
+indicating the interactive command is called with either no prefix or
+a numeric prefix (for example, =M-x beginning-of-buffer= or =C-u 2
+M-<=).  [3.2] will be =nil= when not in Transient Mark mode or mark is
+not active.
 
+*** [4]
 
 #+begin_src elisp
-    (let ((size (- (point-max) (point-min))))
-      (goto-char (if (and arg (not (consp arg)))
-                     (+ (point-min) 1
-                        (/ (* size (prefix-numeric-value arg)) 10))
-                   (point-min))))
+  (let ((size (- (point-max) (point-min))))
+    (goto-char (if (and arg (not (consp arg)))
+                   (+ (point-min) 1
+                      (/ (* size (prefix-numeric-value arg)) 10))
+                 (point-min))))
 #+end_src
 
 =(point-max)= and =(point-min)= act on the accessible / visible
@@ -114,6 +120,8 @@ simplified version of the code, i.e. =(goto-char (point-min))=.
     ;; minibuffer, this is at the end of the prompt.
     (goto-char (minibuffer-prompt-end)))  ; [3]
 #+end_src
+
+** [1-3]
 
 First look at =push-mark=:
 
@@ -145,6 +153,7 @@ position, one at buffer end.  The latter exists mainly to mark the
 whole buffer.  The former lets the user go back to the previous
 position after typing =C-u C-SPC= twice.
 
+** A closer look at [3]
 
 At last, take a closer look at [3].
 
@@ -203,6 +212,8 @@ minibuffer prompt when marking in minibuffer. So if the buffer says
               (set-window-point window (point))))))))
 #+end_src
 
+** [1]
+
 First, look at [1] -- the =interactive= expression.
 
 #+begin_src elisp
@@ -227,7 +238,8 @@ Originally, the ARG-DESCRIPTOR is a string:
 But the default buffer for this expression is *not visible*, so the
 list representation was used instead.
 
-[1.1] & [1.2]:
+*** [1.1] & [1.2]
+
 #+begin_quote
 #+begin_src elisp
   (read-buffer PROMPT &optional DEFAULT REQUIRE-MATCH PREDICATE)
@@ -245,6 +257,8 @@ Optional second arg DEFAULT is value to return if user enters an empty line,
 When called interactively, the =read-buffer= prompts with [1.1] --
 "Append to buffer: ", defaulting to buffer returned by [1.2] --
 =other-buffer= (including visible buffer but not current buffer).
+
+** [2-3]
 
 After [1], the =let*= expression in [2] assigns a series of variables
 in order, where =windows= in [3] is all windows displaying the
@@ -318,6 +332,8 @@ matches =buffer-or-name= will be returned.
 
 -----
 
+** [4-5]
+
 Anyway, get back to the =append-to-buffer= function.
 
 #+begin_src elisp
@@ -370,6 +386,8 @@ look like this:
 #+end_src
 
 That's what leads to [6].
+
+** [6]
 
 [6] uses a =dolist= to traverse all windows displaying the =append-to=
 buffer, and sync those whose point is still at =point= (meaning it did
