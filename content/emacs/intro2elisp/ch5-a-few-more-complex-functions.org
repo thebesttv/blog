@@ -1,0 +1,156 @@
+#+title: A Few More Complex Functions
+
+* =copy-to-buffer=
+
+#+begin_src elisp
+  (defun copy-to-buffer (buffer start end)
+    "Copy to specified BUFFER the text of the region.
+  The text is inserted into that buffer, replacing existing text there.
+  BUFFER can be a buffer or the name of a buffer; this
+  function will create BUFFER if it doesn't already exist.
+
+  When calling from a program, give three arguments:
+  BUFFER (or buffer name), START and END.
+  START and END specify the portion of the current buffer to be copied."
+    (interactive "BCopy to buffer: \nr")  ; [1]
+    (let ((oldbuf (current-buffer)))
+      (with-current-buffer (get-buffer-create buffer)
+        (barf-if-buffer-read-only)
+        (erase-buffer)
+        (save-excursion                   ; [2]
+          (insert-buffer-substring oldbuf start end)))))
+#+end_src
+
+** [1]
+As already discussed in chapter 4, using ="B"= will not default to
+visible buffer.
+
+*** Some difference of ="b"= & ="B"=
+#+begin_quote
+=b= -- Name of existing buffer.
+
+=B= -- Name of buffer, possibly nonexistent.
+#+end_quote
+
+So [1] will allow nonexistend buffer name to be entered.
+
+** [2]
+
+Again, since =insert-buffer-substring= says "Point and
+before-insertion markers move forward to end up *after the inserted
+text*.  The =save-exrustion= inside =with-current-buffer= is meant to
+preserve point position.
+
+About this, also see [[https://www.reddit.com/r/emacs/comments/eg8txn/noob_emacs_lisp_question_why_use_saveexcursion_in/][Noob Emacs Lisp question: Why use save-excursion
+in copy-to-buffer?]]
+
+
+* =insert-buffer=
+#+begin_quote
+(insert-buffer BUFFER)
+
+Insert *after point* the contents of BUFFER.
+Puts mark *after* the inserted text.
+BUFFER may be a buffer or a buffer name.
+#+end_quote
+
+** Original Code
+
+#+begin_src elisp
+  (defun insert-buffer (buffer)
+    "Insert after point the contents of BUFFER.
+       Puts mark after the inserted text.
+       BUFFER may be a buffer or a buffer name."
+    (interactive "*bInsert buffer: ")     ; [1]
+    (or (bufferp buffer)                  ; [2]
+        (setq buffer (get-buffer buffer)))
+    (let (start end newmark)              ; [3]
+      (save-excursion                     ; [3.1]
+        (save-excursion                   ; [3.2]
+          (set-buffer buffer)
+          (setq start (point-min) end (point-max)))
+        (insert-buffer-substring buffer start end)
+        (setq newmark (point)))
+      (push-mark newmark)))
+#+end_src
+
+*** [1]
+
+Since we are inserting, the current buffer must not be read-only. So
+the asterisk ="*"= is used. See the doc:
+
+#+begin_quote
+In addition, if the string begins with ‘*’, an *error* is signaled if
+the buffer is read-only.
+#+end_quote
+
+Since =buffer= is to be copied *from*, it must exist. So the lower
+case ="b"= is used instead of ="B"=.
+
+*** [2]
+
+The =or= expression ensures that =buffer= is bound to an actual
+buffer, not the *name* of the buffer.
+
+*** [3]
+
+The two nested =save-excursion= is the most important in =let=.
+
+The inner =save-excursion= [3.2] is used to get the range of =buffer=
+by =set-buffer= into it, and set =start= & =end= to =(point-min)= &
+=(point-max)=.  Since the only side-effect of [3.2] is affecting the
+value of =start= & =end=, I don't see why not it can't be placed
+before [3.1], thus creating a parallel structure.
+
+The outer =save-excursion= [3.1] is used to insert =buffer= to current
+buffer.  Then it records the value of =(point)= after insertion (which
+woluld be after the inserted text).  Since after [3.1], point will be
+restored to its original position (which is before the inserted text).
+It will be convenient to record where the inserted text ends.  I also
+don't see why not simply use =(push-mark (point))= at the end of
+[3.1].  Then the last =(push-mark newmark)= can also be omitted.
+
+** New version
+#+begin_src elisp
+  (defun insert-buffer (buffer)
+    "Insert after point the contents of BUFFER.
+  Puts mark after the inserted text.
+  BUFFER may be a buffer or a buffer name."
+    (declare (interactive-only insert-buffer-substring)) ; [1]
+    (interactive                                         ; [2]
+     (list (progn (barf-if-buffer-read-only)
+                  (read-buffer "Insert buffer: "
+                               (if (eq (selected-window) (next-window))
+                                   (other-buffer (current-buffer))
+                                 (window-buffer (next-window)))
+                               t))))
+    (push-mark                            ; [3]
+     (save-excursion
+       (insert-buffer-substring (get-buffer buffer))
+       (point)))
+    nil)                                  ; [4]
+#+end_src
+
+It sure has a daunting =interactive= expression in deed.  But the main
+body [3] is quite simple.
+
+*** [3]
+
+Let's first look at the body.
+
+The original =or= expression is replaced by a simple =(get-buffer
+buffer)=, since =get-buffer= accepts an argument =BUFFER-OR-NAME= that
+can be either a buffer or its name.  The =START= & =END= argument in
+=(insert-buffer-substring BUFFER &optional START END)= is omitted.
+=save-excursion= returns the =(point)= after insertion to be pushed
+into mark ring.
+
+At last, the whole function evaluates to =nil= [4].  So the function
+=insert-buffer= exists only to produce a side effect.
+
+*** [1]
+TODO
+
+*** [2]
+
+TODO
