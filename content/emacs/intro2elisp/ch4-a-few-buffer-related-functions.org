@@ -40,14 +40,17 @@ Not much to say here, a very simple implementation.
         (forward-line 1)))
 #+end_src
 
-*** [1]
+Note the keyword =&optional=.
 
 Here =\\[universal-argument]= indicates =C-u=.  When called with
-=C-u=, it does not push mark.
+=C-u=, it does not push mark.  This "=\\=" tells the Lisp interpreter
+to subtitute whatever key is currently bound to the "=[...]=".
+
+*** [1] =declare= expression
 
 First is the =declare=, TODO.
 
-*** [2]
+*** [2] =interactive= expression
 
 About the "=^=" in ="^P"=, the doc says:
 
@@ -70,7 +73,10 @@ right now. TODO
 
 - =C-u= with numeric argument (like =C-u 4=), =arg= is an integer.
 
-*** [3]
+*** [3] =or= expression to =push-mark=
+:PROPERTIES:
+:CUSTOM_ID: beginning-of-buffer-3
+:END:
 
 #+begin_src elisp
   (or (consp arg)           ; [3.1]
@@ -85,7 +91,7 @@ a numeric prefix (for example, =M-x beginning-of-buffer= or =C-u 2
 M-<=).  [3.2] will be =nil= when not in Transient Mark mode or mark is
 not active.
 
-*** [4]
+*** [4] move point
 
 #+begin_src elisp
   (let ((size (- (point-max) (point-min))))
@@ -101,6 +107,35 @@ portion of the buffer.
 
 If =arg= is nil, =and= fails.  This will have the same effect as the
 simplified version of the code, i.e. =(goto-char (point-min))=.
+
+=prefix-numeric-value= converts the raw prefix argument produced by
+=(interactive "P")= to a numeric value.
+
+*** [5] do nicety
+
+#+begin_quote
+Finally, the last line of the ‘beginning-of-buffer’ command says to
+move point to the beginning of the next line if the command is invoked
+with an argument:
+
+#+begin_src elisp
+  (if (and arg (not (consp arg)))       ; [5]
+      (forward-line 1)))
+#+end_src
+
+This puts the cursor at the beginning of the first line after the
+appropriate tenths position in the buffer.  This is a flourish that
+means that the cursor is always located _at least_ the requested
+tenths of the way through the buffer, which is a nicety that is,
+perhaps, not necessary, but which, if it did not occur, would be sure
+to draw complaints.  (The ‘=(not (consp arg))=’ portion is so that if
+you specify the command with a ‘=C-u=’, but *without a number*, that
+is to say, if the raw prefix argument is _simply a cons cell_, the
+command does not put you at the beginning of the second line -- it
+instead puts you at =(point-min)= without pushing mark, see
+[[#beginning-of-buffer-3]].)
+
+#+end_quote
 
 * =mark-whole-buffer=
 
@@ -121,7 +156,7 @@ simplified version of the code, i.e. =(goto-char (point-min))=.
     (goto-char (minibuffer-prompt-end)))  ; [3]
 #+end_src
 
-** [1-3]
+** [1-3] main body
 
 First look at =push-mark=:
 
@@ -212,7 +247,7 @@ minibuffer prompt when marking in minibuffer. So if the buffer says
               (set-window-point window (point))))))))
 #+end_src
 
-** [1]
+** [1] =interactive= expression
 
 First, look at [1] -- the =interactive= expression.
 
@@ -238,7 +273,7 @@ Originally, the ARG-DESCRIPTOR is a string:
 But the default buffer for this expression is *not visible*, so the
 list representation was used instead.
 
-*** [1.1] & [1.2]
+*** [1.1] & [1.2] =read-buffer= & =other-buffer=
 
 #+begin_quote
 #+begin_src elisp
@@ -258,7 +293,7 @@ When called interactively, the =read-buffer= prompts with [1.1] --
 "Append to buffer: ", defaulting to buffer returned by [1.2] --
 =other-buffer= (including visible buffer but not current buffer).
 
-** [2-3]
+** [2-3] function starts
 
 After [1], the =let*= expression in [2] assigns a series of variables
 in order, where =windows= in [3] is all windows displaying the
@@ -332,7 +367,7 @@ matches =buffer-or-name= will be returned.
 
 -----
 
-** [4-5]
+** [4-5] =point= & inserting
 
 Anyway, get back to the =append-to-buffer= function.
 
@@ -387,7 +422,7 @@ look like this:
 
 That's what leads to [6].
 
-** [6]
+** [6] window synchronization
 
 [6] uses a =dolist= to traverse all windows displaying the =append-to=
 buffer, and sync those whose point is still at =point= (meaning it did

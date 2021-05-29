@@ -154,3 +154,8 @@ TODO
 *** [2]
 
 TODO
+
+* =beginning-of-buffer=
+
+See [[http:./ch4-a-few-buffer-related-functions.org][Chapter 4]].
+
