@@ -13,6 +13,7 @@
 - [[https://stackoverflow.com/questions/9254891/what-does-content-type-application-json-charset-utf-8-really-mean][What does “Content-type: application/json; charset=utf-8” really
   mean?]]  =simple-httpd= 在 header 就忘了加 =charset=utf-8= ，花了我一
   晚上才发现，呜呜😣
+- [[http://winestockwebdesign.com/Essays/Lisp_Curse.html][The Lisp Curse]] The power of Lisp is its own worst enemy.
 
 * 宝藏博主
 
