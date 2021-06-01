@@ -22,23 +22,26 @@ buffer that's visible on the screen.
   (other-buffer &optional BUFFER VISIBLE-OK FRAME)
 #+END_SRC
 
-Return most recently selected buffer other than BUFFER.  Buffers *not
-visible* in windows are *preferred* to visible buffers, unless
-optional second argument VISIBLE-OK is non-nil.  Ignore the argument
-BUFFER unless it denotes a live buffer. (This means BUFFER is the
-buffer to *ignore*.)  If the optional third argument FRAME specifies a
-live frame, then use that frame’s buffer list instead of the selected
-frame’s buffer list.
+#+begin_quote
+Return most recently selected buffer other than BUFFER.
+
+Buffers *not visible* in windows are *preferred* to visible buffers,
+unless optional second argument VISIBLE-OK is non-nil.  Ignore the
+argument BUFFER unless it denotes a live buffer. (This means BUFFER is
+the buffer to *ignore*.)  If the optional third argument FRAME
+specifies a live frame, then use that frame’s buffer list instead of
+the selected frame’s buffer list.
 
 The buffer is found by scanning the selected or specified frame’s
 buffer list first, followed by the list of all buffers.  If no other
 buffer exists, return the buffer ‘*scratch*’ (creating it if
 necessary).
+#+end_quote
 
 Simply use =(other-buffer)= only returns most recent *non-visible*
 buffer.  However, only setting VISIBLE-OK to =t=, like =(other-buffer
-nil t)=, will return the current buffer.  So in order to ignore
-current buffer, pass =(current-buffer)= to BUFFER.
+nil t)=, will return the current buffer.  In order to ignore current
+buffer, pass =(current-buffer)= to BUFFER.
 
 #+BEGIN_SRC elisp
   (other-buffer (current-buffer) t)
