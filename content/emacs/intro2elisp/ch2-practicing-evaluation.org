@@ -1,4 +1,4 @@
-#+title: Chapter 2 - Practicing Evaluation
+#+title: Chapter 2 -- Practicing Evaluation
 
 * buffer related functions
 

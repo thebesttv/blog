@@ -1,4 +1,4 @@
-#+title: A Few Buffer-Related Functions
+#+title: Chapter 4 -- A Few Buffer-Related Functions
 
 * =beginning-of-buffer=
 

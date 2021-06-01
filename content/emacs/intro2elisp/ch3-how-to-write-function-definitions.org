@@ -1,4 +1,4 @@
-#+title: Chapter 3 - How To Write Function Definitions
+#+title: Chapter 3 -- How To Write Function Definitions
 
 * The =defun= macro
 

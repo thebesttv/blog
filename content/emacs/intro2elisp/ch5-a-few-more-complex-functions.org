@@ -1,4 +1,4 @@
-#+title: A Few More Complex Functions
+#+title: Chapter 5 -- A Few More Complex Functions
 
 * =copy-to-buffer=
 
