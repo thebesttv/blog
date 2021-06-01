@@ -36,7 +36,7 @@ after documentation string.  Emacs do not display their results in the
 echo area by default.
 
 Usually the argument of =interactive= is a string containing a code
-letter *followed optionally by a prompt*.  (Some code letters do not
+letter _followed optionally by a prompt_.  (Some code letters do not
 use I/O to get the argument and do not use prompts.)  To pass several
 arguments to the command, concatenate the individual strings,
 separating them by newline characters =\n=.
@@ -58,8 +58,8 @@ There are three possibilities for the argument /arg-descriptor/:
   separated by newlines, one for each argument.
 
 - It may be a Lisp expression that is not a string; then it should be
-  a form that is *evaluated to get a list of arguments to pass to the
-  command*.
+  a form that is _evaluated to get a list of arguments to pass to the
+  command_.
 
 Some available letters:
 - =c= -- Character (no input method is used).
@@ -102,11 +102,13 @@ form (dynamic scoping).
 
 [[https://www.gnu.org/software/emacs/manual/html_node/eintr/Point-and-mark.html][Brief & great review of point & mark.]]
 
+#+begin_quote
 Save *point*, and *current buffer*; execute BODY; restore those
 things.  The values of point and the current buffer are restored even
 in case of abnormal exit (throw or error).
+#+end_quote
 
-=save-excursion= is used only for its side effect -- restoring current
+=save-excursion= is used only for its _side effect_ -- restoring current
 point & buffer.
 
 * Equality & Comparison
