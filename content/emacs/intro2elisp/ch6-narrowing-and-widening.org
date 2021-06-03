@@ -1,0 +1,151 @@
+#+title: Chapter 6 -- Narrowing & Widening
+
+* =save-restriction= special form
+
+#+begin_quote
+#+begin_src elisp
+  (save-restriction &rest BODY)
+#+end_src
+
+Execute BODY, _saving and restoring current buffer’s restrictions_.
+
+The buffer’s restrictions make parts of the beginning and end
+invisible.  (They are set up with =narrow-to-region= and eliminated
+with =widen=.)  This special form, =save-restriction=, saves the
+current buffer’s restrictions when it is entered, and restores them
+when it is exited.  So any =narrow-to-region= within BODY lasts only
+until the end of the form.  The old restrictions settings are restored
+even in case of abnormal exit (throw or error).
+
+The value returned is the value of the last form in BODY.
+
+Note: if you are using both =save-excursion= and =save-restriction=,
+use ‘save-excursion’ outermost:
+#+begin_src elisp
+  (save-excursion
+    (save-restriction
+      ...))
+#+end_src
+#+end_quote
+
+
+#+begin_quote
+In other circumstances, when not written together, the
+=save-excursion= and =save-restriction= special forms must be written
+in the order appropriate to the function.
+
+#+begin_src elisp
+  (save-restriction
+    (widen)
+    (save-excursion
+      ...))
+#+end_src
+
+#+end_quote
+
+* =what-line=
+
+** Old version
+
+#+begin_src elisp
+  (defun what-line ()
+    "Print the current line number (in the buffer) of point."
+    (interactive)
+    (save-restriction
+      (widen)                             ; [1]
+      (save-excursion
+        (beginning-of-line)               ; [2]
+        (message "Line %d"
+                 (1+ (count-lines 1 (point))))))) ; [3]
+#+end_src
+
+#+begin_quote
+The =save-restriction= special form is followed by =widen=.  This
+function undoes any narrowing the current buffer may have had when
+=what-line= was called.  (The narrowing that was there is the
+narrowing that =save-restriction= remembers.)  This widening makes it
+possible for the line counting commands to count from _the beginning
+of the buffer_.  Otherwise, they would have been limited to counting
+within _the accessible region_.  Any original narrowing is restored
+just before the completion of the function by the =save-restriction=
+special form.
+#+end_quote
+
+*** [3] =count-lines=
+
+#+begin_quote
+#+begin_src elisp
+  (count-lines START END)
+#+end_src
+
+Return number of lines between START and END.
+
+This is usually the number of newlines between them,
+but can be one more if START is not equal to END
+and the greater of them is not at the start of a line.
+#+end_quote
+
+The [2] =beginning-of-line= moves point to the beginning of the
+current line so that =count-lines= will always return the number of
+lines between buffer beginning and point (excluding the line current
+point is at).  Then, it adds 1 to the result, indicating the current
+line number.
+
+** New version
+
+#+begin_src elisp
+  (defun what-line ()
+    "Print the current buffer line number and narrowed line number of point."
+    (interactive)
+    (let ((start (point-min))             ; [1]
+          (n (line-number-at-pos)))
+      (if (= start 1)                     ; [2]
+          (message "Line %d" n)
+        (save-excursion
+          (save-restriction
+            (widen)
+            (message "line %d (narrowed line %d)"
+                     (+ n (line-number-at-pos start) -1) ; [3]
+                     n))))))
+#+end_src
+
+Unlike the old version, the new one takes narrowing into
+consideration.
+
+*** [1] all about narrowing
+
+As usual, =start= binds to =(point-min)=, which is only in the
+*accessible* portion of the buffer.  The =line-number-at-pos= also
+defaults to take narrowing into consideration.
+
+#+begin_quote
+#+begin_src elisp
+  (line-number-at-pos &optional POS ABSOLUTE)
+#+end_src
+
+Return buffer line number at position POS.  If POS is nil, use current
+buffer location.
+
+If ABSOLUTE is nil, the default, counting starts at =(point-min)=, so
+the value refers to the contents of the accessible portion of the
+(potentially narrowed) buffer.  If ABSOLUTE is non-nil, ignore any
+narrowing and return the absolute line number.
+#+end_quote
+
+*** [2] does it narrow?
+
+If =start= equals to 1, then no narrowing is in effect.  Otherwise,
+it's similar to the old version.  Inside the =save-excursion= &
+=save-restriction= nesting, it first undoes current narrowing, then
+report both original & narrowed line number.
+
+*** [3] calculation
+
+#+begin_src elisp
+  (+ n (line-number-at-pos start) -1) ; [3]
+#+end_src
+
+This expression first calculates the starting line number of the
+narrowed portion, then adds the narrowed line number =n=, finally
+subtracts 1 from the sum.  This is the final line number in the
+original buffer.
