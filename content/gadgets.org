@@ -1,0 +1,46 @@
+#+title: 我的小玩意们
+
+记录一下我都买了哪些好玩的东西。
+
+#+begin_src elisp :exports results :results value drawer
+  (setq tbt-gadgets '(("Bose QC35 ii" 1067  2021 06 03)
+                      ("NB 显示器支架" 160.5 2021 05 12)
+                      ("XBox Series S 手柄" 577 2021 02 14)
+                      ("致钛 1T SSD" 698 2021 01 01)
+                      ("博皓冲牙器" 226.53 2020 12 14)
+                      ("文石 Note 3" 3531.98 2020 10 21)
+                      ("韶音 AS600 骨传导耳机" 388 2020 07 25)
+                      ("英睿达 500G SSD" 389 2020 06 24)
+                      ("MOFT电脑支架" 98 2019 10 10)
+                      ("小米手环4" 168.98 2019 10 06)
+                      ("Redmi Note 8 Pro" 1799 2019 10 02)
+                      ("凉鞋" 178 2019 09 23)))
+
+  (defun get-elapsed-day (year month day)
+    (/
+     (-
+      (time-convert (current-time) 'integer) ; current time in seconds
+      (time-convert (encode-time             ; given time in seconds
+                     (make-decoded-time :second 0
+                                        :minute 0
+                                        :hour   0
+                                        :day    day
+                                        :month  month
+                                        :year   year
+                                        :zone   28800))
+                    'integer))
+     (* 24.0 3600)))                         ; seconds a day
+
+  (let (result)
+    (dolist (gadget tbt-gadgets result)
+      (let ((name  (cl-first gadget))
+            (price (cl-second gadget))
+            (year  (cl-third gadget))
+            (month (cl-fourth gadget))
+            (day   (cl-fifth  gadget)))
+        (setq result
+              (concat result
+                      (format "- %s, %04d-%02d-%02d, 共 %.2f, 平均每天 %.2f\n"
+                              name year month day price
+                              (/ price (get-elapsed-day year month day))))))))
+#+end_src
