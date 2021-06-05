@@ -1,0 +1,45 @@
+#+title: =car=, =cdr=, =cons=: Fundamental Functions
+
+The word =cons= is an abbreviation of the word "construct".
+
+* =nthcdr=
+
+#+begin_quote
+#+begin_src elisp
+  (nthcdr N LIST)
+#+end_src
+
+Take cdr N times on LIST, return the result.
+#+end_quote
+
+* =nth=
+
+#+begin_quote
+#+begin_src elisp
+  (nth N LIST)
+#+end_src
+
+Return the Nth element of LIST.
+N counts from zero.  If LIST is not that long, nil is returned.
+#+end_quote
+
+If it were not definied in C for speed, it would be:
+#+begin_src elisp
+  (defun nth (n list)
+    (car (nthcdr n list)))
+#+end_src
+
+* =setcar= & =setcdr=
+#+begin_quote
+#+begin_src elisp
+  (setcar CELL NEWCAR)
+#+end_src
+
+Set the car of CELL to be NEWCAR.  Returns NEWCAR.
+
+#+begin_src elisp
+  (setcdr CELL NEWCDR)
+#+end_src
+
+Set the cdr of CELL to be NEWCDR.  Returns NEWCDR.
+#+end_quote
