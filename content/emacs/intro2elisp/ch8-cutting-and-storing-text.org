@@ -1,0 +1,396 @@
+#+title: Cutting and Storing Text
+
+* the =when= & =unless= macro
+
+#+begin_src elisp
+  (defmacro when (cond &rest body)
+    "If COND yields non-nil, do BODY, else return nil.
+  When COND yields non-nil, eval BODY forms sequentially and return
+  value of last one, or nil if there are none.
+
+  \(fn COND BODY...)"
+    (declare (indent 1) (debug t))
+    (list 'if cond (cons 'progn body)))
+
+  (defmacro unless (cond &rest body)
+    "If COND yields nil, do BODY, else return nil.
+  When COND yields nil, eval BODY forms sequentially and return
+  value of last one, or nil if there are none.
+
+  \(fn COND BODY...)"
+    (declare (indent 1) (debug t))
+    (cons 'if (cons cond (cons nil body))))
+#+end_src
+
+=when= & =unless= are both macros expanding to the =if= special form.
+=(when cond body)= expands to =(if cond (progn body))=.  =(unless cond
+body)= expands to =(if cond nil body)=.
+
+* =kill-new=
+
+#+begin_quote
+#+begin_src elisp
+  (kill-new STRING &optional REPLACE)
+#+end_src
+
+Make =STRING= the latest kill in the kill ring.
+
+Set =kill-ring-yank-pointer= to point to it.
+
+If =interprogram-cut-function= is non-nil, apply it to =STRING=.
+Optional second argument =REPLACE= non-nil means that =STRING= will
+*replace* the front of the kill ring, rather than being added to the
+list.
+
+When =save-interprogram-paste-before-kill= and
+=interprogram-paste-function= are non-nil, save the interprogram paste
+string(s) into =kill-ring= before =STRING=.
+
+When the yank handler has a non-nil =PARAM= element, the original
+=STRING= argument is not used by =insert-for-yank=.  However, since
+Lisp code may access and use elements from the kill ring directly, the
+=STRING= argument should still be a "useful" string for such uses.
+#+end_quote
+
+#+begin_src elisp
+  (defun kill-new (string &optional replace)
+    ;; [1]
+    (unless (and kill-do-not-save-duplicates                          ; [1.1]
+                 ;; Due to text properties such as 'yank-handler that
+                 ;; can alter the contents to yank, comparison using
+                 ;; `equal' is unsafe.
+                 (equal-including-properties string (car kill-ring))) ; [1.2]
+      (if (fboundp 'menu-bar-update-yank-menu)
+          (menu-bar-update-yank-menu string (and replace (car kill-ring)))))
+    ;; [2]
+    (when save-interprogram-paste-before-kill
+      (let ((interprogram-paste (and interprogram-paste-function
+                                     (funcall interprogram-paste-function))))
+        (when interprogram-paste
+          (dolist (s (if (listp interprogram-paste)
+                         ;; Use `reverse' to avoid modifying external data.
+                         (reverse interprogram-paste)
+                       (list interprogram-paste)))
+            (unless (and kill-do-not-save-duplicates
+                         (equal-including-properties s (car kill-ring)))
+              (push s kill-ring))))))
+    ;; [3]
+    (unless (and kill-do-not-save-duplicates
+                 (equal-including-properties string (car kill-ring)))
+      (if (and replace kill-ring)
+          (setcar kill-ring string)
+        (let ((history-delete-duplicates nil))
+          (add-to-history 'kill-ring string kill-ring-max t))))
+    ;; [4]
+    (setq kill-ring-yank-pointer kill-ring)
+    (if interprogram-cut-function
+        (funcall interprogram-cut-function string)))
+#+end_src
+
+* =kill-append=
+
+#+begin_quote
+#+begin_src elisp
+  (kill-append STRING BEFORE-P)
+#+end_src
+
+Append STRING to the end of the latest kill in the kill ring.
+If BEFORE-P is non-nil, prepend STRING to the kill instead.
+If =interprogram-cut-function= is non-nil, call it with the
+resulting kill.
+If =kill-append-merge-undo= is non-nil, remove the last undo
+boundary in the current buffer.
+#+end_quote
+
+#+begin_src elisp
+  (defun kill-append (string before-p)
+    (let ((cur (car kill-ring)))
+      (kill-new (if before-p (concat string cur) (concat cur string))
+                (or (string= cur "")
+                    (null (get-text-property 0 'yank-handler cur)))))
+    (when (and kill-append-merge-undo (not buffer-read-only))
+      (let ((prev buffer-undo-list)
+            (next (cdr buffer-undo-list)))
+        ;; Find the next undo boundary.
+        (while (car next)
+          (pop next)
+          (pop prev))
+        ;; Remove this undo boundary.
+        (when prev
+          (setcdr prev (cdr next))))))
+#+end_src
+
+* =copy-region-as-kill=
+
+#+begin_src elisp
+  ;; copy-region-as-kill no longer sets this-command, because it's confusing
+  ;; to get two copies of the text when the user accidentally types M-w and
+  ;; then corrects it with the intended C-w.
+  (defun copy-region-as-kill (beg end &optional region)
+    "Save the region as if killed, but don't kill it.
+  In Transient Mark mode, deactivate the mark.
+  If `interprogram-cut-function' is non-nil, also save the text for a window
+  system cut and paste.
+
+  The copied text is filtered by `filter-buffer-substring' before it is
+  saved in the kill ring, so the actual saved text might be different
+  from what was in the buffer.
+
+  When called from Lisp, save in the kill ring the stretch of text
+  between BEG and END, unless the optional argument REGION is
+  non-nil, in which case ignore BEG and END, and save the current
+  region instead.
+
+  This command's old key binding has been given to `kill-ring-save'."
+    ;; Pass mark first, then point, because the order matters when
+    ;; calling `kill-append'.
+    (interactive (list (mark) (point)
+                       (prefix-numeric-value current-prefix-arg)))
+    (let ((str (if region
+                   (funcall region-extract-function nil)
+                 (filter-buffer-substring beg end))))
+    (if (eq last-command 'kill-region)
+          (kill-append str (< end beg))
+        (kill-new str)))
+    (setq deactivate-mark t)
+    nil)
+#+end_src
+
+The ‘filter-buffer-substring’ function returns a _filtered substring
+of the buffer_, if any.  Optionally—the arguments are not here, so
+neither is done—the function may delete the initial text or return the
+text without its properties; this function is a replacement for the
+older =buffer-substring= function, which came before text properties
+were implemented.
+* =kill-region=
+
+#+begin_src elisp
+  (defun kill-region (beg end &optional region)
+    "Kill (\"cut\") text between point and mark.
+  This deletes the text from the buffer and saves it in the kill ring.
+  The command \\[yank] can retrieve it from there.
+  \(If you want to save the region without killing it, use \\[kill-ring-save].)
+
+  If you want to append the killed region to the last killed text,
+  use \\[append-next-kill] before \\[kill-region].
+
+  Any command that calls this function is a \"kill command\".
+  If the previous command was also a kill command,
+  the text killed this time appends to the text killed last time
+  to make one entry in the kill ring.
+
+  The killed text is filtered by `filter-buffer-substring' before it is
+  saved in the kill ring, so the actual saved text might be different
+  from what was killed.
+
+  If the buffer is read-only, Emacs will beep and refrain from deleting
+  the text, but put the text in the kill ring anyway.  This means that
+  you can use the killing commands to copy text from a read-only buffer.
+
+  Lisp programs should use this function for killing text.
+   (To delete text, use `delete-region'.)
+  Supply two arguments, character positions BEG and END indicating the
+   stretch of text to be killed.  If the optional argument REGION is
+   non-nil, the function ignores BEG and END, and kills the current
+   region instead."
+    ;; Pass mark first, then point, because the order matters when
+    ;; calling `kill-append'.
+    (interactive (list (mark) (point) 'region))
+    (unless (and beg end)
+      (user-error "The mark is not set now, so there is no region"))
+    (condition-case nil
+        (let ((string (if region
+                          (funcall region-extract-function 'delete)
+                        (filter-buffer-substring beg end 'delete))))
+          (when string			; STRING is nil if BEG = END
+            ;; Add that string to the kill ring, one way or another.
+            (if (eq last-command 'kill-region)
+                (kill-append string (< end beg))
+              (kill-new string)))
+          (when (or string (eq last-command 'kill-region))
+            (setq this-command 'kill-region))
+          (setq deactivate-mark t)
+          nil)
+      ((buffer-read-only text-read-only)
+       ;; The code above failed because the buffer, or some of the characters
+       ;; in the region, are read-only.
+       ;; We should beep, in case the user just isn't aware of this.
+       ;; However, there's no harm in putting
+       ;; the region's text in the kill ring, anyway.
+       (copy-region-as-kill beg end region)
+       ;; Set this-command now, so it will be set even if we get an error.
+       (setq this-command 'kill-region)
+       ;; This should barf, if appropriate, and give us the correct error.
+       (if kill-read-only-ok
+           (progn (message "Read only text copied to kill ring") nil)
+         ;; Signal an error if the buffer is read-only.
+         (barf-if-buffer-read-only)
+         ;; If the buffer isn't read-only, the text is.
+         (signal 'text-read-only (list (current-buffer)))))))
+#+end_src
+
+This is a quite big function, so I can't go into detail for now.
+
+** the =condition-case= special form
+
+#+begin_quote
+#+begin_src elisp
+  (condition-case VAR BODYFORM &rest HANDLERS)
+#+end_src
+
+Regain control when an error is signaled.
+Executes =BODYFORM= and returns its value if no error happens.
+Each element of =HANDLERS= looks like =(CONDITION-NAME BODY...)=
+where the =BODY= is made of Lisp expressions.
+
+A handler is applicable to an error if =CONDITION-NAME= is one of the
+error’s condition names.  Handlers may also apply when non-error
+symbols are signaled (e.g., ‘quit’).  A =CONDITION-NAME= of =t= applies to
+any symbol, including non-error symbols.  If multiple handlers are
+applicable, only the first one runs.
+
+The car of a handler may be _a list of condition names_ instead of a
+single condition name; then it handles all of them.  If the special
+condition name =debug= is present in this list, it allows another
+condition in the list to run the debugger if =debug-on-error= and the
+other usual mechanisms say it should (otherwise, =condition-case=
+suppresses the debugger).
+
+When a handler handles an error, control returns to the =condition-case=
+and it executes the handler’s =BODY...=
+with =VAR= bound to =(ERROR-SYMBOL . SIGNAL-DATA)= from the error.
+(If =VAR= is =nil=, the handler can’t access that information.)
+Then the value of the last =BODY= form is returned from the =condition-case=
+expression.
+
+#+BEGIN_SRC elisp
+(condition-case err
+    (/ 1 0)
+  (arith-error
+   (message "%s" (error-message-string err))
+   nil))
+#+END_SRC
+#+end_quote
+
+* =zap-to-char=
+
+** Old version
+
+#+begin_src elisp
+  (defun zap-to-char (arg char)
+    "Kill up to and including ARG'th occurrence of CHAR.
+       Case is ignored if `case-fold-search' is non-nil in the current buffer.
+       Goes backward if ARG is negative; error if CHAR not found."
+    (interactive "p\ncZap to char: ")              ; [1]
+    (if (char-table-p translation-table-for-input) ; [2]
+        (setq char (or (aref translation-table-for-input char)
+                       char)))
+    (kill-region (point)
+                 (progn (search-forward (char-to-string char) ; [3]
+                                        nil nil arg)
+                        (point))))
+#+end_src
+
+*** [1] =interactive= expression
+
+#+begin_quote
+c -- Character (no input method is used).
+
+p -- Prefix arg converted to number.  Does not do I/O.
+#+end_quote
+
+This expression takes a numeric prefix and a character.
+
+*** [2] character table
+
+See the doc for the variable =translation-table-for-input=:
+
+#+begin_quote
+#+begin_src elisp
+  translation-table-for-input
+#+end_src
+
+Char table for _translating self-inserting characters_.
+This is applied to the result of input methods, not their input.
+See also ‘keyboard-translate-table’.
+#+end_quote
+
+I guess this is mainly intended for non-English regions.  Anyway, if
+the variable is a char table, then set =char= to the value in the
+table using =aref=. If the table does not have the corresponding
+value, set =char= to itself.
+
+#+begin_src elisp
+  (setq char (or (aref translation-table-for-input char)
+                 char))
+#+end_src
+
+I think this is a kind of style.  When binding a variable (such as
+=char=) to the result of some complex expression (such as =(aref
+translation-table-for-input char)=) only if the result is non-nil,
+don't use =if= to test the result.  Instead, use =or= with a fallback
+value (in this case, =char= itself) when the result is =nil=.
+
+*** [3] search & kill
+
+#+begin_src elisp
+  (progn (search-forward (char-to-string char) ; [3]
+                         nil nil arg)
+         (point))
+#+end_src
+
+The doc:
+
+#+begin_quote
+#+begin_src elisp
+  (search-forward STRING &optional BOUND NOERROR COUNT)
+#+end_src
+
+Search forward from point for STRING.
+
+Set point to the *end* of the occurrence found, and return point.
+
+An optional second argument *bounds* the search; it is a buffer
+position.  _The match found must not end after that position._ A value
+of nil means search to the end of the accessible portion of the
+buffer.
+
+Optional third argument, if t, means if fail just return nil (no
+error).  If not nil and not t, move to limit of search and return nil.
+
+Optional fourth argument COUNT, if a positive number, means to search
+for COUNT successive occurrences.  If COUNT is negative, search
+backward, instead of forward, for -COUNT occurrences.  A value of nil
+means the same as 1.
+
+With COUNT positive, the match found is the COUNTth one (or first, if
+COUNT is 1 or nil) in the buffer located entirely after the origin of
+the search; correspondingly with COUNT negative.
+#+end_quote
+
+It first uses =char-to-string= to convert =char= to a string.  Then it
+searches forward (or backward) =arg= times for the string.  If found,
+point is located *after* the occurrence (or before if =arg= is
+negative).
+
+Finally it returns =(point)= after the search to be used in
+=kill-region=.
+
+** New version
+#+begin_src elisp
+  (defun zap-to-char (arg char)
+    (interactive (list (prefix-numeric-value current-prefix-arg)
+                       (read-char-from-minibuffer "Zap to char: "
+                                                  nil 'read-char-history)))
+    ;; Avoid "obsolete" warnings for translation-table-for-input.
+    (with-no-warnings
+      (if (char-table-p translation-table-for-input)
+          (setq char (or (aref translation-table-for-input char) char))))
+    (kill-region (point) (progn
+                           (search-forward (char-to-string char) nil nil arg)
+                           (point))))
+#+end_src
+
+The new version uses a list in the =interactive= expression, and, as
+commented, wraps its body inside =with-no-warnings= to avoid
+"obsolete" warnings.
