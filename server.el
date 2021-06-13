@@ -69,6 +69,8 @@
                    (equal '("t")              ; from url parameter
                           (alist-get "dataurl" parameters nil nil 'string=)))))
           (with-temp-buffer
+            (insert "#+HTML_HEAD: <link rel=\"stylesheet\" type=\"text/css\" href=\"https://latex.now.sh/style.css\"/>\n")
+            (insert "#+HTML_HEAD: <style>body { max-width: 100ch; }</style>\n")
             (insert-file-contents path)
             ;; (httpd-log `(inserted file contents under ,path))
             (org-export-to-buffer 'html buffer))
