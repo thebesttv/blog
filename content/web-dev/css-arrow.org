@@ -1,0 +1,60 @@
+#+title: CSS Arrow
+
+#+begin_src elisp :exports results
+  (org-babel-do-load-languages 'org-babel-load-languages
+                               '((emacs-lisp . t) (org . t)))
+#+end_src
+
+最近在看 CSS ，学到可以用 =::before= & =::after= pseudo-element 来弄
+[[https://developer.mozilla.org/en-US/docs/Learn/CSS/Building_blocks/Selectors/Pseudo-classes_and_pseudo-elements#generating_content_with_before_and_after][Generated Content]]，挺有意思的，就记录下。
+
+#+name: a-css
+#+begin_src css :exports none
+  a.external:after {
+    background: transparent
+                url(https://developer.mozilla.org/static/media/external.e091ac5d.svg)
+                0 0 no-repeat;
+    background-size: 16px;
+    content: "";
+    display: inline-block;
+    height: 16px;
+    margin-left: 3px;
+    width: 16px;
+  }
+#+end_src
+
+大概酱：
+
+#+name: html-src
+#+begin_src html :noweb yes
+  <div>
+    <style scoped>
+      <<a-css>>
+    </style>
+    <p>
+      This is a link
+      <a class="external" href="http://bing.com">Bing</a>
+      with generated content.
+    </p>
+  </div>
+#+end_src
+
+结果就酱：
+#+begin_src org :noweb yes :results replace drawer :exports results :post wrap-html(text=*this*)
+  <<html-src>>
+#+end_src
+
+ps. 终于学会怎么显示 HTML 源码的时候同时嵌入网页了，感谢 [[https://stackoverflow.com/questions/20194347/org-mode-with-code-example-as-html][org-mode with
+code example as html]]，StacksOverflow yyds！
+
+pps. 用了这么久 org-mode 了，确实得好好学学，尤其是 babel  = =
+
+好了，复习数电去了，呜呜
+
+* Utils                                                             :noexport:
+#+name: wrap-html
+#+begin_src emacs-lisp :var text="" :results raw
+  (concat "#+BEGIN_EXPORT html\n<div>"
+          text
+          "\n</div>\n#+END_EXPORT")
+#+end_src
