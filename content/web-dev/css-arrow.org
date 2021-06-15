@@ -8,12 +8,13 @@
 最近在看 CSS ，学到可以用 =::before= & =::after= pseudo-element 来弄
 [[https://developer.mozilla.org/en-US/docs/Learn/CSS/Building_blocks/Selectors/Pseudo-classes_and_pseudo-elements#generating_content_with_before_and_after][Generated Content]]，挺有意思的，就记录下。
 
+能这么写还是靠的 =scoped= attribute ，见 [[https://stackoverflow.com/questions/2830296/using-style-tags-in-the-body-with-other-html][Using =<style>= tags in the
+=<body>= with other HTML]]
+
 #+name: a-css
 #+begin_src css :exports none
   a.external:after {
-    background: transparent
-                url(https://developer.mozilla.org/static/media/external.e091ac5d.svg)
-                0 0 no-repeat;
+    background: transparent url(./icon-link.svg) 0 0 no-repeat;
     background-size: 16px;
     content: "";
     display: inline-block;
@@ -40,7 +41,7 @@
 #+end_src
 
 结果就酱：
-#+begin_src org :noweb yes :results replace drawer :exports results :post wrap-html(text=*this*)
+#+begin_src org :noweb yes :exports results :results replace drawer :post wrap-html(text=*this*)
   <<html-src>>
 #+end_src
 
@@ -50,6 +51,12 @@ code example as html]]，StacksOverflow yyds！
 pps. 用了这么久 org-mode 了，确实得好好学学，尤其是 babel  = =
 
 好了，复习数电去了，呜呜
+
+-----
+
+这边还有一个有意思的网站：[[https://cssarrowplease.com/][CSS ARROW PLEASE!]] - Create and export CSS
+code for a custom box with an arrow extending out from the side. Great
+for tooltips, flyouts and the like.
 
 * Utils                                                             :noexport:
 #+name: wrap-html
