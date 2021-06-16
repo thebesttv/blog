@@ -15,6 +15,11 @@
   晚上才发现，呜呜😣
 - [[http://winestockwebdesign.com/Essays/Lisp_Curse.html][The Lisp Curse]] The power of Lisp is its own worst enemy.
 
+* Code, Talk, & Thoughts
+
+- [[https://gigamonkeys.com/code-reading/][CODE IS NOT LITERATURE]]
+- [[http://www.yinwang.org/blog-cn/2019/09/11/talk-is-not-cheap][王垠 - Talk is not cheap]] 听君一席话，胜读十年书
+
 * 宝藏博主
 
 - [[https://idealclover.top/][翠翠 / Idealclover]]
