@@ -10,6 +10,11 @@
 
   顺便就[[http:/blog/content/emacs/index.org][在这里]]记录一下各种奇奇怪怪的问题&解决吧。
 
+* World Community Grid
+#+begin_src elisp :exports results :results html
+  (wcg-html "thebesttv")
+#+end_src
+
 * 文件结构
 #+BEGIN_SRC sh :exports results :results code
   tree -I '*~'                    # ignore files ending with tilde
