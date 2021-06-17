@@ -76,3 +76,111 @@
                         ;; dircard ".", "..", hidden, and emacs-backup files
                         (rx string-start (not ?.) (* anything) (not ?~) string-end)))
    #+END_SRC
+
+* XML Parsing
+
+[[https://www.emacswiki.org/emacs/XmlParsers][各种 XML Parser]]，还有 =xml.el= 的[[https://www.emacswiki.org/emacs/XmlParserExamples][例子]]，这里就介绍一下 =xml.el= 吧：
+
+=xml.el= 主要有两个函数： =xml-parse-file= 和 =xml-parse-region= ，它
+们会返回一个 XML parse tree，格式如下：
+
+#+begin_src text
+  xml-list   ::= (node node ...)
+  node       ::= (qname attribute-list . child_node_list)
+  child_node_list ::= child_node child_node ...
+  child_node ::= node | string
+  qname      ::= (:namespace-uri . "name") | "name"
+  attribute_list ::= ((qname . "value") (qname . "value") ...)
+                     | nil
+  string     ::= "..."
+#+end_src
+
+The XML parse tree xml-list is a list of nodes, where each node is
+made up of _its name, alist of attributes, and child nodes_. A child
+node can either be _a string or a new node_.
+
+Here's a XML example:
+#+begin_src xml
+  <post time="20050716234509" id="010101">
+    <login>Test</login>
+    <msg>Here is the message</msg>
+    <info>My UA</info>
+  </post>
+#+end_src
+
+Here's code to parse it:
+
+#+begin_src elisp
+  (let* ((xml "<post time=\"20050716234509\" id=\"010101\">
+                 <login>Test</login>
+                 <msg>Here is the message</msg>
+                 <info>My UA</info>
+               </post>")
+         (root (with-temp-buffer
+                 (insert xml)
+                 (xml-parse-region)))
+         (post  (car root))
+         (attrs (xml-node-attributes post))
+         (time  (cdr (assq 'time attrs)))
+         (msg   (car (xml-get-children post 'msg)))
+         (text  (car (xml-node-children msg))))
+    (message "time: %s, message '%s'" time text))
+#+end_src
+
+#+begin_src elisp
+  "time: 20050716234509, message ’Here is the message’"
+#+end_src
+
+Within =let*=, =root= is a list of a single =post= node:
+
+#+begin_src elisp
+  ((post ((time . "20050716234509") (id . "010101"))
+         "\n               "
+         (login nil "Test")
+         "\n               "
+         (msg nil "Here is the message")
+         "\n               "
+         (info nil "My UA")
+         "\n             "))
+#+end_src
+
+Here, =((time . "20050716234509") (id . "010101"))= is the attribute
+alist , and the rest, both strings & nodes, are child nodes of =post=.
+The attribute list =attr= is extracted with =xml-node-attributes=, you
+can also get a certain attribute with =xml-get-attribute= &
+=xml-get-attribute-or-nil=.
+
+#+begin_src elisp
+  (xml-get-attribute post 'time)
+#+end_src
+
+#+begin_src elisp
+  "20050716234509"
+#+end_src
+
+=xml-node-children= & =xml-get-children= return either all children,
+or children matching a specific name:
+
+#+begin_src elisp
+  (xml-get-children post 'msg)
+#+end_src
+
+#+begin_src elisp
+  ;;; only children named msg
+  ((msg nil "Here is the message"))
+#+end_src
+
+#+begin_src elisp
+  (xml-node-children post)
+#+end_src
+
+#+begin_src elisp
+  ;;; a list of all children under post
+  ("\n                 "
+   (login nil "Test")
+   "\n                 "
+   (msg nil "Here is the message")
+   "\n                 "
+   (info nil "My UA")
+   "\n               ")
+#+end_src
