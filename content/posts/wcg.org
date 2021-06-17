@@ -1,0 +1,21 @@
+#+title: World Community Grid API
+
+想要弄个类似个人展示卡片的东西玩玩。
+
+感觉 WCG 的 [[https://www.worldcommunitygrid.org/help/viewTopic.do?shortName=api][API 文档]] 有点鸡肋，想要获取公开信息的话，还得靠里面那个
+[[https://www.worldcommunitygrid.org/xml/introspection.do][XML page]] 的内容。
+
+查看成员信息的话，主要是靠这个链接：
+#+begin_src text
+  https://www.worldcommunitygrid.org/stat/viewMemberInfo.do?userName=thebesttv
+#+end_src
+想要 XML 格式的话，加上 =&xml=true= 就行了。
+
+然后就是代码啦：
+
+# 路径仿佛是以 blog 为根目录的
+#+INCLUDE: wcg.el src elisp
+
+#+begin_src elisp :exports results :results html
+  (wcg-html "thebesttv")
+#+end_src

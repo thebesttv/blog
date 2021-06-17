@@ -173,3 +173,6 @@ string."
         (browse-url url)))))
 
 (global-set-key (kbd "<f6>") 'eserver-blog-preview)
+
+;;; World Community Grid
+(load (expand-file-name "wcg.el" eserver-blog))
