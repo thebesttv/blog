@@ -13,11 +13,17 @@
 - [[https://stackoverflow.com/questions/9254891/what-does-content-type-application-json-charset-utf-8-really-mean][What does “Content-type: application/json; charset=utf-8” really
   mean?]]  =simple-httpd= 在 header 就忘了加 =charset=utf-8= ，花了我一
   晚上才发现，呜呜😣
-- [[http://winestockwebdesign.com/Essays/Lisp_Curse.html][The Lisp Curse]] The power of Lisp is its own worst enemy.
+- [[http://winestockwebdesign.com/Essays/Lisp_Curse.html][Rudolf Winestock - The Lisp Curse]] The power of Lisp is its own worst
+  enemy.
 
-* Code, Talk, & Thoughts
+** Code, Talk, & Thoughts
 
-- [[https://gigamonkeys.com/code-reading/][CODE IS NOT LITERATURE]]
+- [[https://gigamonkeys.com/code-reading/][Peter Seibel - Code is not literature]] Don't read code like it's a
+  novel, but examine it.  Dissect it as if it's a specimen and you are
+  a naturalist; Decode it as if you're working at a security agency
+  trying to decode a secret code.  The more you learn to read other
+  people's stuff, the more able you are to invent your own in the
+  future.
 - [[http://www.yinwang.org/blog-cn/2019/09/11/talk-is-not-cheap][王垠 - Talk is not cheap]] 听君一席话，胜读十年书
 
 * 宝藏博主
@@ -25,7 +31,6 @@
 - [[https://idealclover.top/][翠翠 / Idealclover]]
 - [[https://qinyuanpei.github.io/][飞鸿踏雪]]
 - [[https://emacsninja.com/][Emacs ninja]]
-
 
 * 有意思的
 
