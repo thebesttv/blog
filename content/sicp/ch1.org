@@ -1,0 +1,157 @@
+#+title: Chapter 1 -- Building Abstractions with Procedures
+
+* conjure v.
+conjure v. / 'kʌndʒə(r) /
+1. =~ / ~ sth=: make sth appear, disappear, or change as if by magic
+   - Her grandfather taught her to *conjure*.
+     她的祖父教她 *变魔术* 。
+   - He could conjure coins *from behind* people's ears.
+     他可以从人们的耳朵后面变出硬币来。
+   - The magician conjured a rabbit out of his hat.
+   - Thirteen years ago she found herself having to *conjure a career
+     from thin air*.
+     13年前，她认识到自己得白手起家创造出一番事业来。
+   - They managed to *conjure a victory*.
+     他们出人意料地取得了胜利。
+   - He has conjured victories from worse situations than this.
+   - He conjured a delicious meal out of a few leftovers.
+     他居然用几样吃剩的东西做出了可口的一餐。
+   - =~ up sth=
+     - Every day a different chef will be conjuring up delicious dishes in
+       the restaurant.
+       每天，饭店里会有一位不同的大厨像变戏法似的奉上可口的菜肴。
+     - He _conjured up a smile_ and reached out to squeeze her hand.
+       他马上露出笑脸，伸手去捏她的手。
+     - Dieting always seems to _conjure up images of_ endless salads.
+     - Somehow we have to conjure up another $10,000.
+     - Anne conjured up a most delicious home-made hot pot.
+       安妮魔术般地变出了一壶烫好的极醇美的自酿酒。
+2. recall (an image); cause to feel or think of sth
+   - she had forgotten how to conjure up the image of her mother's face.
+     她已想不起她母亲的脸长得什么样了。
+   - a special tune that conjures up a particular time and place.
+     令人想起特别时刻及场合的专用曲调。
+3. call upon (a spirit or ghost) to appear by means of a magic ritual.施魔法召唤（神灵，鬼魂）。
+   - they hoped to conjure up the spirit of their dead friend.
+     他们希望能施魔法召来已逝朋友的灵魂。
+
+
+* Applicative order vs. normal order
+In applicative order, the interpreter first evaluates the operator &
+operands and then applies the resulting procedure to the resulting
+arguments.  But in normal order: the interpreter would not evaluate
+the operands _until their values were needed_.  And the value is
+evaluated every time it is needed, instead of once on entrance.
+
+* Find smallest divisior
+#+begin_src scheme
+  (define (smallest-divisor n)            ; find the smallest divisior of n
+    (define (find-divisior n test-divisior)
+      (cond ((> (square test-divisior) n) n)
+            ((divides? test-divisior n) test-divisior)
+            (else (find-divisior n (+ test-divisior 1)))))
+    (define (divides? a b)
+      (= (remainder b a) 0))
+    (find-divisior n 2))
+#+end_src
+
+* Exercises
+** Ex 1.3 -- the smallest of the three
+#+begin_quote
+Define a procedure that takes three numbers as arguments and returns
+the sum of the squares of the two larger numbers.
+#+end_quote
+
+When looking for the smallest value, the predicate _smaller or *equal
+to*_ (=<==) must be used.  If only =<= is used, when it comes to =(f 2
+2 3)=, the first two =and= condition will evaluate to false.  Then the
+result would be =(sum-of-squares 2 2)=, which is very wrong.
+
+#+begin_src scheme
+  (define (sum-of-squares a b)
+    (+ (* a a) (* b b)))
+
+  (define (f a b c)
+    (cond ((and (<= a b) (<= a c)) (sum-of-squares b c))
+          ((and (<= b a) (<= b c)) (sum-of-squares a c))
+          (else                    (sum-of-squares a b))))
+#+end_src
+** Ex 1.4 -- value of operator
+#+begin_quote
+Observe that our model of evaluation allows for combinations _whose
+*operators* are compound expressions_.  Use this observation to
+describe the behavior of the following procedure:
+
+#+begin_src scheme
+  (define (a-plus-abs-b a b)
+    ((if (> b 0) + -) a b))
+#+end_src
+#+end_quote
+** Ex 1.5 -- applicative-order & normal-order
+#+begin_quote
+Ben Bitdiddle has invented a test to determine whether the interpreter
+he is faced with is using applicative-order evaluation or normal-order
+evaluation.  He defines the following two procedures:
+#+begin_src scheme
+  (define (p) (p))
+
+  (define (test x y)
+    (if (= x 0)
+        0
+        y))
+#+end_src
+
+Then he evaluates the expression
+#+begin_src scheme
+  (test 0 (p))
+#+end_src
+
+What behavior will Ben observe with an interpreter that uses
+applicative-order evaluation?  What behavior will he observe with an
+interpreter that uses normal-order evaluation?  Explain your answer.
+(Assume that the evaluation rule for the special form =if= is the same
+whether the interpreter is using normal or applicative order: The
+predicate expression is evaluated first, and the result determines
+whether to evaluate the consequent or the alternative expression.)
+#+end_quote
+
+In applicative-order evaluation, the interpreter will try to determine
+the value of =y= by evaluating =(p)=, which is, sadly, a recursive
+expression that never ends.  So the whole expression will not evaluate
+to any result.
+
+However, in normal-order evaluation, =y= will not be evaluated.  So
+the whole expression evaluates to =0=.
+** Ex 1.16 -- iterative fast exponentiation
+
+#+begin_quote
+Design a procedure that evolves an iterative exponentiation process
+that uses successive squaring and uses a logarithmic number of steps,
+as does =fast-expt=.  (Hint: Using the observation that $(b^{n/2})^2 =
+(b^2)^{n/2}$, keep, along with the exponent $n$ and the base $b$, an
+additional state variable $a$, and define the state transformation in
+such a way that the product $a b^n$ is unchanged from state to
+state.  At the beginning of the process a is taken to be $1$, and the
+answer is given by the value of $a$ at the end of the process.  In
+general, the technique of defining an invariant quantity that remains
+unchanged from state to state is a powerful way to think about the
+design of iterative algorithms.)
+#+end_quote
+
+Original recursive code to compute $b^n$:
+#+begin_src scheme
+  (define (fast-expt b n)
+    (cond ((= n 0) 1)
+          ((even? n) (square (fast-expt b (/ n 2))))
+          (else (* b (fast-expt b (- n 1))))))
+#+end_src
+
+Iterative code:
+#+begin_src scheme
+  (define (fast-expt-iter b n)
+    (define (iter b n prod)
+      (cond ((= n 0) prod)
+            ((even? n) (iter (* b b) (/ n 2) prod))
+            (else (iter b (- n 1) (* prod b)))))
+    (iter b n 1))
+#+end_src
