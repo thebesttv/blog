@@ -1,7 +1,8 @@
 (require 'org)
 (require 'ox)
 (require 'ob-shell)
-(require 'htmlize)
+(use-package htmlize
+  :ensure t)
 
 (eserver-register-site "/blog"
                        "This is thebesttv's blog.")
