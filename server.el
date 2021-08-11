@@ -54,7 +54,7 @@
     (httpd-log `(getting file ,path))
     (if (not (member path available-files))
         ;; file not exist or not allowed to visit
-        (with-httpd-buffer proc "text/plain"
+        (with-httpd-buffer proc "text/plain; charset=utf-8"
           (insert "ERROR: This file does not exist.\nAvailable files are:\n")
           (dolist (file available-files)
             (insert (format "  %s\n" file))))
@@ -74,7 +74,7 @@
             (insert-file-contents path)
             ;; (httpd-log `(inserted file contents under ,path))
             (org-export-to-buffer 'html buffer))
-          (with-httpd-buffer proc "text/html"
+          (with-httpd-buffer proc "text/html; charset=utf-8"
             (insert-buffer buffer)))))))
 
 ;; Image Data URL encoding
