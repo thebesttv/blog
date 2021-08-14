@@ -20,10 +20,12 @@
 (defvar eserver-blog-current-path ""
   "Current .org document path.")
 
-;; Do not show temporary buffer after export org to html
+;;; Do not show temporary buffer after export org to html
 (setq org-export-show-temporary-export-buffer nil)
-;; Evaluate codeblocks without confirmation when export
+;;; Evaluate codeblocks without confirmation when export
 (setq org-confirm-babel-evaluate nil)
+;;; Use smart quotes on export
+(setq org-export-with-smart-quotes t)
 
 (defun eserver-blog-available-files ()
   "Return a list of available files under `eserver-blog'."

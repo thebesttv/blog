@@ -1,5 +1,8 @@
 #+title: Fun with Emacs
 
+* 各种文章
+- [[https://emacs.stackexchange.com/questions/56230/when-use-setq-or-set][When use setq or set ']]
+- [[https://nullprogram.com/blog/2017/01/30/][How to Write Fast(er) Emacs Lisp]]
 * 中文断行
   启用 auto-fill 模式后，中文断行在导出时会出现空格，就先直接抄人家的
   代码啦：[[https://github.com/hick/emacs-chinese#%E4%B8%AD%E6%96%87%E6%96%AD%E8%A1%8C][Emacs相关中文问题以及解决方案]]。
