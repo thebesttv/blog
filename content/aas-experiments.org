@@ -1,0 +1,27 @@
+#+title: AAS实验笔记
+
+* iNat21 mini
+* YFCC-GEO
+N=3, d=128, h=64.
+- =YFCC_Res50_ours= :: 30 epochs, lr=0.04: 48.700, 80.950
+- =YFCC_Res50_ours_E90_lr1=  :: lr=0.01, *53.450,83.900*
+- =YFCC_Res50_ours_E90_lr15= :: lr=0.015, 52.800,82.950
+- =YFCC_Res50_ours_E90_lr2=  :: lr=0.02, 52.200,83.000
+- =YFCC_Res50_ours_E90_lr25= :: lr=0.025, 52.450,82.200
+- =YFCC_Res50_ours_E90_lr3=  :: lr=0.03, 51.200,80.250
+- =YFCC_Res50_ours_E90= :: 90 epochs, lr=0.04: 50.900, 81.800
+- =YFCC_Res50_ours_E90_lr5=  :: lr=0.05, 49.300,80.850
+* iNat17
+- =others (GeoNet)= :: 70.146,89.083
+- =iNat17_Res50_ours= :: 69.411,88.944
+* iNat18
+- =others (concat)= :: 77.135,92.754
+- =iNat18_Res50_ours= :: lr=0.14, N=3, d=128, h=64, 77.516,92.930
+** ablation
+*** =lr= (N=3, d=128, h=64)
+- =iNat18_Res50_ours_lr08= :: lr=0.08, ongoing
+- =iNat18_Res50_ours_lr10= :: lr=0.10, ongoing
+- =iNat18_Res50_ours_lr12= :: lr=0.12, ongoing
+- =iNat18_Res50_ours_lr16= :: lr=0.16, ongoing
+*** =d=, =h=
+*** =N=
