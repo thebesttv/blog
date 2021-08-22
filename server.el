@@ -179,3 +179,26 @@ string."
 
 ;;; World Community Grid
 (load (expand-file-name "wcg.el" eserver-blog))
+
+;;; fix chinese spacing
+(unless (and (boundp 'org-chinese-spacing-fixed)
+             org-chinese-spacing-fixed)
+  (setq org-chinese-spacing-fixed t)
+  ;; 解决 org 导出时中文断行问题
+  ;; https://github.com/hick/emacs-chinese#%E4%B8%AD%E6%96%87%E6%96%AD%E8%A1%8C
+  ;; 下面一段是 zwz 的, 作者声明只适应 org-mode 8.0 以及以上版本
+  (defun clear-single-linebreak-in-cjk-string (string)
+    "clear single line-break between cjk characters that is usually soft line-breaks"
+    (let* ((regexp "\\([\u4E00-\u9FA5]\\)\n\\([\u4E00-\u9FA5]\\)")
+           (start (string-match regexp string)))
+      (while start
+        (setq string (replace-match "\\1\\2" nil nil string)
+              start (string-match regexp string start))))
+    string)
+
+  (defun ox-html-clear-single-linebreak-for-cjk (string backend info)
+    (when (org-export-derived-backend-p backend 'html)
+      (clear-single-linebreak-in-cjk-string string)))
+
+  (add-to-list 'org-export-filter-final-output-functions
+               'ox-html-clear-single-linebreak-for-cjk))
