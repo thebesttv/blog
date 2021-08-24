@@ -1,0 +1,34 @@
+#+title: 计算机组成原理
+
+计算机组成原理：Principles of Computer Organization (POCO)
+
+教材：[[http://www.tup.tsinghua.edu.cn/booksCenter/book_05372701.html][计算机组成原理(修订版) 张功萱等人 清华大学出版社]]
+1. 概论
+2. *计算机内部数据表示*
+3. *运算方法与运算器：ALU&加减乘除*
+4. *存储器系统：RAM、cache等*
+5. 指令系统：大概也是 x86 & MIPS
+6. *控制器系统与CPU*
+7. 总线技术
+8. IO设备
+9. *IO系统组织*
+
+
+MOOC: [[https://www.icourse163.org/course/PKU-1205809805?from=searchPage][计算机组成 陆俊林 北大]]
+1. 计算机基本结构：von Neumann 结构
+2. 指令系统体系结构：x86 & MIPS
+3. 算数逻辑单元：ALU、加减法器
+4. 乘法器&除法器
+5. 单周期处理器
+6. 流水线处理器
+7. 存储层次结构：内存、cache等
+8. 中断与异常
+9. IO
+
+MOOC: [[https://www.icourses.cn/web/sword/portal/shareDetails?&&cId=6011#/course/chapter][哈工大 计算机组成原理]]
+
+MOOC: [[https://www.icourse163.org/course/HUST-1205809816][华中科大 计算机硬件系统设计]]
+
+[[http://web.stanford.edu/class/cs107/][Stanford CS107 -- Computer Organization & Systems]]
+
+[[http://cs107e.github.io/schedule/][Stanford CS107e -- Computer Systems from the Ground Up]]
