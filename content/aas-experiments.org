@@ -19,9 +19,14 @@ N=3, d=128, h=64.
 - =iNat18_Res50_ours= :: lr=0.14, N=3, d=128, h=64, 77.516,92.930
 ** ablation
 *** =lr= (N=3, d=128, h=64)
-- =iNat18_Res50_ours_lr08= :: lr=0.08, ongoing
-- =iNat18_Res50_ours_lr10= :: lr=0.10, ongoing
-- =iNat18_Res50_ours_lr12= :: lr=0.12, ongoing
-- =iNat18_Res50_ours_lr16= :: lr=0.16, ongoing
+- =iNat18_Res50_ours_lr08= :: lr=0.08, 76.902,92.962
+- =iNat18_Res50_ours_lr10= :: lr=0.10, *77.598,93.089*, extends to N=1..4
+- =iNat18_Res50_ours_lr12= :: lr=0.12, 77.336,92.991
+- =iNat18_Res50_ours_lr16= :: lr=0.16, 77.438,93.024
 *** =d=, =h=
 *** =N=
+**** lr=0.10, d=128, h=64
+- =iNat18_Res50_ours_lr10_N1= :: N=1, ongoing
+- =iNat18_Res50_ours_lr10_N2= :: N=2, ongoing
+- =iNat18_Res50_ours_lr10_N3= :: N=3, ongoing
+- =iNat18_Res50_ours_lr10_N4= :: N=4, ongoing
