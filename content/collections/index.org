@@ -7,6 +7,8 @@
 - [[https://idealclover.top/archives/627/][翠翠 - 2020 年年终总结：致即将 22 岁的自己]] 你工人爷爷的年终总结
 - [[https://qinyuanpei.github.io/posts/2136925853/][飞鸿踏雪 - 假如时间有温度]] 活着真好
 - [[https://joelcalifa.com/blog/tiny-wins/][Tiny Wins - The big benefits of little changes.]] 胜利在小处
+- [[https://www.zhihu.com/question/63306763/answer/255496822][为什么计算机科学如密码学喜欢用 Alice 和 Bob 举栗子？ - 刘巍然-学酥的回答 - 知乎]]
+
 ** 关于编码 - UTF-8 遍地开花
 - [[http://www.hanselman.com/blog/why-the-askobama-tweet-was-garbled-on-screen-know-your-utf8-unicode-ascii-and-ansi-decoding-mr-president][Why the #AskObama Tweet was Garbled on Screen: Know your UTF-8,
   Unicode, ASCII and ANSI Decoding Mr. President]]
@@ -34,5 +36,5 @@
 
 * 有意思的
 
-- [[https://pinecast.com/feed/emacscast]] 这个网站是 XML 格式的 RSS feed，
-  不过仿佛加了一层 stylesheet 啥的🤔，酱打开链接就有介绍了，有意思🤓
+- [[https://pinecast.com/feed/emacscast][这个网站]]是 XML 格式的 RSS feed，不过仿佛加了一层 stylesheet 啥的🤔，
+  酱打开链接就有介绍了，有意思🤓
