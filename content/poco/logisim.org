@@ -1,15 +1,31 @@
 #+title: Logisim 笔记
 
+* Different Logisim versions
+
+- [[http://www.cburch.com/logisim/][Original Logisim]]
+- [[https://github.com/logisim-evolution/logisim-evolution][Logisim-Evolution]]
+- [[http://www.cs.cornell.edu/courses/cs3410/2015sp/][Logisim]] from the CS3410 course of the Cornell University
+- [[https://github.com/hneemann/Digital][Digital -- A digital logic designer and circuit simulator.]]
+  (incompatible with Logisim)
+
 * 快捷键
 
 - =Ctrl + <NUM>= :: toolbar
+
+
+** Component
 - =Alt + <NUM>= :: data bits
-- =<NUM>= :: number of inputs (for gates)
+- =<NUM>= :: number of inputs
 - =C-d= :: duplicate
 - =<Arrow Key>= :: facing
+
+
+** Simulation
 - =C-e= :: toggle realtime simulation
-- =C-r= :: reset simulation
 - =C-i= :: step simulation
+- =C-r= :: reset simulation
+- =C-k= :: toggle clock ticking
+- =C-t= :: tick once
 
 * 延迟&毛刺
 
@@ -77,8 +93,45 @@ t3时刻，与门输出0，之后维持在0。
 
 ** [[./logisim/logisim-arithmetic.pdf][Arithmetic]]
 
+[[./logisim/arithmetic-1.png]]
+
+[[./logisim/arithmetic-2.png]]
+
+[[./logisim/arithmetic-3.png]]
+
+[[./logisim/arithmetic-4.png]]
+
+[[./logisim/arithmetic-5.png]]
+
+[[./logisim/arithmetic-6.png]]
+
+[[./logisim/arithmetic-7.png]]
+
 ** [[./logisim/logisim-memory.pdf][Memory]]
+
+[[./logisim/memory-1.png]]
+
+寄存器默认异步清零，若想要同步清零，则可以对输入使用多路选择器或其他方法。
+[[./logisim/memory-2.png]]
+
+[[./logisim/memory-3.png]]
+
+[[./logisim/memory-4.png]]
+
+[[./logisim/memory-5.png]]
+
+[[./logisim/memory-6.png]]
+
+[[./logisim/memory-7.png]]
+
+[[./logisim/memory-8.png]]
 
 ** [[./logisim/logisim-io.pdf][Input/Output]]
 
-** Base
+[[./logisim/io-1.png]]
+
+[[./logisim/io-2.png]]
+
+[[./logisim/io-3.png]]
+
+[[./logisim/io-4.png]]
