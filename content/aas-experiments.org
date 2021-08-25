@@ -2,7 +2,7 @@
 
 * iNat21 mini
 * YFCC-GEO
-N=3, d=128, h=64.
+权重统一生成，默认N=3, d=128, h=64.
 - =YFCC_Res50_ours= :: 30 epochs, lr=0.04: 48.700, 80.950
 - =YFCC_Res50_ours_E90_lr1=  :: lr=0.01, *53.450,83.900*
 - =YFCC_Res50_ours_E90_lr15= :: lr=0.015, 52.800,82.950
@@ -12,9 +12,11 @@ N=3, d=128, h=64.
 - =YFCC_Res50_ours_E90= :: 90 epochs, lr=0.04: 50.900, 81.800
 - =YFCC_Res50_ours_E90_lr5=  :: lr=0.05, 49.300,80.850
 * iNat17
+权重统一生成
 - =others (GeoNet)= :: 70.146,89.083
 - =iNat17_Res50_ours= :: 69.411,88.944
 * iNat18
+权重统一生成
 - =others (concat)= :: 77.135,92.754
 - =iNat18_Res50_ours= :: lr=0.14, N=3, d=128, h=64, 77.516,92.930
 ** ablation
@@ -26,7 +28,13 @@ N=3, d=128, h=64.
 *** =d=, =h=
 *** =N=
 **** lr=0.10, d=128, h=64
-- =iNat18_Res50_ours_lr10_N1= :: N=1, ongoing
-- =iNat18_Res50_ours_lr10_N2= :: N=2, ongoing
-- =iNat18_Res50_ours_lr10_N3= :: N=3, ongoing
-- =iNat18_Res50_ours_lr10_N4= :: N=4, ongoing
+- =iNat18_Res50_ours_lr10_N1= :: N=1, 75.960,92.320
+- =iNat18_Res50_ours_lr10_N2= :: N=2, 76.648,92.692
+- =iNat18_Res50_ours_lr10_N3= :: N=3, 77.364,93.016 (-0.234 than
+  original =iNat18_Res50_ours_lr10=)
+- =iNat18_Res50_ours_lr10_N4= :: N=4, 77.106,93.032
+**** lr=0.14, d=128, h=64
+- =iNat18_Res50_ours_lr14_N1= :: N=1, ongoing
+- =iNat18_Res50_ours_lr14_N2= :: N=2, ongoing
+- =iNat18_Res50_ours_lr14_N3= :: N=3, ongoing
+- =iNat18_Res50_ours_lr14_N4= :: N=4, ongoing
