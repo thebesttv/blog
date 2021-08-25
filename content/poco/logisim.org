@@ -1,0 +1,84 @@
+#+title: Logisim 笔记
+
+* 快捷键
+
+- =Ctrl + <NUM>= :: toolbar
+- =Alt + <NUM>= :: data bits
+- =<NUM>= :: number of inputs (for gates)
+- =C-d= :: duplicate
+- =<Arrow Key>= :: facing
+- =C-e= :: toggle realtime simulation
+- =C-r= :: reset simulation
+- =C-i= :: step simulation
+
+* 延迟&毛刺
+
+Logisim 中所有组件的延迟相同。
+
+由于非门的延迟，与门的两个输入并不同时。开始前输入为0，与门的输入上0下1，输出为0。
+[[./logisim/delay-1.png]]
+t0时刻，输入从0变为1，信号还未开始传递。
+[[./logisim/delay-2.png]]
+t1时刻，信号传到非门和与门的上方输入端，但由于延迟，非门输出仍为0。此时与
+门输入皆为1，下一时刻输出为1。
+[[./logisim/delay-3.png]]
+t2时刻，非门输出变为0，与门输出变为1。此时与门输入上1下0，下一时刻输出
+为0。
+[[./logisim/delay-4.png]]
+t3时刻，与门输出0，之后维持在0。
+[[./logisim/delay-5.png]]
+
+为了消除延迟带来的毛刺，应该让与门的输入延迟相同，可以
+- 在上方加入缓冲器，这样上下两个输入都有一个元件的延迟。
+  [[./logisim/delay-fix-1.png]]
+- 在与门设置中，对第二个（下方）输入取非，这样上下输入都没有延迟。
+  [[./logisim/delay-fix-2.png]]
+
+
+* 震荡
+
+出现震荡时，logisim会停止实时模拟，改为单步模拟。
+[[./logisim/oscillation.png]]
+
+* 组件
+
+[[./logisim/general-attrs.png]]
+
+** [[./logisim/logisim-wiring.pdf][Wiring]]
+
+[[./logisim/wiring-1.png]]
+
+[[./logisim/wiring-2.png]]
+
+[[./logisim/wiring-3.png]]
+
+[[./logisim/wiring-4.png]]
+
+[[./logisim/wiring-5.png]]
+
+[[./logisim/wiring-6.png]]
+
+** [[./logisim/logisim-gates-plexers.pdf][Gates]]
+
+[[./logisim/gates.png]]
+
+** [[./logisim/logisim-gates-plexers.pdf][Plexers]]
+
+[[./logisim/plexers-1.png]]
+
+不恰当的级联会增加延迟
+[[./logisim/plexers-2.png]]
+
+[[./logisim/plexers-3.png]]
+
+[[./logisim/plexers-4.png]]
+
+[[./logisim/plexers-5.png]]
+
+** [[./logisim/logisim-arithmetic.pdf][Arithmetic]]
+
+** [[./logisim/logisim-memory.pdf][Memory]]
+
+** [[./logisim/logisim-io.pdf][Input/Output]]
+
+** Base
