@@ -32,3 +32,5 @@ MOOC: [[https://www.icourse163.org/course/HUST-1205809816][华中科大 计算�
 [[http://web.stanford.edu/class/cs107/][Stanford CS107 -- Computer Organization & Systems]]
 
 [[http://cs107e.github.io/schedule/][Stanford CS107e -- Computer Systems from the Ground Up]]
+
+教材：[[https://www.amazon.com/exec/obidos/ASIN/0128122757/acmorg-20][Computer Organization and Design RISC-V Edition: The Hardware Software Interface]] (COD)
