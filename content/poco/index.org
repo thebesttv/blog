@@ -14,7 +14,7 @@
 9. *IO系统组织*
 
 
-MOOC: [[https://www.icourse163.org/course/PKU-1205809805?from=searchPage][计算机组成 陆俊林 北大]]
+MOOC: [[https://www.icourse163.org/course/PKU-1205809805?from=searchPage][北大 计算机组成 陆俊林]]
 1. 计算机基本结构：von Neumann 结构
 2. 指令系统体系结构：x86 & MIPS
 3. 算数逻辑单元：ALU、加减法器
@@ -29,8 +29,8 @@ MOOC: [[https://www.icourses.cn/web/sword/portal/shareDetails?&&cId=6011#/course
 
 MOOC: [[https://www.icourse163.org/course/HUST-1205809816][华中科大 计算机硬件系统设计]]
 
-[[http://web.stanford.edu/class/cs107/][Stanford CS107 -- Computer Organization & Systems]]
+[[http://web.stanford.edu/class/cs107/][Stanford CS107 --- Computer Organization & Systems]]
 
-[[http://cs107e.github.io/schedule/][Stanford CS107e -- Computer Systems from the Ground Up]]
+[[http://cs107e.github.io/schedule/][Stanford CS107e --- Computer Systems from the Ground Up]]
 
-教材：[[https://www.amazon.com/exec/obidos/ASIN/0128122757/acmorg-20][Computer Organization and Design RISC-V Edition: The Hardware Software Interface]] (COD)
+教材：[[https://www.amazon.com/exec/obidos/ASIN/0128122757/acmorg-20][Computer Organization and Design: The Hardware Software Interface, RISC-V Edition]] (COD)

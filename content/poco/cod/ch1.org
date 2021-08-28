@@ -1,0 +1,271 @@
+#+title: Ch1 --- Computer Abstractions and Technology
+
+* Concepts
+
+** Important ones
+
+*The classic CPU performance equation*:
+$$\begin{aligned}
+\text{CPU time}
+ &= \text{Instruction count} \times \text{CPI} \times \text{Clock cycle time} \\[4pt]
+ &= \frac{\text{Instruction count} \times \text{CPI}}
+         {\text{Clock rate}}
+\end{aligned}$$
+
+These will be mentioned later:
+- instruction set architecture, architecture
+- application binary interface (ABI)
+- main memory, primary memory vs. secondary memory
+- execution time, elapsed time
+- throughput
+- CPU time
+- clock cycles per instruction (CPI)
+- instruction count
+- million instructions per second (MIPS)
+
+** Basic ones
+
+- *instruction*: a command that computer hardware understands.
+- *assembly language*: symbolic representation of machine instructions.
+- *machine language*: binary representation of machine instructions.
+- *assembler*: translates assembly language into machine language.
+- *compiler*: translates high-level language into assembly language.
+
+
+** Others
+
+*Personal mobile devices (PMDs)* are small wireless devices to connect
+to the Internet; they rely on batteries for power, and software is
+installed by downloading apps.  Conventional examples are smart phones
+and tablets.
+
+*Warehouse Scale Computers (WSCs)* are large data centers hosting
+thousands of servers.  Companies like Google and Amazon build such
+WSCs to rent servers to other companies so that the latter can provide
+software services to PMDs without having to build WSCs of their own.
+
+*Software as a Service (SaaS)* delivers software and data as a service
+over the Internet, usually via a thin program such as a browser that
+runs on local client devices, instead of binary code that must be
+installed, and runs wholly on that device.  Examples include web
+search and social networking.
+
+
+* GB (Gb) vs GiB (Gib)
+
+The upper case "B" stands for "Byte", while the lower case "b" stands
+for "bit".  The $2^X$ vs. $10^Y$ bytes ambiguity is resolved by adding
+a binary notation (the "i" in GiB) for all the common size terms.
+
+|  Decimal term   |   Value   |   Binary term    |  Value   |
+|-----------------+-----------+------------------+----------|
+|       <c>       |    <c>    |       <c>        |   <c>    |
+| =KB (kilobyte)= | $10^{3}$  | =KiB (kibibyte)= | $2^{10}$ |
+| =MB (megabyte)= | $10^{6}$  | =MiB (mebibyte)= | $2^{20}$ |
+| =GB (gigabyte)= | $10^{9}$  | =GiB (gibibyte)= | $2^{30}$ |
+| =TB (terabyte)= | $10^{12}$ | =TiB (tebibyte)= | $2^{40}$ |
+| =PB (petabyte)= | $10^{15}$ | =PiB (pebibyte)= | $2^{50}$ |
+
+This tradition also works for bits---​/gigabit/ (Gb) is 1000 Mb ($10^9$
+bits), and /gibibit/ (Gib) is 1024 Mib ($2^{30}$ bits).
+
+* Eight Great Ideas in Computer Architecture
+
+- Design for Moore's Law:
+  Computer architects must anticipate the fast changing technology by
+  the time the design finishes.  They must design for rapid change.
+- Use Abstraction to Simplify Design
+- Make the Common Case Fast
+- Performance via Parallelism
+- Performance via Pipelining
+- Performance via Prediction
+- Hierarchy of Memories
+- Dependability via Redundancy
+
+* The Five Classic Components of a Computer
+
+#+ATTR_HTML: :width 80% :style margin-left: auto; margin-right: auto;
+[[./ch1/computer-organization.png]]
+
+- input & output (输入、输出设备)
+- memory (存储器): the storage area in which *programs* are kept while
+  running and that contains the *data* needed by the running programs.
+- datapath ($\color{red}{运算器}$): the component of the processor
+  that performs *arithmetic operations*.
+
+  Wiki: A datapath is *a collection of functional units* such as
+  _arithmetic logic units or multipliers that perform data processing
+  operations, registers, and buses_.
+
+  *datapath $\ne$ bus* （datapath 并非总线）
+- control (控制器)
+
+The processor logically comprises two main components: *datapath* and
+*control*, the respective brawn [muscle] and brain of the processor.
+It gets instructions and data from memory.  The datapath performs the
+arithmetic operations.  Input writes data to memory, and output reads
+data from memory.  Control tells the datapath, memory, and I/O devices
+what to do according to the wishes of the instructions of the program.
+
+*Instruction set architecture* or *architecture*: an abstract
+interface between the hardware and the lowest-level software that
+encompasses all the information necessary to write a machine language
+program that will run correctly, including instructions, registers,
+memory access, I/O, and so on.
+
+*Application binary interface (ABI)*: the _user portion of the
+instruction set_ plus the _operating system interfaces_ used by
+application programmers.  It defines a standard for *binary
+portability* across computers.
+
+*Implementation*: _hardware_ that obeys the architecture abstraction.
+
+Computer designers distinguish /architecture/ from an
+/*implementation* of an architecture/ along the same lines: an
+implementation is hardware that obeys the architecture abstraction.
+
+The big picture:
+#+begin_quote
+Both hardware and software consist of hierarchical layers using
+abstraction, with each lower layer hiding details from the level
+above.  One key interface between the levels of abstraction is the
+/instruction set architecture/--the interface between the hardware and
+low-level software.  This abstract interface _enables many /implementations/
+of varying cost and performance to run identical software_.
+#+end_quote
+
+** On Datapath
+
+Edward Bosworth---​[[http://www.edwardbosworth.com/My5155_Slides/Chapter09/ComputerArchitectureOverview.htm]["Overview of Computer Architecture"]]:
+#+begin_quote
+Imagine the flow of data during an addition, when all arguments are in
+registers.
+1. Data flow from the two source registers into the ALU.
+2. The ALU performs the addition.
+3. The data flow from the ALU into the destination register.
+
+The term “data path” usually denotes the ALU, the set of registers,
+and the bus.
+#+end_quote
+
+** On Memory
+
+*Dynamic random access memory (DRAM)*: a type of random access memory.
+
+*Static random access memory (SRAM)*: faster and less dense (hence
+more expensive) than DRAM.
+
+Inside the processor is another type of memory---cache memory.  Cache
+memory consists of SRAM that acts as a buffer for the DRAM memory.
+
+*Volatile memory*: storage, such as DRAM, that retains data only if it
+is receiving power.
+
+*Nonvolatile memory*: storage, such as HDD, that retains data even in
+the absence of a power source, which is used to store programs between
+runs.
+
+*Main memory* or *primary memory*: memory used to hold programs while
+they are running, such as DRAM.
+
+*Secondary memory*: nonvolatile memory used to store programs and data
+between runs, such as HDD and SSD.
+
+* Performance
+
+*Response time*, *execution time*, *elapsed time*, or *wall clock
+time*: the total time required for the computer to complete a task,
+including disk accesses, memory accesses, I/O activities, operating
+system overhead, CPU execution time, and so on.  This is the time it
+takes when you start a program and it finally finishes.
+
+*Throughput* or *bandwidth*: the number of tasks completed per unit
+time.
+
+If we define /performance/ in terms of execution time, then the
+performance of computer $X$ is
+$$ \text{Performance}_X = \frac{1}{\text{Execution time}_X} $$
+This means that for two computers $X$ and $Y$, if the performance of
+$X$ is greater than that of $Y$, we have
+$$\begin{aligned}
+  \text{Performance}_X &\gt \text{Performance}_Y \\
+  \frac{1}{\text{Execution time}_X} &\gt \frac{1}{\text{Execution time}_Y} \\
+  \text{Execution time}_X &\lt \text{Execution time}_Y \\
+\end{aligned}$$
+
+To compare the performance of two different computers quantitatively,
+we say "$X$ is $n$ times _faster_ than $Y$"---or equivalently "$X$ is
+$n$ times _as fast as_ $Y$"---to mean:
+$$ \frac{\text{Performance}_X}{\text{Performance}_Y} =
+   \frac{\text{Execution time}_Y}{\text{Execution time}_X} = n $$
+
+Computers are often shared, by either users or running programs, so a
+processor may work on several programs simultaneously.  In such cases,
+the system will often try to optimize *throughput* rather than attempt
+to minimize the /elapsed time/ (or /execution time/) for one program.
+We need to distinguish between the *elapsed time* and the *CPU time*.
+
+*CPU execution time* or *CPU time*: the actual time CPU spends
+computing for *a specific task*.  This does not include the time CPU
+spends computing other tasks or I/O waiting time.  CPU time can be
+further divided into *user CPU time* (CPU time spent in the program)
+and *system CPU time* (CPU time spent in the os performing tasks on
+behalf of the program).
+
+We define two kinds of performances:
+- *system performance*: the elapsed time on an unloaded system.
+- *CPU performance*: the user CPU time.
+
+The most basic formula for computing CPU time is:
+$$\begin{align*}
+\frac{\text{Seconds}}{\text{Program}} &=
+  \frac{\text{Instructions}}{\text{Program}} \times
+  \frac{\text{Clock cycles}}{\text{Instruction}} \times
+  \frac{\text{Seconds}}{\text{Clock cycle}} \\
+\text{执行时间} = \frac{\text{秒}}{\text{程序}} &=
+  \frac{\text{指令数}}{\text{程序}} \times
+  \frac{\text{时钟周期数}}{\text{指令}} \times
+  \frac{\text{秒}}{\text{时钟周期}} \\
+\end{align*}$$
+
+First, we have
+$$\begin{aligned}
+{\text{CPU execution time} \atop \text{for a program}}
+ &= {\text{CPU clock cycles} \atop \text{for a program}} \times
+    \text{Clock cycle time} \\[4pt]
+ &= \frac{\text{CPU clock cycles for a program}}
+         {\text{Clock rate}}
+\end{aligned}$$
+which needs the CPU clock cycles for a program.
+
+Then we define
+- *Clock cycles per instruction (CPI)*: average number of clock cycles
+  per instruction for a program or program fragment.
+- *Instruction count*: the number of instructions executed by the
+  program.
+
+We can now compute CPU clock cycles by multiplying these two:
+$${\text{CPU clock cycles} \atop \text{for a program}} =
+  \text{Instruction count} \times \text{CPI}$$
+
+Finally we have *the classic CPU performance equation*:
+$$\begin{aligned}
+\text{CPU time}
+ &= \text{Instruction count} \times \text{CPI} \times \text{Clock cycle time} \\[4pt]
+ &= \frac{\text{Instruction count} \times \text{CPI}}
+         {\text{Clock rate}}
+\end{aligned}$$
+
+There're other performance metrics, such as
+
+*Million instructions per second (MIPS)*:
+$$\begin{aligned}
+\text{MIPS}
+  &= \frac{\text{Instruction count}}{\text{Execution time}\times10^6} \\
+  &= \frac{\text{Instruction count}}{ \frac{\text{Instruction count}
+\times \text{CPI}}{\text{Clock rate}} \times10^6} \\
+  &= \frac{\text{Clock rate}}{\text{CPI}\times10^6} \\
+\end{aligned}$$
+
+But *execution time* is the only valid and unimpeachable measure of
+performance.
