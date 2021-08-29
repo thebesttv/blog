@@ -28,6 +28,8 @@
 - =iNat18_Res50_ours_lr12= :: lr=0.12, 77.336,92.991
 - =iNat18_Res50_ours_lr16= :: lr=0.16, 77.438,93.024
 *** =d=, =h=
+lr=0.14, N3
+- =iNat18_Res50_ours_lr14_N3_d128_h64= :: not created
 *** =N=
 **** lr=0.10, d=128, h=64
 - =iNat18_Res50_ours_lr10_N1= :: N=1, 75.960,92.320
@@ -42,5 +44,19 @@
 - =iNat18_Res50_ours_lr14_N4= :: N=4, 76.738,92.717
 *** epoch
 120 epochs
-- =iNat18_Res50_concat_E120= :: ongoing
-- =iNat18_Res50_ours_lr14_N3_E120= :: ongoing
+- =iNat18_Res50_concat_E120= :: 77.667,93.040 (+0.532)
+- =iNat18_Res50_ours_lr14_N3_E120= :: 77.766,93.257
+** change
+
+init code
+#+begin_src python
+  for m in self.modules():
+      if isinstance(m, (nn.Conv2d, nn.Linear)):
+          nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
+      elif isinstance(m, (nn.BatchNorm1d, nn.GroupNorm, nn.LayerNorm)):
+          nn.init.constant_(m.weight, 1)
+          nn.init.constant_(m.bias, 0)
+#+end_src
+
+- =iNat18_Res50_ours_ini= :: add init code, ongoing
+- =iNat18_Res50_ours_ini_bn= :: add init code & BatchNorm1d, ongoing
