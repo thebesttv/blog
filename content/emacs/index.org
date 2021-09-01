@@ -187,3 +187,11 @@ or children matching a specific name:
    (info nil "My UA")
    "\n               ")
 #+end_src
+
+* 绑定 80 口
+
+[[https://superuser.com/questions/710253/allow-non-root-process-to-bind-to-port-80-and-443][Allow non-root process to bind to port 80 and 443?]]
+
+基本就是安装 =authbind=​，然后去 =/etc/authbind/byport/= 里面建一个以端
+口号命名的文件（比如 =/etc/authbind/byport/80=​），当前用户对其要有
+execute 权限，最后用 =authbind= 来启动命令即可。
