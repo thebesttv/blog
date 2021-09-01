@@ -31,7 +31,6 @@ These will be mentioned later:
 - *assembler*: translates assembly language into machine language.
 - *compiler*: translates high-level language into assembly language.
 
-
 ** Others
 
 *Personal mobile devices (PMDs)* are small wireless devices to connect
@@ -49,7 +48,6 @@ over the Internet, usually via a thin program such as a browser that
 runs on local client devices, instead of binary code that must be
 installed, and runs wholly on that device.  Examples include web
 search and social networking.
-
 
 * GB (Gb) vs GiB (Gib)
 
