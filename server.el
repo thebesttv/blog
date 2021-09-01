@@ -205,3 +205,17 @@ string."
 
 ;;; org table caption at bottom
 (setq org-html-table-caption-above nil)
+
+;;; add ICP licensing number to postamble
+
+(setq org-html-postamble
+      (concat
+       "<hr>"
+       "<p class=\"author\">Author: thebesttv</p>"
+       (when (stringp eserver-icp-number)
+         (concat
+          "<p style=\"text-align: center;\">"
+          "<a href=\"https://beian.miit.gov.cn/\" target=\"_blank\">"
+          eserver-icp-number
+          "</a></p>\n"))))
+
