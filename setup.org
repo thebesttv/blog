@@ -3,6 +3,8 @@
 #+HTML_HEAD: <style>body { max-width: 100ch; }</style>
 # remove theme's default table caption, use org-mode's instead
 #+HTML_HEAD: <style>caption::before { all: initial; }</style>
+# change table caption's number to bold & center table
+#+HTML_HEAD: <style> .table-number { font-weight: bold; } table { margin-left: auto; margin-right: auto; }</style>
 
 # add google analytics
 #+HTML_HEAD: <!-- Global site tag (gtag.js) - Google Analytics -->
