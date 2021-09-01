@@ -202,3 +202,6 @@ string."
 
   (add-to-list 'org-export-filter-final-output-functions
                'ox-html-clear-single-linebreak-for-cjk))
+
+;;; org table caption at bottom
+(setq org-html-table-caption-above nil)

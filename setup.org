@@ -1,6 +1,8 @@
 # LaTeX CSS Theme
 #+HTML_HEAD: <link rel="stylesheet" type="text/css" href="https://latex.now.sh/style.css"/>
 #+HTML_HEAD: <style>body { max-width: 100ch; }</style>
+# remove theme's default table caption, use org-mode's instead
+#+HTML_HEAD: <style>caption::before { all: initial; }</style>
 
 # add google analytics
 #+HTML_HEAD: <!-- Global site tag (gtag.js) - Google Analytics -->
