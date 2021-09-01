@@ -1,5 +1,6 @@
 #+title: Logisim 笔记
-#+macro: center-50  #+ATTR_HTML: :width 50% :style margin-left: auto; margin-right: auto;
+#+macro: image        #+ATTR_HTML: :width $1% :style margin-left: auto; margin-right: auto; [[$2]]
+#+macro: center-50    {{{image(50)}}}
 
 * Different Logisim versions
 
@@ -69,80 +70,80 @@ t3时刻，与门输出0，之后维持在0。
 
 * 组件
 
-[[./logisim/general-attrs.png]]
+[[./logisim/general-attrs.webp]]
 
 ** [[./logisim/logisim-wiring.pdf][Wiring]]
 
-[[./logisim/wiring-1.png]]
+[[./logisim/wiring-1.webp]]
 
-[[./logisim/wiring-2.png]]
+[[./logisim/wiring-2.webp]]
 
-[[./logisim/wiring-3.png]]
+[[./logisim/wiring-3.webp]]
 
-[[./logisim/wiring-4.png]]
+[[./logisim/wiring-4.webp]]
 
-[[./logisim/wiring-5.png]]
+[[./logisim/wiring-5.webp]]
 
-[[./logisim/wiring-6.png]]
+[[./logisim/wiring-6.webp]]
 
 ** [[./logisim/logisim-gates-plexers.pdf][Gates]]
 
-[[./logisim/gates.png]]
+[[./logisim/gates.webp]]
 
 ** [[./logisim/logisim-gates-plexers.pdf][Plexers]]
 
-[[./logisim/plexers-1.png]]
+[[./logisim/plexers-1.webp]]
 
 不恰当的级联会增加延迟
-[[./logisim/plexers-2.png]]
+[[./logisim/plexers-2.webp]]
 
-[[./logisim/plexers-3.png]]
+[[./logisim/plexers-3.webp]]
 
-[[./logisim/plexers-4.png]]
+[[./logisim/plexers-4.webp]]
 
-[[./logisim/plexers-5.png]]
+[[./logisim/plexers-5.webp]]
 
 ** [[./logisim/logisim-arithmetic.pdf][Arithmetic]]
 
-[[./logisim/arithmetic-1.png]]
+[[./logisim/arithmetic-1.webp]]
 
-[[./logisim/arithmetic-2.png]]
+[[./logisim/arithmetic-2.webp]]
 
-[[./logisim/arithmetic-3.png]]
+[[./logisim/arithmetic-3.webp]]
 
-[[./logisim/arithmetic-4.png]]
+[[./logisim/arithmetic-4.webp]]
 
-[[./logisim/arithmetic-5.png]]
+[[./logisim/arithmetic-5.webp]]
 
-[[./logisim/arithmetic-6.png]]
+[[./logisim/arithmetic-6.webp]]
 
-[[./logisim/arithmetic-7.png]]
+[[./logisim/arithmetic-7.webp]]
 
 ** [[./logisim/logisim-memory.pdf][Memory]]
 
-[[./logisim/memory-1.png]]
+[[./logisim/memory-1.webp]]
 
 寄存器默认异步清零，若想要同步清零，则可以对输入使用多路选择器或其他方法。
-[[./logisim/memory-2.png]]
+[[./logisim/memory-2.webp]]
 
-[[./logisim/memory-3.png]]
+[[./logisim/memory-3.webp]]
 
-[[./logisim/memory-4.png]]
+[[./logisim/memory-4.webp]]
 
-[[./logisim/memory-5.png]]
+[[./logisim/memory-5.webp]]
 
-[[./logisim/memory-6.png]]
+[[./logisim/memory-6.webp]]
 
-[[./logisim/memory-7.png]]
+[[./logisim/memory-7.webp]]
 
-[[./logisim/memory-8.png]]
+[[./logisim/memory-8.webp]]
 
 ** [[./logisim/logisim-io.pdf][Input/Output]]
 
-[[./logisim/io-1.png]]
+[[./logisim/io-1.webp]]
 
-[[./logisim/io-2.png]]
+[[./logisim/io-2.webp]]
 
-[[./logisim/io-3.png]]
+[[./logisim/io-3.webp]]
 
-[[./logisim/io-4.png]]
+[[./logisim/io-4.webp]]

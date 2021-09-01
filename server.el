@@ -219,3 +219,8 @@ string."
           eserver-icp-number
           "</a></p>\n"))))
 
+;;; add webp image format
+(setq org-html-inline-image-rules
+      '(("file" . #1="\\(?:\\.\\(?:gif\\|webp\\|\\(?:jpe?\\|pn\\|sv\\)g\\)\\)")
+        ("http" . #1#)
+        ("https" . #1#)))
