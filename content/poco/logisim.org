@@ -1,5 +1,4 @@
 #+title: Logisim 笔记
-#+macro: image        #+ATTR_HTML: :width $1% :style margin-left: auto; margin-right: auto; [[$2]]
 #+macro: center-50    {{{image(50)}}}
 
 * Different Logisim versions

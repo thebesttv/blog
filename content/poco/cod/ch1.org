@@ -82,7 +82,7 @@ bits), and /gibibit/ (Gib) is 1024 Mib ($2^{30}$ bits).
 
 * The Five Classic Components of a Computer
 
-#+ATTR_HTML: :width 80% :style margin-left: auto; margin-right: auto;
+{{{image(80)}}}
 [[./ch1/computer-organization.png]]
 
 - input & output (输入、输出设备)
