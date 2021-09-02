@@ -58,5 +58,14 @@ init code
           nn.init.constant_(m.bias, 0)
 #+end_src
 
-- =iNat18_Res50_ours_ini= :: add init code, ongoing
-- =iNat18_Res50_ours_ini_bn= :: add init code & BatchNorm1d, ongoing
+- =iNat18_Res50_ours_ini= :: add init code, 76.934,92.782
+- =iNat18_Res50_ours_ini_bn= :: add init code & BatchNorm1d, 77.688,93.143
+- =iNat18_Res50_ours_bn= :: add only BatchNorm1d, 77.774,93.122
+
+- =iNat18_Res50_ours_ini_bn_again= :: again, ongoing
+- =iNat18_Res50_ours_bn_again= :: again, ongoing
+
+-----
+
+- =iNat21_50w_Sk101_224_ours_concat_d256_h64_bn= :: add only BatchNorm1d, bad
+- =iNat21_50w_Sk101_224_ours_concat_d256_h64_ini_bn= :: add init and BatchNorm1d, 84.580,95.383
