@@ -1,0 +1,364 @@
+#+title: Ch2 --- Instructions: Language of the Computer
+#+macro: instruction  {{{image(80)}}}
+
+* Instruction Set
+
+*Instruction set*: the set of commands understood by a given
+architecture.
+
+You might think that the languages of computers would be as diverse as
+those of people, but in reality, computer languages are quite similar,
+more like _regional dialects_ than independent languages.  Once you
+learn one, it is easy to pick up others.  This similarity of
+instruction sets occurs because all computers are constructed from
+hardware technologies based on _similar underlying principles_ and
+because there are a few _basic operations that all computers must
+provide_.  Moreover, computer designers have a _common goal_: to find
+a language that makes it *easy to build the hardware and the compiler*
+while *maximizing performance and minimizing cost and energy*.  This
+goal is time-honored; the following quote was written before you could
+buy a computer, and it is as true today as it was in 1947:
+
+#+begin_quote
+It is easy to see by formal-logical methods that there exist certain
+instruction sets that are in abstract adequate to control and cause
+the execution of any sequence of operations.... The really decisive
+considerations from the present point of view, in selecting an
+instruction set, are more of a _practical nature_: *simplicity of the
+equipment* demanded by the instruction set, and the *clarity of its
+application* to the actually important problems together with the
+*speed of its handling of those problems*.
+#+end_quote
+
+*Stored-program concept*: the idea that instructions and data of many
+types can be *stored in memory as numbers* and thus be easy to change,
+leading to the stored-program computer.
+
+*Machine language*: binary representation used for communication
+within a computer system.
+
+Units:
+- *word*: 32 bits
+- *doubleword*: 64 bits, the size of a register in the RISC-V
+  architecture
+
+* Three Principles of Hardware Design
+
+** Simplicity favors regularity
+
+The arithmetic instructions =add=, =sub= both have exactly three
+operands---hardware for a variable number of operands is more
+complicated than one for a fixed number.
+
+** Smaller is faster
+
+A very large number of registers may increase the clock cycle time
+simply because it takes electronic signals longer when they must
+travel farther.
+
+** Good design demands good compromises
+
+The compromise chosen by the RISC-V designers is to keep all
+instructions the same length, thereby requiring distinct instruction
+formats for different kinds of instructions.
+
+* RISC-V
+
+RISC-V typically has 32 registers.
+
+RISC-V operands:
+- 32 registers named =x0=​--​=x31=. (=x0= is hard-wired to 0)
+- $2^{61}$ memory words accessed only by data transfer
+  instructions. ($2^{64}\text{ bytes} = 2^{61}\text{ words}$)
+
+RISC-V instruction formats are distinguished by the values in the
+opcode field: each format is assigned a distinct set of opcode values
+in the first field so that the hardware knows how to treat the rest of
+the instruction.
+
+RISC-V fields:
+- *opcode*: denotes the operation and format of an instruction (7bits)
+- *rd*: register destination operand
+- *funct3*: additional opcode field of 3 bits
+- *rs1*, *rs2*: two register source operands
+- *funct7*: additional opcode field of 7 bits
+
+** Stack & Heap
+
+*Return address*: a link to the calling site that allows a procedure
+to return to the proper address.
+
+*Procedure frame*, or *activation record*: the segment of the stack
+containing a procedure's saved registers and local variables.
+
+{{{image(100)}}}
+[[./ch2/stack-allocation.png]]
+
+*Text segment*: the segment of a UNIX object file that contains the
+machine language code for routines in the source file.
+
+*Static data segment*: the place for constants and other static
+variables.
+
+{{{image(100)}}}
+[[./ch2/memory-allocation.png]]
+
+RISC-V software is required to _keep the stack aligned to /quad​*word*/
+(16 *byte*) addresses_ to get better performance.  This convention
+means that a =char= variable allocated on the stack may occupy as much
+as 16 bytes, even though it needs less.  However, a C string or an
+array of bytes still packs 16 bytes per quadword.
+
+** Registers
+
+- =x0=: hard-wired to 0 for convenience.
+- =x1= (=ra=): /return address/ register (or /link register/) to
+  return to the point of origin.
+- =x2= (=sp=): /stack pointer/ register.  By historical precedent,
+  stacks "grow" from higher addresses to lower addresses, so pushing
+  to stack actually decreases =sp=.
+- =x3= (=gp=): /global pointer/ register reserved to point to the
+  static area.
+- =x4= (=tp=): /thread pointer/ register.
+- =x10-x17=: eight /parameter registers/ (or /argument/result
+  registers/) used to pass parameters or return values.  Note that
+  these registers are *not* preserved across a procedure call.
+- =x5-x7= & =x28-x31=: seven /temporary registers/ that are
+  *not* preserved by the callee.
+- =x8-x9= & =x18-x27=: twelve /saved registers/ that *must* be
+  preserved on a procedure call.
+- =x8=: /frame pointer/ register, denoting the beginning (higher end)
+  of the procedure frame.  Unlike stack pointer which may change
+  position during a procedure call, frame pointer points to the same
+  place, making it easier to reference local variables in the
+  procedure frame.
+
+List of a 32 registers:
+#+ATTR_HTML: align: center
+#+caption: this is a table
+|    Name     |       Usage       | Preserved on call? |
+|-------------+-------------------+--------------------|
+|     <c>     |        <c>        |        <c>         |
+|    =x0=     | Constant value 0  |        n.a.        |
+| =x1= (=ra=) |  Return address   |        yes         |
+| =x2= (=sp=) |   Stack pointer   |        yes         |
+| =x3= (=gp=) |  Global pointer   |        yes         |
+| =x4= (=tp=) |  Thread pointer   |        yes         |
+|   =x5-x7=   |    Temporaries    |         no         |
+|   =x8-x9=   |       Saved       |        yes         |
+|  =x10-x17=  | Arguments/results |         no         |
+|  =x18-x27=  |       Saved       |        yes         |
+|  =x28-x31=  |    Temporaries    |         no         |
+Note that only _temporary registers_ and _argument/result registers_
+are not preserved on call.
+
+*** The =x0= register
+
+Since the constant 0 can simplify the instruction set by offering
+useful variations, the =x0= register is hard-wired to 0.  This is
+another example of making the *common case fast*.
+
+- to change the sign a register =x9=, do =sub x9, x0, x9=
+- to copy =x9= to =x10=, do =add x10, x0, x9=
+
+* The RISC-V ISA
+
+** Arithmetic Instructions
+
+*** =add=
+{{{instruction}}}
+[[./ch2/add.png]]
+
+*** =addi=
+{{{instruction}}}
+[[./ch2/addi.png]]
+
+*** =sub=
+{{{instruction}}}
+[[./ch2/sub.png]]
+
+** Logical Instructions
+*** =and=
+{{{instruction}}}
+[[./ch2/and.png]]
+
+*** =or=
+{{{instruction}}}
+[[./ch2/or.png]]
+
+*** =xor=
+{{{instruction}}}
+[[./ch2/xor.png]]
+
+*** =not=
+{{{instruction}}}
+[[./ch2/not.png]]
+
+** Shift Instructions
+
+*** =slli=
+{{{instruction}}}
+[[./ch2/slli.png]]
+
+*** =srli=
+{{{instruction}}}
+[[./ch2/srli.png]]
+
+*** =srai=
+{{{instruction}}}
+[[./ch2/srai.png]]
+
+** Data Transfer Instructions
+
+*Data transfer instructions*: instructions that transfer data between
+memory and registers.
+
+*Alignment restriction*: a requirement that data be aligned in memory
+on /natural boundaries/---words must start at addresses that are
+multiples of 4 and doublewords must start at addresses that are
+multiples of 8.  RISC-V and Intel x86 do *not* have alignment
+restrictions, but MIPS does.
+
+*Spilling registers*: the process of putting less frequently used
+variables (or those needed later) into memory.
+
+*** =ld=
+{{{instruction}}}
+[[./ch2/ld.png]]
+
+*** =sd=
+{{{instruction}}}
+[[./ch2/sd.png]]
+
+*** =lui=
+{{{instruction}}}
+[[./ch2/lui.png]]
+
+** Branch Instructions
+
+*** Conditional Branches
+
+*PC-relative addressing*: an addressing regime in which address is the
+sum of the PC and a constant in the instruction.
+
+**** =beq=
+{{{instruction}}}
+[[./ch2/beq.png]]
+
+**** =bne=
+{{{instruction}}}
+[[./ch2/bne.png]]
+
+*** Unconditional
+
+*Jump-and-link instruction*: instruction that branches to an address
+and simultaneously saves the address of the *following instruction*
+(the one to be executed once returned from jump) in a register.
+
+**** =jal=
+{{{instruction}}}
+[[./ch2/jal.png]]
+
+**** =jalr=
+{{{instruction}}}
+[[./ch2/jalr.png]]
+
+To return to the caller, use
+#+begin_src text
+  jalr x0, 0(x1)
+#+end_src
+
+*** Bounds Check Shortcut
+
+When checking signed bounds to see if $0\le x\lt y$, because negative
+integers in two's complement notation look like large numbers in
+unsigned notation, an unsigned comparison of $x\lt y$ will suffice.
+
+Eg. this branches to =IndexOutOfBounds= if =x20= $\ge$ =x11= or if
+=x20= $\lt$ 0
+#+begin_src text
+  bgeu x20, x11, IndexOutOfBounds
+#+end_src
+
+* RISC-V Addressing for Wide Immediates & Addresses
+
+** Loading a 32-Bit Constant
+
+Suppose we have a 32-bit constant $y = y[31{:}12] \bigoplus y[11{:}0]$
+that we want to load into =x10=.  Since instructions are all 32-bit
+long, we need at least 2 instructions.  We first use =lui= to load
+$y[31{:}12]$ to the proper place.  Although =lui= sign extends the
+constant, we now only focus on the lower 32 bits and ignore the upper
+32 bits.  Since =lui= zeros the lower 12 bits, we can now use =addi=
+to add $y[11{:}0]$ to =x10=.  However, =addi= also sign extends the
+constant.  If $y[11]=0$, everything is fine.  But what if $y[11]=1$?
+
+If $y[11]=1$, =addi= extends the bit 12--63 to 1's when adding.  We
+need to at least zero out the bit 12--31.  Recall earlier when using
+=lui=, $y[31{:}12]$ is actually shifted 12 bits to the left before
+loaded to =x10=.  Instead of loading $y[31{:}12]$, we now load
+$y[31{:}12]+1$ to =x10=, and let this extra 1 zero out all the higher
+bits of the sign-extended $y[11{:}0]$.
+
+To better explain this idea, we add the shifted $y[31{:}12]$ (ignoring
+the sign-extension), the added (and shifted) 1, and the sign-extended
+$y[11{:}0]$ together:
+\[\begin{alignat}{3}
+  000\ldots000 && \quad   y[31{:}12] && \quad 000\ldots000 && \quad + \\
+  000\ldots000 && \quad 000\ldots001 && \quad 000\ldots000 && \quad + \\
+  111\ldots111 && \quad 111\ldots111 && \quad    y[11{:}0] && \quad   \\
+\end{alignat}\]
+As can be seen, the added 1 of equation (2) effectively zeros out the
+higher 1's of (3), thus preserving the 32 bit result.
+
+* Parallelism & Instructions: Synchronization
+
+*Data race*: two memory accesses form a data race if they are from
+different threads to the same location, at least one is a write, and
+they occur one after another.
+
+TODO
+
+* Translating and Starting a Program
+
+{{{image(100)}}}
+[[./ch2/translation-hierarchy.png]]
+
+** Compiler
+
+** Assembler
+
+To produce the binary version of each instruction in the assembly
+language program, the assembler must determine the addresses
+corresponding to all labels.  Assemblers keep track of labels used in
+branches and data transfer instructions in a symbol table.
+
+*Symbol table*: a table containing pairs of /symbols/ and /addresses/.
+It matches names of labels to the addresses of the memory words that
+instructions occupy.
+
+The object file for UNIX systems typically contains six distinct pieces:
+
+- The *object file header* describes the size and position of the
+  other pieces of the object file.
+- The *text segment* contains the machine language code.
+- The *static data segment* contains data allocated for the life of
+  the program. (UNIX allows programs to use both /static data/, which
+  is allocated throughout the program, and /dynamic data/, which can
+  grow or shrink as needed by the program. See Figure 2.13.)
+- The *relocation information* identifies instructions and data words
+  that depend on absolute addresses when the program is loaded into
+  memory.
+- The *symbol table* contains the remaining labels that are not defined,
+  such as _external references_.
+- The debugging information contains a concise description of how the
+  modules were compiled so that a debugger can associate machine
+  instructions with C source files and make data structures readable.
+
+** Linker
+
+** Loader
+
+** Dynamically Linked Libraries
+
+
