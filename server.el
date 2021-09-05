@@ -46,7 +46,9 @@
 
 (defun httpd/blog (proc path parameters &rest args)
   (let* ((default-directory eserver-blog)
-         (available-files (eserver-blog-available-files)))
+         (available-files (eserver-blog-available-files))
+         (host-name (eserver-host-name
+                     (car (eserver-request-get "Host" request)))))
     ;; if path ends with directory, then use index.org under path
     (if (string-suffix-p "/" path)
         (setq path (concat path "index.org")))
@@ -76,6 +78,10 @@
             (insert-file-contents path)
             ;; (httpd-log `(inserted file contents under ,path))
             (org-export-to-buffer 'html buffer))
+          (with-current-buffer buffer
+            (replace-string
+             "***6a05b631-e547-4f89-b411-7ea4c1ac94d1***"
+             (eserver-blog-postamble host-name)))
           (with-httpd-buffer proc "text/html; charset=utf-8"
             (insert-buffer buffer)))))))
 
@@ -206,18 +212,32 @@ string."
 ;;; org table caption at bottom
 (setq org-html-table-caption-above nil)
 
-;;; add ICP licensing number to postamble
+;;; Postamble
 
+;;; change original postamble
 (setq org-html-postamble
-      (concat
-       "<hr>"
-       "<p class=\"author\">Author: thebesttv</p>"
-       (when (stringp eserver-icp-number)
-         (concat
-          "<p style=\"text-align: center;\">"
-          "<a href=\"https://beian.miit.gov.cn/\" target=\"_blank\">"
-          eserver-icp-number
-          "</a></p>\n"))))
+      "***6a05b631-e547-4f89-b411-7ea4c1ac94d1***")
+
+;;; add ICP licensing number to postamble
+(defun eserver-blog-postamble (host-name)
+  (let ((icp-number (cdr (assoc-string host-name eserver-icp-number))))
+    (concat
+     "<hr>"
+     "<p class=\"author\">Author: thebesttv</p>"
+     (when icp-number
+       (concat
+        "<p style=\"text-align: center;\">"
+        "<a href=\"https://beian.miit.gov.cn/\" target=\"_blank\">"
+        icp-number
+        "</a></p>\n"))
+     (when eserver-police-number
+       (concat "<p style=\"text-align: center;\">"
+               "<a target=\"_blank\" href=\"http://www.beian.gov.cn/portal/registerSystemInfo?recordcode="
+               (car eserver-police-number)
+               "\">\n  <img src=\"/beian.png\" style=\"display:inline;\"/>"
+               (cdr eserver-police-number)
+               "\n</a></p><br>\n")))))
+
 
 ;;; add webp image format
 (setq org-html-inline-image-rules
