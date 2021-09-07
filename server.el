@@ -244,3 +244,12 @@ string."
       '(("file" . #1="\\(?:\\.\\(?:gif\\|webp\\|\\(?:jpe?\\|pn\\|sv\\)g\\)\\)")
         ("http" . #1#)
         ("https" . #1#)))
+
+;;; use org-special-block-extras
+(use-package org-special-block-extras
+  :ensure t
+  :hook (org-mode . org-special-block-extras-mode)
+  :config
+  ;; Use short names like ‘defblock’ instead of the fully qualified name
+  ;; ‘org-special-block-extras--defblock’
+  (org-special-block-extras-short-names))
