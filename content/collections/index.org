@@ -4,10 +4,20 @@
 
 * 妙妙文章
 
-- [[https://idealclover.top/archives/627/][翠翠 - 2020 年年终总结：致即将 22 岁的自己]] 你工人爷爷的年终总结
-- [[https://qinyuanpei.github.io/posts/2136925853/][飞鸿踏雪 - 假如时间有温度]] 活着真好
-- [[https://joelcalifa.com/blog/tiny-wins/][Tiny Wins - The big benefits of little changes.]] 胜利在小处
-- [[https://www.zhihu.com/question/63306763/answer/255496822][为什么计算机科学如密码学喜欢用 Alice 和 Bob 举栗子？ - 刘巍然-学酥的回答 - 知乎]]
+- [[https://idealclover.top/archives/627/][翠翠 --- 2020 年年终总结：致即将 22 岁的自己]] 你工人爷爷的年终总结
+- [[https://qinyuanpei.github.io/posts/2136925853/][飞鸿踏雪 --- 假如时间有温度]] 活着真好
+- [[https://joelcalifa.com/blog/tiny-wins/][Tiny Wins --- The big benefits of little changes.]] 胜利在小处
+- [[https://www.zhihu.com/question/63306763/answer/255496822][为什么计算机科学如密码学喜欢用 Alice 和 Bob 举栗子？ --- 刘巍然-学酥的回答]]
+- [[https://www.zhihu.com/question/487165905][如何看待媒体曝光北京医院周边「黑民宿」两居室住 12 人？「黑民宿」问题应该如何解决？]]
+  #+begin_quote
+  钱，只有死了，才是身外之物，只要没死，钱就是命。——[[https://www.zhihu.com/question/487165905/answer/2134810284][邢二狗]]
+  #+end_quote
+  #+begin_quote
+  我们写东西是给老百姓看的，底层人民就算做错了什么，也不值得我们去指责。
+  更不要去催动什么力量去破坏老百姓赖以生存的东西。
+
+  我看见有的人住着几十元一天的大通铺，结算几千元一天的医药费。——[[https://www.zhihu.com/question/487165905/answer/2136855559][刘凯]]
+  #+end_quote
 
 ** 关于编码 - UTF-8 遍地开花
 - [[http://www.hanselman.com/blog/why-the-askobama-tweet-was-garbled-on-screen-know-your-utf8-unicode-ascii-and-ansi-decoding-mr-president][Why the #AskObama Tweet was Garbled on Screen: Know your UTF-8,
@@ -15,18 +25,18 @@
 - [[https://stackoverflow.com/questions/9254891/what-does-content-type-application-json-charset-utf-8-really-mean][What does “Content-type: application/json; charset=utf-8” really
   mean?]]  =simple-httpd= 在 header 就忘了加 =charset=utf-8= ，花了我一
   晚上才发现，呜呜😣
-- [[http://winestockwebdesign.com/Essays/Lisp_Curse.html][Rudolf Winestock - The Lisp Curse]] The power of Lisp is its own worst
+- [[http://winestockwebdesign.com/Essays/Lisp_Curse.html][Rudolf Winestock --- The Lisp Curse]] The power of Lisp is its own worst
   enemy.
 
 ** Code, Talk, & Thoughts
 
-- [[https://gigamonkeys.com/code-reading/][Peter Seibel - Code is not literature]] Don't read code like it's a
+- [[https://gigamonkeys.com/code-reading/][Peter Seibel --- Code is not literature]] Don't read code like it's a
   novel, but examine it.  Dissect it as if it's a specimen and you are
   a naturalist; Decode it as if you're working at a security agency
   trying to decode a secret code.  The more you learn to read other
   people's stuff, the more able you are to invent your own in the
   future.
-- [[http://www.yinwang.org/blog-cn/2019/09/11/talk-is-not-cheap][王垠 - Talk is not cheap]] 听君一席话，胜读十年书
+- [[http://www.yinwang.org/blog-cn/2019/09/11/talk-is-not-cheap][王垠 --- Talk is not cheap]] 听君一席话，胜读十年书
 
 * 宝藏博主
 
