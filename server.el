@@ -249,3 +249,5 @@ string."
 (use-package org-special-block-extras
   :ensure t
   :hook (org-mode . org-special-block-extras-mode))
+
+(require 'org-special-block-extras)
