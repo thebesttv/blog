@@ -1,0 +1,161 @@
+#+title: 运算方法&运算器
+
+* 补码运算
+
+\[\begin{align*}
+  [x]_补 + [y]_补 &= [x+y]_补 \\
+  [x]_补 - [y]_补 &= [x-y]_补 \\
+\end{align*}\]
+
+已知 $[x]_补$​，求 $[-x]_补$ 时，各位取反加1（或除最后的 $10\ldots0$ 都
+取反）
+
+基本规则
+1. 所有操作数均以补码表示
+2. 逢二进一
+3. $x-y$ 变成 $x$ 与 $-y$ （变补）之和
+4. 符号位不单独处理，因此溢出可能导致两正数相加结果为负数
+
+
+Eg. 对于 $x=+0.1010$, $y=+0.1001$, 则
+\[x+y = \]
+溢出，结果变为负数
+
+** 溢出判断
+
+溢出用 =OVR=1= 表示
+
+溢出
+- 正溢出：正数相加变为负数
+- 负溢出：负数相加变为正数
+
+
+一正一负不会溢出
+
+** 变形补码
+
+变形补码：有两个符号位的补码
+
+$[x]_变形补 = x_{f1} x_{f2} . x_1 x_2 \ldots x_n$
+
+运算时尽量使用变形补码，防止溢出
+
+存储时使用正常补码（如32位），但在运算时扩展一位符号位（共33位），使用
+变形补码运算。其实就是改为33位加法器
+
+* 定点
+
+** 乘法
+
+*** 原码乘法
+
+设 $n+1$ 位原码 $[x]_原 = x_f.x_1 x_2 \ldots x_n$, 其中 $x_f$ 为符号位.
+求
+\[\begin{align*}
+  [z]_原 &= [x]_原 \times [y]_原 \\
+  \text{积} &= \text{被乘数} \times \text{乘数} \\
+\end{align*}\]
+
+1. 符号位单独运算,同号为0异号为1: $z_f = x_f \oplus y_f$
+2. 
+
+*** 补码乘法（布斯乘法）
+
+
+** 除法
+
+第一步判断溢出！！！
+
+考试：补码不恢复、booth除法，硬件(寄存器开始结束、控制信号)
+
+\[ x \div y = q \cdots\cdots r \]
+
+其中商的符号由 $x$ 和 $y$ 决定，而余数的符号则与被除数相同。
+
+关于商和余数的符号，设 $x', y', q', r' \gt 0$ ，若 $x=x'$, $y=y'$ 则
+$x' = y' \times q' + r'$
+
+\[\begin{alignat}{3}
+  x' &=  q' \times  y' + r' \quad && x=x' , y=y' &&\to q=q' , r=r'  \nonumber\\
+ -x' &= -q' \times  y' - r' \quad && x=-x', y=y' &&\to q=-q', r=-r' \nonumber\\
+  x' &= -q' \times -y' + r' \quad && x=x' , y=-y'&&\to q=-q', r=r'  \nonumber\\
+ -x' &=  q' \times -y' - r' \quad && x=-x', y=-y'&&\to q=q' , r=-r' \nonumber\\
+\end{alignat}\]
+
+*** 补码不恢复余数除法
+
+1. $x,y$ 同号则 $x-y$, 异号则 $x+y$.
+2. $r,y$ 同号则上商为1, $r$ 左移 $-y$. 异号则上商为0, $r$ 左移 $+y$.
+3. 商的矫正有两种方法
+   - 末位恒置1法,即将商的末尾始终置为1,此时不考虑余数. 共需 $n$ 次步骤2.
+   - 矫正法,根据能否除尽(即 $r$ 是否为0),当 $y$ 或商为负时,对商加
+     $2^{-n}$ (即末位加1)进行矫正. 共需 $n+1$ 次步骤2.
+     - 若能除尽,则 $y$ 为负时商末位加1
+     - 若不能除尽,则商为负时商末位加1
+4. 使用矫正法后,还需矫正余数. 余数和被除数应该同号,若异号则需矫正.
+   - $x,y$ 同号, $r,y$ 异号时 $r + y$
+   - $x,y$ 异号, $r,y$ 同号时 $r - y$
+
+*** 布斯除法
+
+1. $r$ 初始为 $x$
+2. $r,y$ 同号则上商为1, $r$ 左移 $-y$. 异号则上商为0, $r$ 左移 $+y$.
+3. 使用末位恒置1法则进行 $n$ 次,矫正法则进行 $n+1$ 次.
+4. 将商符取反,则对商校正.
+
+
+* 浮点
+
+移码加减,将加数或减数的符号位取反即可.
+
+* Am2901A
+
+Am2901A 是 Am2900 家族中的一款芯片，名为 4-bit bit-slice ALU。
+
+#+begin_details bit-slice
+#+begin_quote
+Bit slicing is a technique for constructing a processor from _modules
+of processors of *smaller bit width*_, for the purpose of *increasing
+the word length*; in theory to make an arbitrary n-bit CPU.  Each of
+these component modules processes one bit field or "slice" of an
+operand.  The grouped processing components would then have the
+capability to process the chosen full word-length of a particular
+software design.
+#+end_quote
+
+例如，用两块4比特加法器组成一个8比特加法器。
+#+end_details
+
+Am2901A 中最重要的有两个部件
+- 16-word by 4-bit two-port RAM: 可以视作16个寄存器 $R_0\ldots
+  R_{15}$​。有两个 4 位地址选择输入 $A$ 和 $B$ 用于分别选择寄存器，其中
+  $A$ 只能用于读取，而 $B$ 能用于读取或写入。
+- eight function ALU: 有八种不同的功能，输入和输出可以从芯片内不同的寄
+  存器中选择。需要 $3\times3=9$ 位控制字
+  - $I_2I_1I_0$ 控制两个 operand $R$ 和 $S$ 的来源，包括RAM的A、B口，
+    直接输入D，0，还有内部寄存器Q
+  - $I_5I_4I_3$ 选择ALU对输入的操作，包括加减和逻辑运算
+  - $I_8I_7I_6$ 控制输出 $F$ 的去向，可以输出到芯片外($Y$)，也可以保存
+    在某个寄存器或 RAM 中（也可以先左移或右移一位再保存）。
+
+{{{image(80)}}}
+[[./ch3-calculation/block-diagram.png]]
+
+最重要的几个输入信号
+- $A_{3:0}$ 和 $B_{3:0}$ 可以同时选择两个寄存器。
+- $I_2I_1I_0$ 控制ALU输入来源
+  {{{image(50)}}}
+  [[./ch3-calculation/op-1.png]]
+- $I_5I_4I_3$ 控制ALU功能
+  {{{image(50)}}}
+  [[./ch3-calculation/op-2.png]]
+- $I_8I_7I_6$ 控制ALU输出的去向
+  {{{image(90)}}}
+  [[./ch3-calculation/op-3.png]]
+- $\overline{OE}$ 控制是否输出,为0输出,为1输出为高阻态
+
+
+[[color:gray][题目里的 $M$ 指 memory, 在芯片外部, 因此其实就是 $Y$]]
+
+* 逻辑运算&移位操作
+

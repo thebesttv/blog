@@ -1,0 +1,714 @@
+#+title: 计算机中数据信息的表示
+
+- [[https://cs.lmu.edu/~ray/notes/numenc/][Numeric Encoding]]: 这篇文章从抽象的数开始，到 Positional Numeral
+  Systems，系统地介绍了数字及其编码，包括不同的 base、有符号&无符号整
+  数、小数、浮点数等。
+  #+begin_details number & numeral system
+  A *number* is an abstraction of quanitity, represented by /numeral/.
+  Numbers can be classified into sets, called *number systems*, such
+  as the natural numbers $\mathbb{N}$ and the real numbers
+  $\mathbb{R}$.
+
+  A *numeral system* (or *system of numeration*) is a writing system
+  for expressing numbers, such as [[https://en.wikipedia.org/wiki/Egyptian_numerals][Egyptian numerals]], [[https://en.wikipedia.org/wiki/Roman_numerals][Roman numerals]].
+  The most popular numeral system is [[https://en.wikipedia.org/wiki/Arabic_numerals][Arabic numerals]].
+  #+end_details
+- [[http://vc.airvectors.net/tsfloat.html][Computer Numbering Formats]]: 不错的介绍
+
+计算机内部信息分为
+- 数据信息
+- 控制信息
+  - 数值型
+    - 定点数
+    - 浮点数
+  - 非数值型
+
+十进制 \to 二进制
+- 整数部分：除二取余
+- 小数部分：乘二取整
+
+* 数
+
+计算机中，​$n$ 个比特有 $2^n$ 种可能的组合。利用这仅有的 $2^n$ 种组合来
+编码无穷的整数、小数（甚至虚数），需要在表达的范围、分辨率、精度等方面
+做出取舍。在 Computer Arithmetic: Algorithms and Hardware Designs 2nd
+edition 中第 9 页
+#+begin_quote
+To simplify arithmetic operations, including the required checking for
+singularities or special cases, the assignment of codes to numbers
+must be done *in a logical and systematic manner*.
+#+end_quote
+对于 4 个比特，书中给出了可能的编码方法，其中一些方法可能导致同一个数
+对应不同的二进制机器码。
+{{{image(80)}}}
+[[./ch2-representation/4-bit-mapping.png]]
+
+$k$ 位 $r$ 进制数最多能表示 $r^k$ 个数。反之，想要表示 $[0, max]$ 中
+$max + 1$ 个整数，需要的位数 $k$ 为
+\[ k = \lceil\log_r (max+1)\rceil = \lfloor\log_r max\rfloor + 1 \]
+
+* 带符号数的表示
+
+*机器码*​分为原码、补码、反码、移码。
+
+颜色表示机器码符号位，或真实值预留的符号位。
+
+** 原码
+
+原码最为简单，最高位为符号位，0正1负，其余位表示大小。但这种方法导致0
+有两种表示（正零和负零）。由于要考虑符号位，加减运算也更为复杂。
+
+*** 纯小数
+
+\[\begin{align*}
+  [+0.1001\;1001]_原 &= \color{blue}{0}.1001\;1001 \\
+  [-0.1001\;1001]_原 &= \color{red}{1}.1001\;1001 \\
+\end{align*}\]
+
+零有两种表示
+- $[+0]_原 = 0.00\ldots00$
+- $[-0]_原 = 1.00\ldots00$
+
+Eg. 机器字长为8位，写出 $+0.375$ 和 $-0.6875$ 的二进制原码。
+
+在转化时，先将十进制真实值转化为二进制真实值，然后​*预留符号位*​并将总长
+​*扩展至8位*​（[[color:red][包括小数点前预留的符号位]]）。得到扩展后的真实值后，再求其
+原码表示
+
+\[\begin{align*}
+  (+0.375)_{10} &= (+0.011)_2 \\
+                &= (+\color{red}{0}.011\;0000)_2 \quad\text{预留并扩展} \\
+ \therefore
+ [+0.011\;0000]_原 &= 0.011\;0000 \\
+ (-0.6875)_{10} &= (-0.1011)_2 \\
+                &= (-\color{red}{0}.101\;1000)_2 \\
+ \therefore
+ [-0.101\;1000]_原 &= 1.101\;1000 \\
+\end{align*}\]
+
+*** 纯整数
+
+\[\begin{align*}
+  [+1001\;1001]_原 &= \color{blue}{0}\;1001\;1001 \\
+  [-1001\;1001]_原 &= \color{red}{1}\;1001\;1001 \\
+\end{align*}\]
+
+零有两种表示
+- $[+0]_原 = 0\;00\ldots00$
+- $[-0]_原 = 1\;00\ldots00$
+
+Eg. 机器字长为8位，写出 $+37$ 和 $-37$ 的二进制原码，并用十六进制表示。
+\[\begin{align*}
+  (+37)_{10} &= (+100101)_2 \\
+             &= (+\color{red}{0}010\;0101)_2 \\
+  \therefore
+  [+0010\;0101]_原 &= 0010\;0101 = 25\text{H} \\
+  (-37)_{10} &= (-\color{red}{0}010\;0101)_2 \\
+  \therefore
+  [-0010\;0101]_原 &= 1010\;0101 = \text{A5H} \\
+\end{align*}\]
+
+*** 转化
+
+已知 $[x]_原$​，求 $[-x]_原$​时，将符号位取反即可。
+
+*** 表示范围
+
+对于 4 位原码，正负由符号位决定，大小和后3位有关
+- 纯整数时最小值为​$1111=-7$​，最大值为​$0111=+7$​
+- 纯小数时同理，两边分别为​$1.111=-(1-2^{-3})$ 和 $0111=1-2^{-3}$​
+
+
+对于 $n$ 位原码
+- 纯整数的表示范围为 $-(2^{n-1}-1)\sim2^{n-1}-1$​。
+- 纯小数的表示范围为 $-(1-2^{1-n})\sim1-2^{1-n}$​。
+
+*** 移位规则
+
+符号位不变，数值部分左移或右移，空位补0。
+
+对一个8位原码分别左移、右移，蓝色为符号位，红色为补的0
+$$\begin{align*}
+  [0.011\:0000]_原 &= \color{blue}{0}.011\:0000 \\
+  \frac{1}{2}\times[0.011\:0000]_原 &= \color{blue}{0}{.}\color{red}{0}011\:000 \quad 右移\\
+  2\times[0.011\:0000]_原 &= \color{blue}{0}{.}11\:0000\color{red}{0} \quad 左移\\
+\end{align*}$$
+
+注意：左移时不能将有效位移出，否则会溢出。（即上例纯小数不能左移两位）
+
+** 反码（1的补码）
+
+在原码的基础上，对于负数，不止改变符号位，剩余位全部取反。表示范围与原
+码相同，纯小数反码不能表示 $-1$​，纯整数反码不能表示$-2^{n-1}$​。
+
+0也有两种方式表示
+- 正零 $[+0]_反 = 0000\;0000$
+- 负零 $[-0]_反 = 1111\;1111$
+
+** 补码（2的补码）
+
+补码将减法 $x-y$ 简化为加法 $x+(-y)$​，将减法的重点转移到求 $[-y]_补$​。
+它对 $x$ 按位取反得到 $\overline{x}$​，而 $x + \overline{x}$ 为
+$11\ldots11$​，结果再加1就会溢出变为0。也就是说
+\[\begin{align*}
+  x +\overline{x} + 1 &= 0 \\
+  \overline{x} + 1 &= -x \\
+\end{align*}\]
+所以 $[-x]_补 = \overline{[x]_补} + 1$​，即「取反加一」。
+
+补码改变了从 $0000$ 到 $1111$ 的大小顺序，因此不适合用于浮点数的表示。
+
+*** 纯小数
+\[\begin{align*}
+  [+0.1011]_补 &= [+0.101\;1000]_补 = 0.101\;1000 \\
+  [-0.1011]_补 &= [-0.101\;1000]_补 = 1.010\;1000 \\
+\end{align*}\]
+
+*** 纯整数
+
+？？？
+对于 $n$ 位移码
+\[[x]_补 = \{2^n + x\}_{低\,n\,位} =
+\begin{cases}
+x       & 0\le x \lt 2^{n-1} \\
+2^n + x & -2^{n-1} \le x \lt 0 \\
+\end{cases}\]
+
+\[\begin{align*}
+  [+1011]_补 &= [+0000\;1011]_补 = \color{red}{0}000\;1011 \\
+  [-1011]_补 &= [-0000\;1011]_补 = \color{red}{1}111\;0101 \\
+\end{align*}\]
+
+*** 表示范围
+
+原码的负0变成补码中「更负的数」。​$n$ 位机器码 $100\ldots000$ 对于纯小
+数为 $-1$​，纯整数为$-2^{n-1}$​。
+
+对于 4 位补码
+- 纯整数时，最小为 $1000=-2^3$​，最大为 $0111=2^3-1$​。
+- 纯小数时，最小为 $1.000=-1$​，最大为 $0.111=1-2^{-3}$​。
+
+对于 $n$ 位补码
+- 纯整数的表示范围为 $-2^{n-1}\sim2^{n-1}-1$​。
+- 纯小数的表示范围为 $-1\sim1-2^{1-n}$​。
+
+*** 转化
+下列，绿色表示符号位，划线部分为末尾不变的的 $10\ldots0$​，蓝色、红色为
+中间不变或取反的位。
+
+真实值转换为补码时，预留符号位并扩展，对于负数，除了末尾的
+$10\ldots0$​，其余取反
+\[\begin{align*}
+  [+0.\color{blue}{101\;100}1]_补 &= \color{green}{0}{.}\color{blue}{101\;100}\underline{1} \\
+  [-0.\color{blue}{101\;100}1]_补 &= \color{green}{1}{.}\color{red}{010\;011}\underline{1} \\
+  [+\color{blue}{110\;10}10]_补 &= \color{green}{0}\,\color{blue}{110\;10}\underline{10} \\
+  [-\color{blue}{110\;10}10]_补 &= \color{green}{1}\,\color{red}{001\;01}\underline{10} \\
+\end{align*}\]
+
+已知 $[x]_原$​，求 $[x]_补$ 时，符号位不变，末尾的 $10\ldots0$ 不变，
+对于负数中间部分取反
+\[\begin{align*}
+[+0.\color{blue}{100\;1}100]_原 &= 0.\color{blue}{100\;1}100 \\
+[+0.\color{blue}{100\;1}100]_补 &= 0.\color{blue}{100\;1}100 \\
+\\
+[-0.\color{blue}{100\;1}100]_原 &= 1.\color{blue}{100\;1}100 \\
+[-0.\color{blue}{100\;1}100]_补 &= 1.\color{red}{011\;0}100 \\
+\\
+[+\color{blue}{100\;1}100]_原 &= 0\color{blue}{100\;1}100 \\
+[+\color{blue}{100\;1}100]_补 &= 0\color{blue}{100\;1}100 \\
+\\
+[-\color{blue}{1001}100]_原 &= 1\color{blue}{100\;1}100 \\
+[-\color{blue}{1001}100]_补 &= 1\color{red}{011\;0}100 \\
+\end{align*}\]
+
+已知 $[x]_补$​，求 $[-x]_补$ 时，各位取反加1（或除最后的 $10\ldots0$ 都
+取反）
+\[\begin{align*}
+ [x]_补 &= \color{blue}{1.001\;10}10 \\
+[-x]_补 &= \color{red}{0.110\;01}10 \\
+\\
+ [x]_补 &= \color{blue}{1011\;00}10 \\
+[-x]_补 &= \color{red}{0100\;11}10 \\
+\end{align*}\]
+
+*** 移位规则
+
+右移补符号位，左移补0。
+不能移出有效位（若符号位左移后不一致，则说明有效位被移出）
+
+*** 运算
+
+将4位原码 $1110$ 变成8位补码，可以现将其扩展成8位原码，再转化成8位补码
+\[ 1110_原 = 1000\;0110_原 = 1111\;1010_补 \]
+也可将其先转化成4位补码，再扩展成8位补码
+\[ 1110_原 = 1010_补 = 1111\;1010_补 \]
+
+
+补码总是针对确定的模而言（即特定的字长）。不同位数的码相加时，一定要扩
+展成相同位数。
+\[ 2100\text{H} + 83\text{H} \ne 2183\text{H} \]
+\[ 2100\text{H} + 83\text{H} = 2100\text{H} + \text{FF}83\text{H} = 2083\text{H} \]
+
+** 移码
+
+移码主要用于表示浮点数的阶码，即 $1.01001101 \times 2^x$ 中的 $x$​。最
+高位为符号位，[[color:red][*0负1正*​]]。
+
+*** 纯整数
+
+对于 $n$ 位移码
+\[ [x]_移 = 2^{n-1} + x, \quad -2^{n-1} \le x \lt 2^{n-1} \]
+
+Eg. 机器字长为8位，则 $[x]_移 = 2^7 + x$
+\[\begin{align*}
+  [+110\;0101]_移 &= 2^7 + 110\;0101 = 1000\;0000 + 110\;0101 \\
+                  &= 1110\;0101 \\
+  [-110\;0101]_移 &= 2^7 - 110\;0101 = 1000\;0000 - 110\;0101 \\
+                  &= 1 + 111\;1111 - 110\;0101 \\
+                  &= 0001\;1011 \\
+\end{align*}\]
+
+| 移码 | 真实值 |
+|------+--------|
+| <c>  |  <c>   |
+| 000  |  $-4$  |
+| 001  |  $-3$  |
+| 010  |  $-2$  |
+| 011  |  $-1$  |
+| 100  |   0    |
+| 101  |   1    |
+| 110  |   2    |
+| 111  |   3    |
+
+*** 转换
+
+移码和补码相互转换时，将符号位取反即可
+\[\begin{align*}
+  [x]_补 &= 2^n + x \\
+  [x]_移 &= 2^{n-1} + x \\
+  \therefore
+  [x]_补 &= [x]_移 + 2^{n-1}
+\end{align*}\]
+
+#+caption: 字长4位的补码、移码
+| 真实值 | 补码 | 移码 |
+|  <c>   | <c>  | <c>  |
+|  $-4$  | 1100 | 0100 |
+|  $-3$  | 1101 | 0101 |
+|  $-2$  | 1110 | 0110 |
+|  $-1$  | 1111 | 0111 |
+|   0    | 0000 | 1000 |
+|   1    | 0001 | 1001 |
+|   2    | 0010 | 1010 |
+|   3    | 0011 | 1011 |
+|   4    | 0100 | 1100 |
+
+*** 表示范围
+
+$n$ 位移码的表示范围为 $-2^{n-1}\sim2^{n-1}-1$ 与补码相同。最小值
+$00\ldots0 = -2^{n-1}$​，最大值 $11\ldots1 = 2^{n-1}-1$​。
+
+与补码不同的是，移码实质上将这 $2^n$ 个数在数轴上平移，使得 $[0]_移 =
+100\ldots00$​。也正因此，​*比较移码大小时可以将其当作无符号数处理*​。
+
+** 简单总结
+
+{{{image(100)}}}
+#+caption: 不同码制间的相互转换
+[[./ch2-representation/conversion.png]]
+
+* 数的定点与浮点表示
+
+一个 R 进制数 N 可表示为
+\[ \text{N}_\text{R} = \pm \text{S} \times \text{R}^{\pm \text{E}} \]
+其中
+- R (radix, base): 数的基数，即进制
+- S (significant digit, mantissa, also a sequence of digits 😉): *尾数*
+- E (exponent, power): *阶码*​，控制小数点位置
+
+不同的数字有不同的表示；同一个数字，小数点位置不同，也有不同的表示
+\[\begin{alignat}{2}
+  123.45 &= 0.12345  &&\times\color{red}{10^3}  \nonumber\\
+   0.678 &= 0.678    &&\times\color{blue}{10^0} \nonumber\\
+         &= 0.000678 &&\times\color{red}{10^3}  \nonumber\\
+\end{alignat}\]
+
+** 定点表示
+
+定点数小数点位置固定（即阶码固定），纯整数的小数点在有效位末尾，纯小数
+的小数点在符号位之后。
+
+** 浮点表示
+
+小数点位置可变，同时存储尾数与阶码，其中
+- *阶码为纯整数*
+- *尾数为纯小数*
+
+{{{image(60)}}}
+[[./ch2-representation/float-point.png]]
+
+*** 规格化
+
+由于小数点位置可变，一个数对应多种表示，因此需要将​*尾数（纯小数）*​规格
+化，让数与机器码一一对应。规格化原则：[[color:red][在不破坏符号位的前提下，将有效位
+​*尽量左移*​]]。
+
+原码的规格化：符号位不变，其余部分尽量左移，1不移出
+\[\begin{align*}
+  0.000\color{red}{101} &\to 0.\color{red}{101}000 \\
+  1.000\color{red}{101} &\to 1.\color{red}{101}000 \\
+\end{align*}\]
+
+补码的规格化：整体左移，保持符号位不变（其实就是符号位和最高有效位不同）
+- 正数符号位为0，1不移出
+- 负数符号位为1，0
+\[\begin{align*}
+  0.000\color{red}{101} &\to 0.\color{red}{101}000 \\
+  1.111\color{red}{010} &\to 1.\color{red}{010}000 \\
+\end{align*}\]
+在此前提下
+\[\begin{align*}
+  [-1.0]_补 &= 1.00\ldots0 \quad 是规格化数 \\
+  [-0.5]_补 &= 1.10\ldots0 \quad 非规格化数 \\
+\end{align*}\]
+
+*** 表示范围
+
+{{{image(80)}}}
+[[./ch2-representation/float-point-range.png]]
+
+六个范围
+\[ N_\min \lt N_\max \lt N_\max' \lt P_\min' \lt P_\min \lt P_\max \]
+其中 $N_\max'$ 表示非规格化最大负数，​$P_\min'$ 表示非规格化最小正数。
+
+设阶码除符号位有 m 位，尾数除符号位有 n 位。
+
+**** 阶码和尾数均用原码
+
+尾数
+\[\begin{align*}
+  P_\max^S  &= 0.11\ldots11 = 1 - 2^{-n}      \\
+  P_\min^S  &= 0.10\ldots00 = 2^{-1} = 0.5    \\
+  P_\min'^S &= 0.00\ldots01 = 2^{-n}          \\
+  N_\max'^S &= 1.00\ldots01 = -2^{-n}         \\
+  N_\max^S  &= 1.10\ldots00 = -2^{-1} = -0.5  \\
+  N_\min^S  &= 1.11\ldots11 = -(1 - 2^{-n})   \\
+\end{align*}\]
+
+阶码
+\[\begin{align*}
+  P_\max^E &= 0\;11\ldots11 = 2^m - 1 \to 2^{2^m - 1} \\
+  N_\min^E &= 1\;11\ldots11 = -(2^m - 1) \to 2^{-(2^m - 1)} \\
+\end{align*}\]
+
+浮点数
+\[\begin{alignat}{3}
+  P_\max  &= P_\max^S  \times P_\max^E &&= (1-2^{-n}) &&\times 2^{2^m-1}   \nonumber\\
+  P_\min  &= P_\min^S  \times P_\min^E &&= 2^{-1}     &&\times 2^{-(2^m-1)}\nonumber\\
+  P_\min' &= P_\min'^S \times P_\min^E &&= 2^{-n}     &&\times 2^{-(2^m-1)}\nonumber\\
+  N_\max' &= N_\max'^S \times P_\min^E &&= -2^{-n}    &&\times 2^{-(2^m-1)}\nonumber\\
+  N_\max  &= N_\max^S  \times P_\min^E &&= -2^{-1}    &&\times 2^{-(2^m-1)}\nonumber\\
+  N_\min  &= N_\min^S  \times P_\max^E &&= -(1-2^{-n})&&\times 2^{2^m-1}   \nonumber\\
+\end{alignat}\]
+
+**** 阶码和尾数均用补码
+
+尾数
+\[\begin{align*}
+  P_\max^S  &= 0.11\ldots11 = 1 - 2^{-n}      \\
+  P_\min^S  &= 0.10\ldots00 = 2^{-1}          \\
+  P_\min'^S &= 0.00\ldots01 = 2^{-n}          \\
+  N_\max'^S &= 1.11\ldots11 = -2^{-n}         \\
+  N_\max^S  &= \color{red}{1.01\ldots11} = -(2^{-1}+2^{-n})\\
+  N_\min^S  &= 1.00\ldots00 = -1              \\
+\end{align*}\]
+
+阶码
+\[\begin{align*}
+  P_\max^E &= 0\;11\ldots11 = 2^m - 1 \to 2^{2^m - 1} \\
+  N_\min^E &= 1\;00\ldots00 = -2^m    \to 2^{-2^m}    \\
+\end{align*}\]
+
+浮点数
+\[\begin{alignat}{3}
+  P_\max  &= P_\max^S  \times P_\max^E &&= (1-2^{-n}) &&\times 2^{2^m-1}   \nonumber\\
+  P_\min  &= P_\min^S  \times P_\min^E &&= 2^{-1}     &&\times 2^{-2^m}    \nonumber\\
+  P_\min' &= P_\min'^S \times P_\min^E &&= 2^{-n}     &&\times 2^{-2^m}    \nonumber\\
+  N_\max' &= N_\max'^S \times P_\min^E &&= -2^{-n}    &&\times 2^{-2^m}    \nonumber\\
+  N_\max  &= N_\max^S  \times P_\min^E &&= -(2^{-1}+2^{-n}) &&\times 2^{-2^m}\nonumber\\
+  N_\min  &= N_\min^S  \times P_\max^E &&= -1         &&\times 2^{2^m-1}   \nonumber\\
+\end{alignat}\]
+
+**** 阶码使用移码、尾数使用补码
+
+除了阶码的机器码改变，其余不变（阶码范围也不变）
+\[\begin{align*}
+  P_\max^E &= 1\;11\ldots11 = 2^m - 1 \to 2^{2^m - 1} \\
+  N_\min^E &= 0\;00\ldots00 = -2^m    \to 2^{-2^m}    \\
+\end{align*}\]
+
+*** IEEE 754 浮点数
+
+- [[https://babbage.cs.qc.cuny.edu/IEEE-754.old/References.xhtml][IEEE-754 Reference Material]]: 包含了各种文档和链接，棒棒
+- [[https://people.eecs.berkeley.edu/~wkahan/ieee754status/754story.html][An Interview with the Old Man of Floating-Point]]: 讲述了 IEEE 754 初
+  期的建立过程，包括 subnormal number 和它带来的 gradual underflow。
+  #+begin_quote
+  I could describe the precisions, exponent ranges, special values
+  (Not-a-Number and Infinities), and storage formats (which differed
+  from the VAX's).  I could also disclose some of the reasoning behind
+  our decisions: WHY but not HOW.
+  #+end_quote
+- [[http://www.physics.utah.edu/~detar/phys6720/handouts/IEEE.txt][IEEE Numeric Format]]: 从整数到小数的简短介绍
+  #+begin_details 关于规范化
+  #+begin_src text
+    Next we look at binary scientific notation.  Here we want to represent
+    the number in the form A * 2^N (2 raised to the power N), where A and
+    N are both binary numbers.  Here are some examples:
+
+         Decimal      Binary                                 F      N
+            1           1.000 * 2^(00)                      000     00
+            4         100.000 * 2^(00) = 1.000 * 2^(10)     000     10
+            5         101.000 * 2^(00) = 1.010 * 2^(10)     010     10
+           1/2          0.100 * 2^(00) = 1.000 * 2^(-01)    000    -01
+           3/4          0.110 * 2^(00) = 1.100 * 2^(-01)    100    -01
+
+    Consider that by shifting the decimal point in A and adjusting N,
+    every number can be written in the form
+
+              1.F * 2^N,
+
+    as we have done. The result is given in the last three columns.  A
+    clever feature of IEEE format is that the leading digit is always "1"
+    so after shifting the decimal point to the standard place, the leading
+    1 can be dropped without loss of information in favor of keeping only
+    the fraction F, thus increasing the ultimate precision by a factor of 2.
+  #+end_src
+  #+end_details
+- [[http://steve.hollasch.net/cgindex/coding/ieeefloat.html][IEEE Standard 754 Floating Point Numbers]]: 挺完整挺不错的介绍
+- [[https://web.archive.org/web/20171230124220/http://grouper.ieee.org/groups/754/reading.html][Supplemental Readings for IEEE 754 / 854]]
+- [[https://standards.ieee.org/standard/754-1985.html][IEEE 754-1985]]: 最初的标准，只包括了二进制浮点数 (binary floating-point)
+- [[https://standards.ieee.org/standard/754-2008.html][IEEE 754-2008]]: 主要增加了十进制浮点数
+- [[https://standards.ieee.org/standard/754-2019.html][IEEE 754-2019]]: emm……反正是现行版本
+
+The [[https://en.wikipedia.org/wiki/IEEE_754][*IEEE Standard for Floating-Point Arithmetic (IEEE 754)*]] defines:
+- *arithmetic formats*: sets of _*binary and decimal* floating-point
+  data_, which consist of finite numbers (including signed zeros and
+  subnormal numbers), infinities, and special "not a number" values
+  (NaNs)
+- *interchange formats*: encodings (bit strings) that may be used to
+  exchange floating-point data in an efficient and compact form
+- *rounding rules*: properties to be satisfied when rounding numbers
+  during arithmetic and conversions
+- *operations*: arithmetic and other operations (such as trigonometric
+  functions) on arithmetic formats
+- *exception handling*: indications of exceptional conditions (such as
+  division by zero, overflow, etc.)
+
+A floating-point /format/ is *specified by*:
+- a base (also called radix) $b$, which is either 2 (binary) or 10
+  (decimal) in IEEE 754
+- a precision $p$
+- an exponent range from $emin$ to $emax$, with $emin = 1 - emax$ for
+  all IEEE 754 formats.
+
+A /format/ *comprises*:
+- *Finite numbers*, which can be described by three integers
+  - $s$: a sign (zero or one)
+  - $c$: a significand (or coefficient) having no more than $p$ digits
+    when written in base $b$ (i.e., an integer in the range through 0
+    to $b^p-1$)
+  - $q$: an exponent such that $emin \le q + p - 1 \le emax$.  The
+    numerical value of such a finite number is $(-1)^s \times c \times
+    b^q$.  Moreover, there are two zero values, called *signed zeros*:
+    the sign bit specifies whether a zero is $+0$ (positive zero) or
+    $-0$ (negative zero).
+- Two infinities: $+\infty$ and $-\infty$.
+- Two kinds of NaN (not-a-number): a *quiet NaN* (qNaN) and a
+  *signaling NaN* (sNaN).
+
+
+#+caption: 32位单精度浮点数
+{{{image(100)}}}
+[[./ch2-representation/single-precision.svg]]
+
+- S: 数符，1位
+- E: 带阶符的阶码，8位，采用移127码表示
+- M: 尾数，23位，但规格化表示后左侧有隐含位1，实际有效值为 1.M
+
+
+|       E        |   M    |              数               |
+|      <c>       |  <c>   |              <c>              |
+|       0        |   0    |            $\pm0$             |
+|       0        | $\ne0$ | $(-1)^S \text{0.M} \times 2^{-126}$ |
+| $1\le E\le254$ |   -    | $(-1)^S \text{1.M} \times 2^{E-127}$ |
+|      255       | $\ne0$ |              NaN              |
+|      255       |   0    |          $\pm\infty$          |
+
+Eg. 将 $5/32$ 和 $-4120$ 表示为单精度浮点数
+\[\begin{align*}
+  (5/32)_{10} &= (0.00101)_{10} = 1.01 \times 2^{-3} \\
+  S &= 0 \\
+  E &= -3 + 127 = 124 = (0111\;1100)_2 \\
+  M &= 0100\ldots00 \\
+  \therefore
+  [5/32]_{单精度} &= 0\;\;0111\;1100\;\;0100\ldots00 \\
+  \\
+  -4120_{10} &= -1\;0000\;0001\;1000 = -1.0000\;0001\;1 \times 2^{12} \\
+  S &= 1 \\
+  E &= 127 + 12 = 1000\;1011 \\
+  M &= 0000\;0001\;100\ldots00 \\
+  \therefore
+  [-4120]_{单精度} &= 1\;\;1000\;1011\;\;0000\;0001\;100\ldots00 \\
+\end{align*}\]
+
+* 数据校验码
+
+[[https://en.wikipedia.org/wiki/Checksum][Checksum]]:
+#+begin_quote
+A checksum is a *small-sized block* of data derived from another block
+of digital data for the purpose of *detecting* errors that may have
+been introduced *during its transmission or storage*.  By themselves,
+checksums are often used to verify data *integrity* but are not relied
+upon to verify data /authenticity/.
+#+end_quote
+
+纠错码 [[https://en.wikipedia.org/wiki/Error_correction_code][Error correction code]]:
+#+begin_quote
+In computing, telecommunication, information theory, and coding
+theory, an error correction code, sometimes error correcting code,
+(ECC) is used for controlling errors in data _over unreliable or noisy
+communication channels_.  The central idea is the sender encodes the
+message with *redundant information* in the form of an ECC.  The
+redundancy allows the receiver to *detect* a limited number of errors
+that may occur anywhere in the message, and often to _*correct* these
+errors without retransmission_.  The American mathematician Richard
+Hamming pioneered this field in the 1940s and invented the first
+error-correcting code in 1950: the Hamming (7,4) code.
+#+end_quote
+
+错误检测与纠正 [[https://en.wikipedia.org/wiki/Error_detection_and_correction][Error detection and correction]]:
+#+begin_quote
+In information theory and coding theory with applications in computer
+science and telecommunication, /error detection and correction/ or
+/error control/ are techniques that enable *reliable delivery* of
+digital data *over unreliable communication channels*.  Many
+communication channels are subject to channel noise, and thus errors
+may be introduced during transmission from the source to a receiver.
+*Error detection* techniques allow detecting such errors, while *error
+correction* enables reconstruction of the original data in many cases.
+#+end_quote
+
+mark 一本书：Fundamentals of Error-Correcting Codes
+
+在数据传输中，由于噪声干扰等因素，可能导致传输数据的损坏。纠错码相当于
+数据的压缩信息，可以通过纠错码​*发现*​甚至​*恢复*​部分损坏的信息。纠错码主
+要包括错误检测与错误纠正两方面。由于不同的传输媒界的特性不同，适用的纠
+错码也不同。
+
+- 错误检测方案
+  - 奇偶校验码
+  - 循环冗余校验码
+- 错误纠正方案
+  - 自动重传请求
+  - 纠错码，包括海明码等
+  - 混合方案
+
+*码距*​，亦称汉明距离(Hamming distance)，是两个01串（或字符串）中不同位
+的个数，如
+\[\begin{align*}
+A &= 010\color{red}{1}\;1\color{red}{1}01 \\
+B &= 010\color{red}{0}\;1\color{red}{0}01 \\
+\end{align*}\]
+则 $A$ 和 $B$ 的码距为2。这也是将 $A$ 转化为 $B$ 所需的最小步数。
+（一步改变一比特）
+
+对一组编码，​*最小码距*​是任意两个01串码距的最小值，也是噪声将一个有效编
+码转化到另一个有效编码所需的最小步数。对编码集合 $S = \{000, 111\}$​，
+最小码距 $d=3$​。这表示传输时，若噪声改变 $\lt d$ 个比特，就会被检测出。
+但噪声若改变 3 个比特，则 000 变成 111 就不会被检测出。至于纠错，一般
+基于最短距离寻找原编码，即如果收到 001，则会当成 000 而非 111。
+
+- $d \ge e+1$ 可检验 $e$ 个错
+- $d \ge 2t+1$ 可纠正 $t$ 个错：[[https://www.zhihu.com/question/282718598/answer/427209025][刘梳子的回答]]
+
+
+** 奇偶校验码
+
+- 奇校验：​*加上*​校验位后为奇数
+- 偶校验：​*加上*​校验位后为偶数
+
+只能发现奇数个比特位的错误，无法自动纠错。
+
+** 海明码
+
+本质上是多组奇偶校验
+
+k位校验码共有 2^k 种状态，每一状态表示一种单比特错误（或无错误）
+共有 n + k 位，则有 n + k + 1 种状态，即
+\[ 2^k \ge n + k + 1 \]
+
+|    n    | k_min |
+|   <c>   |  <c>  |
+|    1    |   2   |
+|  2--4   |   3   |
+|  5--11  |   4   |
+| 12--26  |   5   |
+| 27--57  |   6   |
+| 58--120 |   7   |
+
+** 扩展海明码
+
+检2纠1
+
+直接在最左或最右加上奇/偶校验位即可
+
+** 循环冗余校验码
+
+Cyclic Redundancy Check (CRC)
+
+- [[http://ross.net/crc/][The CRC Pitstop]]
+- [[http://ross.net/crc/crcpaper.html][A Painless Guide to CRC Error Detection Algorithms]]
+- [[https://zlib.net/#:~:text=CRC%20(Cyclic%20Redundancy%20Check)%20Bonus%20Information][CRC (Cyclic Redundancy Check) Bonus Information]]
+
+以下是脑瘫作业
+#+begin_src text
+              1011
+       ------------------------
+100101 ) 101011001000111100000
+         100101  |||| | | || |
+         --------|||| | | || |
+           111000|||| | | || |
+           100101|||| | | || |
+           ------|||| | | || |
+            111011||| | | || |
+            100101||| | | || |
+            ------||| | | || |
+             111100|| | | || |
+             100101|| | | || |
+             ------|| | | || |
+              110010| | | || |
+              100101| | | || |
+              ------| | | || |
+               101110 | | || |
+               100101 | | || |
+               ------ | | || |
+                 101111 | || |
+                 100101 | || |
+                 ------ | || |
+                   101011 || |
+                   100101 || |
+                   ------ || |
+                     111000| |
+                     100101| |
+                     ------| |
+                      111010 |
+                      100101 |
+                      ------ |
+                       111110|
+                       100101|
+                       ------|
+                        110110
+                        100101
+                        ------
+                         10011
+#+end_src

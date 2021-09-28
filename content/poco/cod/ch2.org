@@ -163,6 +163,28 @@ another example of making the *common case fast*.
 
 * The RISC-V ISA
 
+- The book ​[[http://riscvbook.com/][The RISC-V Reader: An Open Architecture Atlas]] explains the
+  RISC-V ISA in great detail.  For brevity, we'll call it /The RISC-V
+  book/.  Many of the following content is taken from this book.
+  - the Menu vs. the Buffet: Chapter 1.2, Modular vs. Incremental ISAs
+    #+begin_quote
+    RISC-V offers a menu instead of a buffet; the chef need cook only
+    what the customers want---not a feast for every meal---and the
+    customers pay only for what they order.
+    #+end_quote
+- [[https://riscv.org/announcements/2016/04/risc-v-offers-simple-modular-isa/][RISC-V Offers Simple, Modular ISA]]
+
+-----
+
+#+begin_quote
+Mona Lisa represents elegance, which we believe is a feature of
+RISC-V. ---​/The RISC-V book/
+#+end_quote
+
+
+** Instruction Formats
+
+
 ** Arithmetic Instructions
 
 *** =add=
@@ -361,4 +383,7 @@ The object file for UNIX systems typically contains six distinct pieces:
 
 ** Dynamically Linked Libraries
 
+* Footnotes
 
+[fn:1] The RISC-V Reader: An Open Architecture Atlas, p.3 Figure 1.2:
+Growth of x86 instruction set over its lifetime.
