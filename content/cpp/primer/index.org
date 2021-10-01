@@ -1,0 +1,14 @@
+#+title: C++ Primer 笔记
+
+#+begin_quote
+Traditional books about programming and programming languages explain
+what a language is and how to use it.  However, many people are also
+curious about why a language is the way it is and how it came to be
+that way.  This book answers these last two questions for C++.  It
+explains how C++ evolved from its first design to the language in use
+today.  It describes the key problems, design aims, language ideas,
+and constraints that shaped C++, and how they changed over time.
+#+end_quote
+
+Emm... 就重新开始看 C++ Primer. 之前大一的时候大概看到一半就弃坑了,不
+造现在能看到哪. 所有笔记基本都是原文复制过来的,还挺多,就先酱8.

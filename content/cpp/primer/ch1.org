@@ -1,0 +1,251 @@
+#+title: Ch1 --- Getting Started
+
+* Writing a Simple C++ Program
+
+The operating system runs a C++ program by calling =main=.  =main=
+returns a value to the operating system.
+
+A function definition has four elements:
+- return type: the value returned by a =return= statement must have a
+  type that is *compatible* with the return type of the function.
+- function name
+- parameter list: enclosed in parentheses, possibly empty
+- function body: a /block/ of /statements/ starting with an open curly
+  brace and ending with a close curly
+
+
+*Types* are one of the most fundamental concepts in programming.  A
+type defines both the *contents* of a data element and the
+*operations* that are possible on those data.
+
+*built-in type*: types the language defines.
+
+*library type*: Type, such as =istream=, defined by the standard
+library.
+
+* A First Look at Input/Output
+
+Return value: 0--255
+#+begin_src cpp
+  int main() {
+      return -1;  // becomes 255
+  }
+#+end_src
+
+_The C++ language does not define any /statements/ to do input or
+output (IO)._ Instead, C++ includes an extensive *standard library*
+that provides IO (and many other facilities).
+
+Fundamental to the =iostream= library are two types named =istream=
+and =ostream=, which represent input and output streams, respectively.
+A stream is a *sequence of characters* read from or written to an IO
+device.  The term stream is intended to suggest that the characters
+are generated, or consumed, *sequentially* over time.
+
+The library defines four IO objects:
+- an object of type =istream= named =cin= (standard input)
+- an =ostream= object named =cout= (standard output).
+- two other ostream objects =cerr= and =clog=.  By default, writes to
+  =cerr= are not buffered, but _writes to =clog= are buffered_.
+
+Ordinarily, the system _associates each of these objects with the
+window in which the program is executed_.  So, when we read from
+=cin=, data are read from the window in which the program is
+executing, and when we write to =cout=, =cerr=, or =clog=, the output
+is written to the same window. [stdin, stdout 等IO与进程绑定?]
+
+*expression*: The smallest unit of computation.  An expression
+consists of *one or more operands* and *usually one or more
+operators*.  Expressions are evaluated to *produce a result*.  For
+example, assuming =i= and =j= are ints, then =i + j= is an expression
+and yields the sum of the two int values.
+
+*statement*: A part of a program that specifies an action to take
+place when the program is executed.  *An expression followed by a
+semicolon is a statement*; other kinds of statements include blocks
+and =if=, =for=, and =while= statements, all of which _contain other
+statements within themselves_.
+
+The =<<= operator (output operator) takes two operands: The left-hand
+operand must be an =ostream= object; the right-hand operand is a value
+to print.  The operator writes the given value on the given ostream.
+*The result of the output operator is its left-hand operand.*
+
+=>>=: the input operator takes an =istream= as its left-hand operand
+and an object as its right-hand operand.  It reads data from the given
+istream and stores what was read in the given object.  Like the output
+operator, the input operator returns its left-hand operand as its
+result.
+
+#+begin_src cpp
+  std::cout << "The sum of " << v1 << " and " << v2
+            << " is " << v1 + v2 << std::endl;
+#+end_src
+What is interesting in this example is that the operands are *not all
+the same kinds of values*.  Some operands are string literals, others
+are =int= values.  The library defines versions of the input and
+output operators that handle *operands of each of these differing
+types*.
+
+
+*string literal*, *character string literal*: Sequence of zero or more
+characters enclosed in double quotes.
+
+*manipulator*: Object, such as =std::endl=, that when read or written
+"manipulates" the stream itself.
+
+=endl= is a special value called a *manipulator*.  Writing =endl= has
+the effect of ending the current line and _flushing the buffer
+associated with that *device*_.  Flushing the buffer ensures that all
+the output the program has generated so far is actually written to the
+output stream, rather than sitting in memory waiting to be written.
+
+#+begin_box Always Flush Your Log
+Programmers often add print statements during debugging.  Such
+statements should always flush the stream.  Otherwise, if the program
+crashes, output may be left in the buffer, leading to incorrect
+inferences about where the program crashed.
+#+end_box
+
+Namespaces allow us to avoid inadvertent collisions between the names
+we define and uses of those same names inside a library.  All the
+names defined by the standard library are in the =std= namespace.
+
+=::=: the scope operator.  It says that the compiler should look in
+the scope of the left-hand operand for the name of the right-hand
+operand.
+
+*initialize*: Give an object a value at the same time that it is
+created.
+
+*uninitialized variable*: Variable that is not given an initial value.
+- Variables of /class type/ for which no initial value is specified
+  are initialized *as specified by the class definition*.
+- Variables of /built-in type/ defined inside a function are
+  *uninitialized unless explicitly initialized*.
+*It is an error to try to use the value of an uninitialized variable.*
+
+* A Word about Comments
+
+#+begin_box A Word about Comments
+Although the compiler ignores comments, readers of our code do not.
+Programmers tend to believe comments even when other parts of the
+system documentation are out of date.  *An incorrect comment is worse
+than no comment at all because it may mislead the reader.* When you
+change your code, be sure to update the comments, too!
+#+end_box
+
+Comment pairs do not nest.  We often need to comment out a block of
+code during debugging.  Because that code might contain nested comment
+pairs, the best way to comment a block of code is to insert
+single-line comments at the beginning of each line in the section we
+want to ignore:
+#+begin_src cpp
+  // /*
+  // * everything inside a single-line comment is ignored
+  // * including nested comment pairs
+  // */
+#+end_src
+
+* Flow of Control
+
+A =while= has the form
+#+begin_src text
+  while (condition)
+    statement
+#+end_src
+A =while= executes by (alternately) testing the condition and
+executing the associated statement until the condition is false.  A
+condition is an /expression/ that yields a result that is either true
+or false.
+
+A *block* is a sequence of zero or more statements enclosed by curly
+braces.  A block is a statement and may be used wherever a statement
+is required.
+
+Each =for= statement has two parts: a *header* and a *body*.  The
+header controls how often the body is executed.  The header itself
+consists of three parts: an *init-statement*, a *condition*, and an
+*expression*.  Note that _the init-statement is a statement_, allowing
+for assignment statements like =int i=0;=.
+
+When we use an =istream= as a *condition*, the effect is to *test the
+state of the stream*.  If the stream is valid---that is, if the stream
+hasn't encountered an error---then the test succeeds.  An =istream=
+becomes invalid when we hit /end-of-file/ or encounter an invalid
+input, such as reading a value that is not an integer.  An =istream=
+that is in an invalid state will cause the condition to yield false.
+
+
+A compiler cannot detect whether a program does what its author
+intends, but it can detect errors in the *form* of the program.  It is
+a good practice to correct errors in the sequence they are reported.
+Often a single error can have a cascading effect and cause a compiler
+to report more errors than actually are present.  It is also a good
+idea to recompile the code after each fix---or after making at most a
+small number of obvious fixes.  This cycle is known as
+/edit-compile-debug/.
+
+#+begin_src cpp
+  // counts consecutive numbers from input
+  #include <iostream>
+  int main() {
+      int currVal = 0, val = 0;
+      if (std::cin >> currVal) {
+          int cnt = 1;
+          while (std::cin >> val) {
+              if (val == currVal) {
+                  ++cnt;
+              } else {
+                  std::cout << currVal << " occurs "
+                            << cnt << " time(s)" << std::endl;
+                  currVal = val;
+                  cnt = 1;
+              }
+          }
+          std::cout << currVal << " occurs "
+                    << cnt << " time(s)" << std::endl;
+      }
+  }
+#+end_src
+
+#+begin_box Free-Format
+C++ programs are largely *free-format*, meaning that where we put curly
+braces, indentation, comments, and newlines usually has no effect on
+what our programs mean.
+
+Endless debates occur as to the right way to format C or C++ programs.
+Our belief is that there is no single correct style but that there is
+value in *consistency*.  Once you've chosen a style, use it
+consistently.
+#+end_box
+
+* Introducing Classes
+
+*class type*: A type defined by a class.  The name of the type is the
+class name.
+
+
+A class defines a type along with a collection of *operations* that
+are related to that type.  A primary focus of the design of C++ is to
+make it possible to define _class types that behave as naturally as
+the built-in types_.
+
+A member function is a function that is defined as part of a class.
+Member functions are sometimes referred to as methods.
+
+=.=: the dot operator applies only to objects of class type.  The
+left-hand operand must be an object of class type, and the right-hand
+operand must name a member of that type.  The result of the dot
+operator is the member named by the right-hand operand.
+
+=()=: the call operator
+
+
+*buffer*: A region of storage used to hold data.  IO facilities often
+store input (or output) in a buffer and read or write the buffer
+*independently from actions in the program*.  Output buffers can be
+explicitly flushed to force the buffer to be written.  By default,
+*reading =cin= flushes =cout=*; =cout= is also flushed when the
+program ends normally.
+

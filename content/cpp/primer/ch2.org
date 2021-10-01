@@ -1,0 +1,888 @@
+#+title: Ch2 --- Variables and Basic Types
+
+Types are fundamental to any program: They tell us what our data mean
+and what operations we can perform on those data.
+
+Every widely used programming language provides _a common set of
+features_.  Among the most fundamental of these common features are:
+- Built-in *types* such as integers, characters, and so forth
+- *Variables*, which let us give names to the objects we use
+- *Expressions* and *statements* to *manipulate* values of these types
+- *Control structures*, such as =if= or =while=, that allow us to
+  conditionally or repeatedly execute a set of actions
+- *Functions* that let us define callable units of computation
+
+[[https://stackoverflow.com/q/19132/11938767][Expression Versus Statement]]
+
+#+begin_details Weird Languages
+Although most languages offer these common set of features, what
+distinguish them are their own unique features, such as Java's
+reflection, Lisp's macro.  Learning a language is not simply about
+knowing the way it implements the common features.
+
+See Paul Graham's new article: [[http://www.paulgraham.com/weird.html][Weird Languages]].
+#+begin_quote
+In the process of learning how to say things you couldn't previously
+say, you'll probably be learning how to think things you couldn't
+previously think.
+#+end_quote
+#+end_details
+
+In C++, as in most programming languages, the type of an object
+determines what operations can be performed on it.  Whether a
+particular expression is legal depends on the type of the objects in
+that expression.  Some languages, such as Smalltalk and Python, check
+types *at run time*.  In contrast, C++ is a *statically typed
+language*; *type checking is done at compile time*.  As a consequence,
+the compiler must know the type of every name used in the program.
+
+#+begin_box The Expressive Power of C++
+C++ provides a set of built-in types, operators to manipulate those
+types, and a small set of statements for program flow control.  These
+elements form an alphabet from which we can write large, complicated,
+real-world systems.  At this basic level, C++ is a simple language.
+_Its expressive power arises from its support for mechanisms that
+allow the programmer to *define new data structures*._ Using these
+facilities, programmers can *shape the language to their own purposes*
+without the language designers having to anticipate the programmers'
+needs.
+
+SICP talks about the concept of /data abstraction/.
+#+end_box
+
+* Primitive Built-in Types
+
+C++ defines a set of primitive types that include the *arithmetic
+types* and a special type named =void=.
+
+** Arithmetic Types
+
+The arithmetic types are divided into two categories: *integral types*
+(including character and boolean types) and *floating-point types*.
+
+The size of the arithmetic types varies across machines.  The standard
+guarantees *minimum sizes*.  However, compilers are allowed to use
+larger sizes for these types.
+{{{image(80)}}}
+[[./ch2/cpp-arithmetic-types.jpg]]
+
+A =char= is guaranteed to be big enough to hold numeric values
+corresponding to the characters in the machine's /basic character
+set/.  That is, a =char= is *the same size as a single machine byte*.
+
+The remaining character types---​=wchar_t=, =char16_t=, and
+=char32_t=​---are used for /extended character sets/.  The =wchar_t=
+type is guaranteed to be large enough to hold any character in the
+machine's largest /extended character set/.  The types =char16_t= and
+=char32_t= are intended for Unicode characters.
+
+#+begin_box Char—Signed or Unsigned
+Unlike the other integer types, there are *three distinct basic
+character types*: =char=, =signed char=, and =unsigned char=.  In
+particular, =char= is not the same type as =signed char= (or =unsigned
+char=).  Although there are three character types, _there are only two
+representations: /signed/ and /unsigned/._ The (plain) =char= type
+uses *one of* these representations.  Which of the other two character
+representations is equivalent to =char= *depends on the compiler*.
+
+[[https://stackoverflow.com/q/2054939/11938767][This]] Stack Overflow question says the standard makes the signedness of
+=char= implementation dependent.  [[https://stackoverflow.com/a/57898765/11938767][This]] and [[https://stackoverflow.com/a/15533179/11938767][this]] answer explain why.
+
+Do not use plain =char= or =bool= in arithmetic expressions.  Use them
+only to hold characters or truth values.  Computations using =char=
+are especially problematic because =char= is signed on some machines
+and unsigned on others.  If you need a tiny integer, explicitly
+specify either =signed char= or =unsigned char=.
+#+end_box
+
+The standard *does not define how signed types are represented*, but
+does specify that the *range* should be _evenly divided between
+positive and negative values_.  Hence, an 8-bit =signed char= is
+_guaranteed to be able to hold values from –127 through 127_; most
+modern machines use representations that allow values from –128
+through 127.
+
+** Type Conversions
+
+Type conversions happen automatically when we use an object of one
+type where an object of another type is expected.
+
+#+begin_src cpp
+  signed char c2 = 256; // assuming 8-bit chars, the value of c2 is undefined
+#+end_src
+When we assign one arithmetic type to another, what happens depends on
+the range of the values that the types permit:
+- When we assign one of the non-=bool= arithmetic types to a =bool=
+  object, the result is =false= if the value is 0 and =true=
+  otherwise.
+- When we assign a =bool= to one of the other arithmetic types, the
+  resulting value is 1 if the =bool= is =true= and 0 if the =bool= is
+  =false=.
+- When we assign a floating-point value to an object of integral type,
+  the value is *truncated*.  The value that is stored is _the part
+  before the decimal point_.
+- When we assign an integral value to an object of floating-point
+  type, the fractional part is zero.  *Precision may be lost* if the
+  integer has _more bits than the floating-point object can
+  accommodate_.
+- If we assign an *out-of-range* value to an object of *=unsigned=*
+  type, the result is the *remainder* of the value modulo the number
+  of values the target type can hold.  For example, an 8-bit =unsigned
+  char= can hold values from 0 through 255, inclusive.  If we assign a
+  value outside this range, the compiler assigns the remainder of that
+  value modulo 256.  Therefore, assigning –1 to an 8-bit =unsigned
+  char= gives that object the value 255.
+- [[color:red][If we assign an *out-of-range* value to an object of
+  *=signed=* type, the result is *undefined*.]]  The program might
+  appear to work, it might crash, or it might produce garbage values.
+
+#+begin_box "The Undefined Signed Overflow 🧐"
+See this great Stack Overflow question: [[https://stackoverflow.com/q/18195715/11938767][Why is unsigned integer
+overflow defined behavior but signed integer overflow isn't?]]
+
+Basically, since the standard does not define how signed types are
+represented, /sign and magnitude/, /two's complement/, and /one's
+complement/ may be used.  Simply truncating the value may produce
+different results across different representations.  Nowadays,
+although basically all machines use two's complement representation,
+signed arithmetic overflow remains undefined to help with
+optimization.
+#+end_box
+
+#+begin_box Avoid Undefined and Implementation-Defined Behavior
+Undefined behavior results from errors that the compiler is not
+required (and sometimes is not able) to detect.  Even if the code
+compiles, a program that executes an undefined expression is in error.
+
+Unfortunately, programs that contain undefined behavior can appear to
+execute correctly in some circumstances and/or on some compilers.
+*There is no guarantee* that the same program, compiled under a
+_different compiler_ or even a _subsequent release of the same
+compiler_, will continue to run correctly.  Nor is there any guarantee
+that what works with one set of inputs will work with another.
+
+Similarly, programs usually should *avoid implementation-defined
+behavior*, such as assuming that the size of an =int= is a fixed and
+known value.  Such programs are said to be /nonportable/.  When the
+program is moved to another machine, code that relied on
+implementation-defined behavior may fail.  Tracking down these sorts
+of problems in previously working programs is, mildly put, unpleasant.
+#+end_box
+
+#+begin_box "Don't Mix Signed and Unsigned Types 😣"
+Expressions that mix signed and unsigned values can yield surprising
+results when the signed value is negative.  It is essential to
+remember that *signed values are automatically converted to unsigned*.
+For example, in an expression like =a * b=, if =a= is -1 and b is 1,
+then if both =a= and =b= are =int=​s, the value is, as expected -1.
+However, if =a= is =int= and =b= is =unsigned=, then the value of this
+expression depends on how many bits an =int= has on the particular
+machine.  On our machine, this expression yields 4294967295.
+
+See [[https://stackoverflow.com/a/25609711/11938767][this]] answer.
+
+#+begin_src cpp
+  unsigned u = 10;
+  int a = -42;
+  std::cout << u + a << std::endl;
+  std::cout << u - a << std::endl;
+#+end_src
+In =u + a=, =a= is converted to =unsigned= before the addition is
+done, yielding $2^{32}-42$.  The result is $10 + (2^{32} - 42) =
+4294967264$.  In =u - a=, The result is $10 - (2^{32} - 42) + 2^{32} =
+52$.
+#+end_box
+
+** Literals
+
+Every literal has a type.  The *form* and value of a literal determine
+its type.
+
+*** Integer and Floating-Point Literals
+
+We can write an integer literal using decimal, octal, or hexadecimal
+notation.  Integer literals that begin with =0= (zero) are interpreted
+as octal.  Those that begin with either =0x= or =0X= are interpreted
+as hexadecimal.  For example, =20=, =024=, =0x14= all equal 20.
+
+The type of an integer literal depends on its *value* and *notation*.
+By default, decimal literals are *signed* whereas _octal and
+hexadecimal literals can be *either signed or unsigned* types_.
+- A decimal literal has the smallest type of =int=, =long=, or =long
+  long= in which the literal's value fits.
+- Octal and hexadecimal literals have the smallest type of =int=,
+  =unsigned int=, =long=, =unsigned long=, =long long=, or =unsigned
+  long long= in which the literal's value fits.
+
+It is an error to use a literal that is too large to fit in the
+largest related type.  There are no literals of type =short=.  We can
+override these defaults by using a suffix.
+
+Trying to use very large integer literals will cause either a warning
+or an error:
+#+begin_src cpp -n
+  #include <iostream>
+
+  int main(void){
+      auto x1 = 9223372036854775807;  // 2^63 - 1
+      auto x2 = 9223372036854775808;  // 2^63
+      auto x3 = 18446744073709551615; // 2^64 - 1
+      auto x4 = 18446744073709551616; // 2^64
+  }
+#+end_src
+=g++= outputs:
+#+begin_src text
+  ex4.cpp:5:15: warning: integer constant is so large that it is unsigned
+      5 |     auto x2 = 9223372036854775808;  // 2^63
+        |               ^~~~~~~~~~~~~~~~~~~
+  ex4.cpp:6:15: warning: integer constant is so large that it is unsigned
+      6 |     auto x3 = 18446744073709551615; // 2^64 - 1
+        |               ^~~~~~~~~~~~~~~~~~~~
+  ex4.cpp:7:15: warning: integer constant is too large for its type
+      7 |     auto x4 = 18446744073709551616; // 2^64
+        |               ^~~~~~~~~~~~~~~~~~~~
+#+end_src
+=clang++= outputs:
+#+begin_src text
+  ex4.cpp:5:15: warning: integer literal is too large to be represented in a signed integer type, interpreting as unsigned [-Wimplicitly-unsigned-literal]
+      auto x2 = 9223372036854775808;  // 2^63
+                ^
+  ex4.cpp:6:15: warning: integer literal is too large to be represented in a signed integer type, interpreting as unsigned [-Wimplicitly-unsigned-literal]
+      auto x3 = 18446744073709551615; // 2^64 - 1
+                ^
+  ex4.cpp:7:15: error: integer literal is too large to be represented in any integer type
+      auto x4 = 18446744073709551616; // 2^64
+#+end_src
+
+Although integer literals may be stored in signed types, _technically
+speaking, the value of a decimal literal is never a negative number_.
+If we write what appears to be a negative decimal literal, for
+example, =-42=, the minus sign is not part of the literal.  *The minus
+sign is an operator that negates the value of its (literal) operand.*
+#+begin_src cpp
+  #include <iostream>
+
+  int main(void) {
+      std::cout << typeid(1).name() << std::endl;           // i
+      std::cout << typeid(2147483647).name() << std::endl;  // i
+      std::cout << typeid(2147483648).name() << std::endl;  // l
+      std::cout << typeid(-2147483647).name() << std::endl; // i
+      std::cout << typeid(-2147483648).name() << std::endl; // l
+  }
+#+end_src
+
+*** Character and Character String Literals
+
+The type of a string literal is array of constant =char=​s.  The
+compiler appends a null character (='\0'=) to every string literal.
+Thus, the actual size of a string literal is one more than its
+apparent size.
+
+Two string literals that appear *adjacent to one another* and that are
+separated only by spaces, tabs, or newlines are concatenated into a
+single literal.  We use this form of literal when we need to write a
+literal that would otherwise be too large to fit comfortably on a
+single line:
+#+begin_src cpp
+  std::cout << "a really, really long string literal "
+               "that spans two lines" << std::endl;
+#+end_src
+
+* Variables
+** Variable Definitions
+
+A simple variable definition consists of a *type specifier*, followed
+by a list of one or more variable names separated by commas, and ends
+with a semicolon.
+
+Most generally, an *object* is a region of memory that can contain
+data and has a type.
+
+*** Initializers
+#+begin_box Initialization is NOT Assignment
+Initialization is not assignment.
+- Initialization happens when a variable is given a value *when it is
+  created*.
+- Assignment _obliterates [destroy] an object's current value_ and
+  _*replaces* that value with a new one_.
+#+end_box
+
+**** List Initialization
+
+#+begin_src cpp
+  int units_sold = {0};
+  int units_sold{0};
+#+end_src
+
+When used with variables of built-in type, this form of initialization
+has one important property: The compiler will not let us list
+initialize variables of built-in type if the initializer might *lead
+to the loss of information*:
+#+begin_src cpp
+  long double ld = 3.1415926536;
+  int a{ld}, b = {ld};           // error: narrowing conversion required
+  int c(ld), d = ld;             // ok: but value will be truncated
+#+end_src
+
+**** Default Initialization
+
+When we define a variable *without an initializer*, the variable is
+*default initialized*.  Such variables are given the "default" value.
+What that default value is depends on the *type* of the variable and
+may also depend on *where* the variable is defined.
+
+- The value of an object of /built-in type/ that is not explicitly
+  initialized depends on where it is defined.
+  - Variables defined *outside any function body* are initialized to
+    zero.
+  - With one exception (static variable?), variables of built-in type
+    defined *inside a function* are *uninitialized*.  The value of an
+    uninitialized variable of built-in type is undefined.  It is an
+    error to copy or otherwise try to access the value of a variable
+    whose value is undefined.
+- Each /class/ controls how we initialize objects of that class type.
+
+To summarize, uninitialized objects of built-in type defined inside a
+function body have undefined value; objects of class type that we do
+not explicitly initialize have a value that is defined by the class.
+
+** Variable Declarations and Definitions 🧐
+
+[[color:red][This is a very import section that deserves careful reading again and
+again.]]  The extracts below, although useful, are not comparable to the
+original text.  So I'll gray out them.
+#+begin_gray
+To allow programs to be written in logical parts, C++ supports what is
+commonly known as *separate compilation*.  Separate compilation lets
+us _split our programs into several files_, each of which can be
+compiled independently.
+
+When we separate a program into multiple files, we need a way to
+*share code* across those files.  To support separate compilation, C++
+distinguishes between *declarations* and *definitions*.
+- *A declaration makes a name known to the program.* A file that wants
+  to use a name defined elsewhere includes a declaration for that
+  name.  A variable declaration specifies the *type* and *name* of a
+  variable.
+- *A definition creates the associated /entity/.* *A variable
+  definition is a declaration.* In addition to specifying the /name/
+  and /type/, a definition also *allocates storage* and may *provide
+  the variable with an initial value*.
+
+Any declaration that includes an explicit initializer is a definition.
+We can provide an initializer on a variable defined as =extern=, but
+doing so *overrides the =extern=*.  An =extern= that has an
+initializer is a definition.
+
+It is an *error* to _provide an initializer on an =extern= *inside a
+function*_.
+#+end_gray
+
+Links:
+- [[https://stackoverflow.com/a/1410632/11938767][What is the difference between a definition and a declaration?]]
+- [[https://stackoverflow.com/q/17090354/11938767][Why does initializing an extern variable inside a function give an error?]]
+- [[https://stackoverflow.com/q/12199656/11938767]["extern" inside a function?]]
+- [[https://www.cprogramming.com/declare_vs_define.html][Declare vs Define in C and C++]]
+
+The keyword =extern= can be global or inside a function, differeing in
+scope.
+
+** Identifiers
+
+The standard also reserves a set of names for use in the standard
+library.  The identifiers we define in our own programs may not
+contain two consecutive underscores, nor can an identifier begin with
+an underscore followed immediately by an uppercase letter.  In
+addition, identifiers defined outside a function may not begin with an
+underscore.
+
+- Variable names normally are lowercase---​=index=, not =Index= or
+  =INDEX=.
+- Like =Sales_item=, classes we define usually begin with an uppercase
+  letter.
+
+** Scope of a Name
+
+At any particular point in a program, each name that is in use refers
+to a *specific entity*---a variable, function, type, and so on.
+However, a given name can be *reused* to refer to different entities
+at different points in the program.
+
+A *scope* is a part of the program in which a name has a particular
+meaning.  Most scopes in C++ are delimited by curly braces.  The same
+name can refer to different entities in different scopes.  Names are
+visible from the point where they are declared until the end of the
+scope in which the declaration appears.
+
+*global scope* & *block scope*
+
+The global scope has no name.  Hence, when the scope operator (=::=)
+has an *empty left-hand side*, it is a request to fetch the name on
+the right-hand side from the global scope (normally a global
+variable).
+
+* Compound Types
+
+A *compound type* is a type that is defined *in terms of another
+type*, such as references & pointers.
+
+More generally, a declaration is a *base type* followed by a list of
+*declarators*.  Each declarator _names a variable_ and _gives the
+variable a type that is *related to the base type*_.
+
+** References
+
+A reference defines an alternative name for an object.  We define a
+reference type by writing a *declarator* of the form =&d=, where =d=
+is the name being declared.
+
+Ordinarily, when we initialize a variable, the value of the
+initializer is *copied* into the object we are creating.  When we
+define a reference, instead of copying the initializer's value, we
+_*bind* the reference to its initializer_.  Once initialized, a
+reference remains bound to its initial object. _There is no way to
+rebind a reference to refer to a different object._ Because there is
+no way to rebind a reference, _references must be initialized_.
+
+*A reference is not an object.* Instead, a reference is just an alias
+for an already existing object.
+
+Because references are not objects, we may not define a reference to a
+reference.  So we cannot rebind a reference.  When we use a reference
+as an initializer, we are actually using _the object to which the
+reference is bound_.
+
+With two exceptions (references to =const=, inheritance & base class),
+the type of a reference and the object to which the reference refers
+must *match exactly*.  Moreover, a reference may be bound *only to an
+object*, not to a literal or to the result of a more general
+expression.
+
+** Pointers
+
+Like references, pointers are used for indirect access to other
+objects.  Unlike a reference, a pointer is an object in its own right.
+Like other built-in types, pointers defined at block scope have
+undefined value if they are not initialized.
+
+We define a pointer type by writing a *declarator* of the form =*d=,
+where =d= is the name being defined.  The =*= must be repeated for
+each pointer variable (decorator).
+
+The value (i.e., the address) stored in a pointer can be in one of
+four states:
+1. It can point to an object.
+2. It can point to the location *just immediately past the end of an
+   object*.
+3. It can be a null pointer (=nullptr=), indicating that it is not
+   bound to any object.
+4. It can be invalid; values other than the preceding three are
+   invalid.
+
+Although pointers in cases 2 and 3 are valid, there are *limits* on
+what we can do with such pointers.  Because these pointers do not
+point to any object, we may not use them to access the object to which
+the pointer points.  If we do attempt to access an object through such
+pointers, the behavior is undefined.
+
+Here both operators are used in an *expression* (not in the decorator
+of a declaration):
+- The address-of operator (=&=) takes the address of the variable.
+- The dereference operator (=*=) can be used to access the object
+  pointed by a pointer.
+
+In declarations, =&= and =*= are used to form compound types.  In
+expressions, these same symbols are used to denote an *operator*.
+
+The *preprocessor variable* =NULL= is included in header =<cstddef>=
+and =<cstdlib>=.
+
+=nullptr= is a literal that has a special type that can be _converted
+to any other pointer type_.
+
+The type =void*= is a special pointer type that can hold the address
+of any object.  Like any other pointer, a =void*= pointer holds an
+address, but the type of the object at that address is unknown.
+Generally, we use a =void*= pointer to _deal with memory as memory_,
+rather than using the pointer to access the object stored in that
+memory.
+
+** Understanding Compound Type Declarations
+
+As we've seen, a variable definition consists of a /base type/ and a
+list of /declarators/.  Each declarator can *relate its variable to
+the base type* _differently from the other declarators in the same
+definition_.  Thus, a single definition might define variables of
+different types:
+#+begin_src cpp
+  // i is an int; p is a pointer to int; r is a reference to int
+  int i = 1024, *p = &i, &r = i;
+#+end_src
+
+Note the interaction between the /base type/ and the /type
+modification/ that may be part of a declarator.
+
+*** References to Pointers
+
+A reference is not an object.  Hence, we may not have a pointer to a
+reference.  However, because a pointer is an object, we can define *a
+reference to a pointer*:
+#+begin_src cpp
+  int i = 42;
+  int *p;                         // p is a pointer to int
+  int *&r = p;                    // r is a reference to the pointer p
+  r = &i; // r refers to a pointer; assigning &i to r makes p point to i
+  ,*r = 0; // dereferencing r yields i, the object to which p points; changes i to 0
+#+end_src
+
+* =const= Qualifier 🧐
+
+#+begin_red
+This is also a section worth careful reading.
+#+end_red
+
+- [[https://docs.microsoft.com/en-us/cpp/cpp/program-and-linkage-cpp?view=msvc-160][Translation units and linkage]]
+- [[https://stackoverflow.com/q/1358400/11938767][What is external linkage and internal linkage?]]
+
+Because we can't change the value of a =const= object after we create
+it, it must be initialized.  Otherwise, an error will be generated:
+#+begin_src text
+  ex6.cpp: In function ‘int main()’:
+  ex6.cpp:5:15: error: uninitialized ‘const x’ [-fpermissive]
+      5 |     const int x;
+        |
+#+end_src
+
+The =const=-ness of a variable matters only for operations that might
+change it.
+
+#+begin_box External & Internal Linkage
+By Default, =const= Objects Are Local to a File
+
+You can explicitly control the linkage of a symbol by using the
+=extern= and =static= keywords.  If the linkage is not specified then
+the default linkage is =extern= (external linkage) for non-=const=
+symbols and =static= (internal linkage) for =const= symbols.
+#+end_box
+
+** References to =const=
+
+** Pointers and =const=
+*** Pointers to =const= vs. =const= Pointers
+
+Unlike references, pointers are objects.  Hence, as with any other
+object type, we can have a pointer that is *itself =const=*.  Like any
+other =const= object, a =const= pointer must be initialized, and once
+initialized, its value (i.e., the address that it holds) may not be
+changed.  We indicate that the pointer is const by *putting the
+=const= after the =*=*.  This placement indicates that it is the
+pointer, not the pointed-to type, that is =const=.
+
+** Top-Level =const=
+
+We can talk independently about whether a pointer is =const= and
+whether the objects to which it can point are =const=.  We use the
+term *top-level =const=* to indicate that *the pointer itself is a
+=const=*.  When a pointer can point to a =const= object, we refer to
+that =const= as a *low-level =const=*.
+
+More generally, top-level =const= indicates that an object *itself is
+const*.  Top-level =const= can appear in any object type, i.e., one of
+the built-in arithmetic types, a class type, or a pointer type.
+Low-level =const= appears _in the base type of *compound types*_ such
+as pointers or references.  Note that pointer types, unlike most other
+types, can have both top-level and low-level const independently:
+#+begin_src cpp
+  int i = 0;
+  int *const p1 = &i;  // we can't change the value of p1; const is top-level
+  const int ci = 42;   // we cannot change ci; const is top-level
+  const int *p2 = &ci; // we can change p2; const is low-level
+  const int *const p3 = p2; // right-most const is top-level, left-most is not
+  const int &r = ci;   // const in reference types is always low-level
+#+end_src
+
+The distinction between top-level and low-level matters when we copy
+an object.  When we copy an object, top-level =const=​s are ignored:
+#+begin_src cpp
+  i = ci;  // ok: copying the value of ci; top-level const in ci is ignored
+  p2 = p3; // ok: pointed-to type matches; top-level const in p3 is ignored
+#+end_src
+
+On the other hand, low-level =const= is never ignored.  When we copy
+an object, both objects must have *the same low-level =const=
+qualification* or there must be a *conversion* between the types of
+the two objects.  In general, we can convert a non-=const= to =const=
+but not the other way round.
+#+begin_src cpp
+  int *p = p3; // error: p3 has a low-level const but p doesn't
+  p2 = p3;     // ok: p2 has the same low-level const qualification as p3
+  p2 = &i;     // ok: we can convert int* to const int*
+  int &r = ci; // error: can't bind an ordinary int& to a const int object
+  const int &r2 = i; // ok: can bind const int& to plain int
+#+end_src
+
+** =constexpr= and Constant Expressions
+
+A constant expression is an expression whose value _cannot change_ and
+that can be evaluated *at compile time*.
+- A *literal* is a constant expression.
+- A *=const= object* that is *initialized from a constant expression*
+  is also a constant expression.
+As we'll see, there are several contexts in the language that require
+constant expressions.
+
+Under the new standard, we can _ask the compiler to verify that a
+variable is a constant expression_ by _declaring the variable in a
+=constexpr= declaration_.  Variables declared as =constexpr= are
+*implicitly =const=* and must be initialized by constant expressions.
+
+=constexpr= imposes a *top-level =const=* on the objects it defines.
+
+* Dealing with Types
+
+** Type Aliases
+
+The keyword =typedef= may appear _as part of the base type of a
+declaration_.  Declarations that include =typedef= *define type
+aliases rather than variables*.  As in any other declaration, the
+declarators can *include type modifiers* that define compound types
+built from the base type of the definition.
+#+begin_src cpp
+  typedef double wages;    // wages is a synonym for double
+  typedef wages base, *p;  // base is a synonym for double, p for double*
+#+end_src
+
+The new standard introduced a second way to define a type alias, via
+an *alias declaration*:
+#+begin_src cpp
+  using SI = Sales_item; // SI is a synonym for Sales_item
+#+end_src
+
+Declarations that use type aliases that represent compound types and
+=const= can yield surprising results.
+#+begin_src cpp
+  typedef char *pstring;
+  const pstring cstr = 0; // cstr is a constant pointer to char
+  const pstring *ps;      // ps is a pointer to a constant pointer to char
+#+end_src
+It's beffer to interpret =const pstring cstr= as =pstring const cstr=,
+thus =char * const cstr=---constant pointer to =char=.
+
+#+begin_box "typeid().name()"
+According to [[https://stackoverflow.com/a/4465907/11938767][this]] Stack Overflow answer, the output of
+=typeid(x).name()= in g++ is a decorated name, which can be
+"demangled" using =c++filt=.
+
+#+begin_src cpp
+  #include <iostream>
+  using namespace std;
+  using n1 = double;
+  using n2 = double *;
+  using n3 = double * const;
+  using n4 = const double *;
+  using n5 = double const * const;
+
+  int main(){
+      cout << typeid(n1).name() << endl;
+      cout << typeid(n2).name() << endl;
+      cout << typeid(n3).name() << endl;
+      cout << typeid(n4).name() << endl;
+      cout << typeid(n5).name() << endl;
+      return 0;
+  }
+#+end_src
+So, compile the code above and run with =./a.out | c++filt -t= to see
+the actual type:
+#+begin_src bash
+  $ ./a.out | c++filt -t
+  double
+  double*
+  double*
+  double const*
+  double const*
+#+end_src
+We can see the alias declaration does not preserve top-level =const=.
+#+end_box
+
+** The =auto= Type Specifier
+
+=auto= tells the compiler to deduce the type from the initializer.
+
+As with any other type specifier, we can define _multiple variables_
+using =auto=.  Because _a declaration can involve only *a single base
+type*_, the initializers for all the variables in the declaration must
+have types that are *consistent with each other*:
+#+begin_src cpp
+  auto i = 0, *p = &i;        // ok: i is int and p is a pointer to int
+  auto sz = 0, pi = 3.14;     // error: inconsistent types for sz and pi
+#+end_src
+
+三目运算符的结果也只有唯一的类型
+
+#+begin_src cpp
+  const int i = 42;               // Press Ctrl-Q in CLion:
+  auto j = i;                     // int j = i;
+  const auto &k = i;              // const int &k = i;
+  auto *p = &i;                   // const int *p = &i;
+  const auto j2 = i, &k2 = i;     // const int j2 = i, &k2 = i;
+#+end_src
+
+** The =decltype= Type Specifier
+
+=decltype= returns the type of that variable, including top-level
+=const= and references.  It is worth noting that decltype is the
+*only* context in which a variable defined as a reference is not
+treated as a synonym for the object to which it refers.
+
+Generally speaking, =decltype= returns a *reference type* for
+*expressions* that yield objects that can stand on the left-hand side
+of the assignment.
+#+begin_src cpp
+  // decltype of an expression can be a reference type
+  int i = 42, *p = &i, &r = i;
+  decltype(r + 0) b; // ok: addition yields an int; b is an (uninitialized) int
+  decltype(*p) c;    // error: c is int& and must be initialized
+#+end_src
+
+Another important difference between =decltype= and =auto= is that the
+deduction done by =decltype= _depends on the *form* of its given
+expression_.  What can be confusing is that enclosing the name of a
+variable in parentheses affects the type returned by =decltype=.  When
+we apply =decltype= to *a variable without any parentheses*, we get
+the type of that variable.  If we _wrap the variable's name in one or
+more sets of parentheses_, the compiler will *evaluate the operand as
+an expression*.  A variable is an expression that can be the left-hand
+side of an assignment.  As a result, =decltype= on such an expression
+yields a reference:
+#+begin_src cpp
+  // decltype of a parenthesized variable is always a reference
+  decltype((i)) d; // error: d is int& and must be initialized
+  decltype(i) e;   // ok: e is an (uninitialized) int
+#+end_src
+
+Remember that =decltype((variable))= (double parentheses) is always a
+reference type, but =decltype(variable)= is a reference type only if
+=variable= is a reference.
+
+#+begin_src cpp
+  int a = 3, b = 4;
+  decltype(a) c = a;
+  decltype(a = b) d = a;
+#+end_src
+Assignment is an example of an expression that yields a reference
+type.  The type is a reference to the type of the left-hand operand.
+So =d= is a reference to =a=.  Note that =decltype= *does not evaluate
+the expression* =a = b=, so the value of =a= remains =3=.
+
+* Defining Our Own Data Structures
+
+#+begin_src cpp
+  struct Sales_data {
+      std::string bookNo;
+      unsigned units_sold = 0;
+      double revenue {0.0};
+  };
+#+end_src
+
+The class body defines the *members* of the class. Our class has only
+*data members*.
+
+The semicolon is needed at the end of =class= (or =struct=) so that we
+can define variables after the class body.  The semicolon marks the
+end of the (usually empty) list of declarators.  _Ordinarily, it is a
+bad idea to define an object as part of a class definition._ Doing so
+*obscures the code* by combining the definitions of two different
+entities---the class and a variable---in a single statement.
+
+Under the new standard, we can supply an *in-class initializer* for a
+data member.  When we create objects, the in-class initializers will
+be used to initialize the data members.  _Members without an
+initializer are *default initialized*._
+
+In-class initializers are restricted as to the /form/ we can use: They
+must either be *enclosed inside curly braces* or *follow an === sign*
+(or both).  We may not specify an in-class initializer +inside
+parentheses+.
+
+** Writing Our Own Header Files
+
+Headers (usually) contain entities (such as class definitions and
+=const= and =constexpr= variables) that can be defined *only once in
+any given file*.
+
+In order to ensure that the class definition is the same in each file,
+classes are usually defined in header files.  Typically, classes are
+stored in headers whose name derives from the name of the class.
+
+C++ programs also use the preprocessor to define *header guards*.
+Header guards rely on preprocessor variables.  Preprocessor variables
+have one of two possible states: *defined* or *not defined*.  The
+=#define= directive takes a name and defines that name as a
+preprocessor variable.  There are two other directives that test
+whether a given preprocessor variable has or has not been defined:
+=#ifdef= is true if the variable has been defined, and =#ifndef= is
+true if the variable has not been defined.  If the test is true, then
+everything following the =#ifdef= or =#ifndef= is processed up to the
+matching =#endif=.
+
+The most common technique for making it safe to include a header
+multiple times relies on the =preprocessor=.  We can use these
+facilities to guard against multiple inclusion as follows:
+#+begin_src cpp
+  #ifndef SALES_DATA_H
+  #define SALES_DATA_H
+  #include <string>
+  struct Sales_data {
+      std::string bookNo;
+      unsigned units_sold = 0;
+      double revenue = 0.0;
+  };
+  #endif
+#+end_src
+
+* Defined Terms
+
+- *alias declaration*: Defines a synonym for another type: =using name
+  = type= declares =name= as a synonym for the type =type=.
+- *base type*: /type specifier/, possibly *qualified* by =const=, that
+  precedes the /declarators/ in a declaration.  The base type provides
+  *the common type* on which the declarators in a declaration can
+  build.
+- *bind*: *Associating a name with a given entity* so that uses of the
+  name are uses of the underlying entity.  For example, a reference is
+  a name that is bound to an object. (same as in Lisp)
+- *const*: /Type qualifier/ used to define objects that may not be
+  changed.
+- *declaration*: */Asserts/ the existence* of a variable, function, or
+  type defined elsewhere.  _Names may not be used until they are
+  defined or declared._
+- *decltype*: /Type specifier/ that deduces the type of a *variable*
+  or an *expression*.
+- *default initialization*: How objects are initialized when no
+  explicit initializer is given.  How class type objects are
+  initialized is controlled by the class.  Objects of built-in type
+  defined at global scope are initialized to 0; those defined at local
+  scope are uninitialized and have undefined values.
+- *definition*: *Allocates storage* for a variable of a specified type
+  and optionally initializes the variable.  Names may not be used
+  until they are defined or declared.
+- *identifier*: Sequence of characters that makeup a name.
+- *in-class initializer*: Initializer provided as part of the
+  declaration of a class data member.  In-class initializers must
+  follow an === symbol or be enclosed inside curly braces.
+- *list initialization*: Form of initialization that uses *curly
+  braces* to enclose one or more initializers.
+- *low-level =const=*: A =const= that is not top-level.  Such consts
+  are *integral to the type* and are *never ignored*.
+- *top-level =const=*: The =const= that specifies that an object may
+  not be changed.
+- *scope*: The portion of a program in which names have meaning.  C++
+  has *several levels of scope*:
+  - *global*: names defined outside any other scope
+  - *class*: names defined inside a class
+  - *namespace*: names defined inside a namespace
+  - *block*: names defined inside a block
+- *temporary*: Unnamed object created by the compiler while evaluating
+  an expression.  A temporary exists until the end of the largest
+  expression that encloses the expression for which it was created.
+

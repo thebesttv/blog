@@ -1,0 +1,639 @@
+#+title: Ch3 --- Strings, Vectors, and Arrays
+
+* Namespace =using= Declarations
+#+begin_src cpp
+  using std::cin;
+  using std::cout;
+#+end_src
+
+Comma-separated =using= declaration:
+#+begin_src text
+  ex1.cpp:2:15: warning: comma-separated list in using-declaration only available with ‘-std=c++17’ or ‘-std=gnu++17’
+      2 | using std::cin, std::cout;
+        |
+#+end_src
+
+* Library =string= Type
+
+** Defining and Initializing =string=​s 🧐
+
+*** Direct & Copy Forms of Initialization
+
+[[color:red][When we initialize a variable using ===, we are asking the compiler to
+*copy initialize* the object]] by _copying the initializer on the
+right-hand side into the object being created_.  Otherwise, when we
+omit the ===, we use *direct initialization*.
+
+When we have a _single initializer_, we can use either the direct or
+copy form of initialization.  When we initialize a variable from _more
+than one value_, we must use the direct form of initialization:
+
+#+begin_src cpp
+  string s5 = "hiya"; // copy initialization
+  string s6("hiya");  // direct initialization
+  string s7(10, 'c'); // direct initialization
+#+end_src
+
+When we want to use _several values_, we can *indirectly* use the copy
+form of initialization by *explicitly creating a (temporary) object to
+copy*:
+#+begin_src cpp
+  string s8 = string(10, 'c');    // copy initialization
+#+end_src
+The initializer of =s8=---​=string(10, 'c')=---creates a string of the
+given size and character value and then *copies that value into =s8=*.
+It is as if we had written
+#+begin_src cpp
+  string temp(10, 'c');           // temp is cccccccccc
+  string s8 = temp;               // copy temp into s8
+#+end_src
+
+** Operations on =string=​s
+
+=s[n]= returns a *reference* to the =char= at position =n= in =s=.
+
+#+begin_src cpp
+  istream& getline (istream&  is, string& str, char delim);
+  istream& getline (istream&  is, string& str);
+#+end_src
+Extracts characters from =is= and stores them into =str= until the
+delimitation character =delim= (or ='\n'=) is found.  If the delimiter
+is found, it is *extracted* and *discarded* (i.e. it is not stored and
+the next input operation will begin after it).
+#+begin_src cpp
+  int main(void) {
+      int c = 0;
+      string line;
+      while (getline(cin, line)) {
+          if (line.empty())
+              continue;
+          ++c;
+          cout << c << ": " << line << endl;
+      }
+  }
+#+end_src
+
+*** The =string::size_type= Type 🧐
+
+=s.size()= returns a =string::size_type= value. The
+=string::size_type= is defiend as =size_t= type.
+
+The =string= class---and most other library types---defines several
+*companion types*.  These companion types make it possible to use the
+library types in a *machine-independent manner*.  The type =size_type=
+is one of these companion types.  To use the =size_type= defined by
+=string=, we use the scope operator (=::=) to say that the name
+=size_type= is defined in the string class.
+
+Although we don't know the precise type of =string::size_type=, we do
+know that it is _an unsigned type big enough to hold the size of any
+=string=_.  Any variable used to store the result from the =string
+size= operation should be of type =string::size_type=.
+
+Admittedly, it can be tedious to type =string::size_type=.  Under the
+new standard, we can ask the compiler to provide the appropriate type
+by using =auto= or =decltype=.
+
+Because =size= returns an unsigned type, it is essential to remember
+that [[color:red][expressions that mix signed and unsigned data can have surprising
+results]].  For example, if =n= is an int that holds a _negative value_,
+then =s.size() < n= will almost surely evaluate as =true=.  It yields
+=true= because the negative value in =n= will *convert to a large
+unsigned value*.
+
+*** Adding Literals and =string=​s
+
+The =string= library lets us convert both /character literals/ and
+/character string literals/ to =string=​s.  When we mix =string=​s and
+/string or character literals/, at least one operand to each
+=+= operator must be of =string= type:
+#+begin_src cpp
+  string s4 = s1 + ", ";           // ok: adding a string and a literal
+  string s5 = "hello" + ", ";      // error: no string operand
+  string s6 = s1 + ", " + "world"; // ok: each + has a string operand
+  string s7 = "hello" + ", " + s2; // error: can’t add string literals
+#+end_src
+
+** Dealing with the Characters in a =string=
+
+*** Range-Based =for=
+
+The *range =for=* statement iterates through the elements in a given
+sequence and performs some operation on each value in that sequence.
+
+#+begin_src cpp
+  for (declaration : expression)
+      statement
+#+end_src
+where =expression= is an object of a type that *represents a
+sequence*, and =declaration= defines _the variable that we'll use to
+access the underlying elements in the sequence_.  On each iteration,
+the variable in declaration is initialized from the value of the next
+element in expression.
+
+If we want to change the value of the characters in a =string=, we
+must _define the loop variable as a reference type_.
+
+The *subscript operator* (=[]=) takes a =string::size_type= value that
+denotes the position of the character we want to access.  The operator
+returns a *reference* to the character at the given position.  If the
+index has a *signed* type, its value will be *converted to the
+unsigned type* that =string::size_type= represents.
+
+The result of using an index outside a =string='s range is undefined.
+By implication, subscripting an empty =string= is undefined.
+
+* Library =vector= Type
+
+A =vector= is a *class template*.  C++ has both /class and function
+templates/.  Templates are not themselves functions or classes.
+Instead, they can be thought of as *instructions to the compiler* for
+*generating* classes or functions.  The process that the compiler uses
+to create classes or functions from templates is called
+*instantiation*.  When we use a template, we specify what kind of
+class or function we want the compiler to instantiate.
+
+=vector= is a template, *not a type*.  Types generated from =vector=
+must include the element type, for example, =vector<int>=.  Because
+references are not objects, we cannot have a vector of references.
+
+** Defining and Initializing =vector=​s 🧐
+
+*** List Initializing a =vector=
+
+As we've seen, C++ provides several forms of initialization.  In many,
+but not all, cases we can use these forms of initialization
+interchangably.  So far, we have seen two examples where the *form* of
+initialization matters:
+- when we use the *copy initialization form* (i.e., when we use ===),
+  we can supply *only a single initializer*
+- when we supply an *in-class* initializer, we must either use copy
+  initialization (===) or use curly braces.
+- A third restriction is that we can supply *a list of element values*
+  only by using list initialization in which the initializers are
+  enclosed in curly braces.  We cannot supply a list of initializers
+  using parentheses:
+  #+begin_src cpp
+    vector<string> v1{"a", "an", "the"}; // list initialization
+    vector<string> v2("a", "an", "the"); // error
+  #+end_src
+
+*** Creating a Specified Number of Elements
+
+We can also initialize a =vector= from a count and an element value.
+The count determines how many elements the vector will have; the value
+provides the initial value for each of those elements:
+#+begin_src cpp
+  vector<int> ivec(10, -1);  // ten int elements, each initialized to -1
+  vector<string> svec(10, "hi!"); // ten strings; each element is "hi!"
+#+end_src
+
+*** Value Initialization
+
+We can usually omit the value and *supply only a size*.  In this case
+the library creates a *value-initialized* /element initializer/ for
+us.  This library-generated value is used to *initialize each element
+in the container*.  The value of the element initializer depends on
+the type of the elements stored in the vector.
+- If the vector holds elements of a built-in type, such as =int=, then
+  the element initializer has a value of 0.
+- If the elements are of a class type, such as =string=, then the
+  element initializer is itself default initialized:
+
+#+begin_src cpp
+  vector<int> ivec(10);           // ten elements, each initialized to 0
+  vector<string> svec(10);        // ten elements, each an empty string
+#+end_src
+
+There are two restrictions on this form of initialization:
+- The first restriction is that some classes require that we always
+  supply *an explicit initializer*.  If our vector holds objects of a
+  type that we *cannot default initialize*, then we _must supply an
+  initial element value_; it is not possible to create vectors of such
+  types by supplying only a size.
+- The second restriction is that when we supply an element count
+  without also supplying an initial value, we must use *the direct
+  form of initialization*, that is, we cannot use copy initialization.
+  #+begin_src cpp
+    vector<int> vi = 10; // error: must use direct initialization to supply a size
+  #+end_src
+
+*** List Initializer or Element Count?
+
+In a few cases, what initialization means depends upon whether we use
+*curly braces* or *parentheses* to pass the initializer(s):
+#+begin_src cpp
+  vector<int> v1(10);        // v1 has ten elements with value 0
+  vector<int> v2{10};        // v2 has one element with value 10
+  vector<int> v3(10, 1);     // v3 has ten elements with value 1
+  vector<int> v4{10, 1};     // v4 has two elements with values 10 and 1
+#+end_src
+
+- When we use parentheses, we are saying that the values we supply are
+  to be used to *construct* the object.
+- When we use curly braces, ={...}=, we're saying that, [[color:red][if possible]],
+  we want to *list initialize* the object.
+  - That is, if there is a way to use the values inside the curly
+    braces as a list of element initializers, the class will do so.
+    Only if it is not possible to list initialize the object will the
+    other ways to initialize the object be considered.  The values we
+    supply when we initialize =v2= and =v4= can be used as element
+    values.  These objects are list initialized; the resulting vectors
+    have one and two elements, respectively.
+  - On the other hand, if we use braces and there is _*no way* to use
+    the initializers to list initialize the object_, then those values
+    will be used to *construct* the object.  For example, to list
+    initialize a =vector= of =string=​s, we must supply values that can
+    be used as =string=​s.  In this case, there is no confusion about
+    whether to list initialize the elements or construct a vector of
+    the given size:
+
+#+begin_src cpp
+  vector<string> v5{"hi"}; // list initialization: v5 has one element
+  vector<string> v6("hi"); // error: can't construct a vector from a string literal
+  vector<string> v7{10};   // v7 has ten default-initialized elements
+  vector<string> v8{10, "hi"}; // v8 has ten elements with value "hi"
+#+end_src
+
+In all, when using parentheses, we're constructing the object; but
+when using braces, we are only *trying* to list initialize the object.
+On failure of list initialization, the compiler tries to construct it
+instead.
+
+** Adding Elements to a =vector=
+
+[[color:red][We must ensure that any loops we write are correct even if the loop
+*changes the size* of the vector.]]  The body of a range =for= must not
+change the size of the sequence over which it is iterating.
+
+** Other =vector= Operations
+
+To use =size_type=, we must *name the type* in which it is defined.  [[color:red][A
+vector type always includes its element type]]:
+
+#+begin_src cpp
+  vector<int>::size_type          // ok
+  vector::size_type               // error
+#+end_src
+
+* Introducing Iterators
+
+All of the library containers have iterators, but only a few of them
+support the subscript operator.  A valid iterator either denotes an
+element or denotes a position one past the last element in a
+container.  All other iterator values are invalid.
+
+** Using Iterators
+
+Instead, types that have iterators have members that return iterators.
+In particular, these types have members named =begin= and =end=.  The
+iterator returned by =end= is often referred to as the off-the-end
+iterator or abbreviated as "the =end= iterator".  If the container is
+empty, =begin= returns the same iterator as the one returned by =end=.
+
+Dereferencing an invalid iterator or an off-the-end iterator has
+undefined behavior.
+
+Similarly, all of the library containers have iterators that define
+the ==== and =!== operators.  Most of those iterators *do not* have
+the =<= operator.  By routinely using iterators and =!==, we don't
+have to worry about the precise type of container we're processing.
+
+As with =size_type=, the library types that have iterators define
+types named =iterator= and =const_iterator= that represent actual
+iterator types.  If a =vector= or =string= is const, we may use only
+its =const_iterator= type.  With a nonconst =vector= or =string=, we
+can use either =iterator= or =const_iterator=.
+
+The parentheses in =(*it).empty()= are necessary.  The parentheses say
+to *apply the dereference operator to =it=* and to _apply the dot
+operator to the result of dereferencing it_.  Without parentheses, the
+dot operator would apply to =it=, not to the resulting object:
+
+#+begin_src cpp
+  (*it).empty() // dereferences it and calls the member empty on the resulting object
+  ,*it.empty()   // error: attempts to fetch the member named empty from it
+                //        but it is an iterator and has no member named empty
+#+end_src
+
+Any operation, such as =push_back=, that changes the size of a
+=vector= *potentially invalidates all iterators* into that vector.
+For now, it is important to realize that [[color:red][loops that use iterators
+should not add elements to the container to which the iterators refer]].
+
+** Iterator Arithmetic
+
+* Arrays
+
+** Defining and Initializing Built-in Arrays
+
+Arrays are a compound type.  An array declarator has the form =a[d]=,
+where =a= is the name being defined and =d= is the dimension of the
+array.  The dimension of an array is *part of the array's type*.  As a
+result, the dimension must be known *at compile time*, which means
+that the dimension must be a *constant expression*.
+
+By default, the elements in an array are *default initialized*.  As
+with variables of built-in type, a default-initialized array of
+built-in type that is defined inside a function will have undefined
+values.
+
+We cannot use =auto= to deduce the type from a list of initializers:
+#+begin_src cpp
+  auto v = {1, 2, 3};
+  cout << typeid(v).name() << endl;
+  // the type will be std::initializer_list<int>
+#+end_src
+
+We can list initialize the elements in an array.  When we do so, we
+can _omit the dimension_.  If we omit the dimension, the compiler
+infers it from the number of initializers.  If we specify a dimension,
+the number of initializers must not exceed the specified size.  If the
+dimension is greater than the number of initializers, the initializers
+are used for the first elements and any remaining elements are *value
+initialized*.
+#+begin_src cpp
+  int v[10] = {};                 // all value initialized to 0
+#+end_src
+
+We cannot initialize an array as a copy of another array, nor is it
+legal to assign one array to another:
+#+begin_src cpp
+  int a[] = {0, 1, 2}; // array of three ints
+  int a2[] = a;        // error: cannot initialize one array with another
+  a2 = a;              // error: cannot assign one array to another
+#+end_src
+
+*** Understanding Complicated Array Declarations
+
+Starting from the name, from inside to outside, from right to left.
+从名字开始,从里到外,从右到左.
+
+#+begin_src cpp
+  int *ptrs[10];              // ptrs is an array of ten pointers to int
+  int &refs[10] = /* ? */;    // error: no arrays of references
+  int (*Parray)[10] = &arr;   // Parray points to an array of ten ints
+  int (&arrRef)[10] = arr;    // arrRef refers to an array of ten int s
+  int *(&arry)[10] = ptrs;    // arry is a reference to an array of ten pointers
+#+end_src
+
+** Accessing the Elements of an Array
+
+Because _the dimension is part of each array type_, the system knows
+how many elements to traverse when using range =for=.
+
+** Pointers and Arrays
+
+In most expressions, when we use an object of array type, we are
+really using a pointer to the first element in that array.  When we
+use an array as an initializer for a variable defined using =auto=,
+the deduced type is a *pointer*, not an +array+:
+#+begin_src cpp
+  int v[] = {1, 2, 3};            // v:  int [3]
+  auto p1 = v;                    // p1: int *
+  auto *p2 = v;                   // p2: int *
+
+  int ia[] = {0,1,2,3,4,5,6,7,8,9}; // ia is an array of ten ints
+  auto ia2(ia); // ia2 is an int* that points to the first element in ia
+#+end_src
+Although =ia= is an array of ten =int=​s, when we use ia as an
+initializer, the compiler treats that initialization as if we had
+written
+#+begin_src cpp
+  auto ia2(&ia[0]);             // now it's clear that ia2 has type int*
+#+end_src
+It is worth noting that this conversion *does not* happen when we use
+=decltype=.  The type returned by =decltype(ia)= is array of ten ints:
+#+begin_src cpp
+  // ia3 is an array of ten ints
+  decltype(ia) ia3 = {0,1,2,3,4,5,6,7,8,9};
+  ia3 = p;            // error: can't assign an int* to an array
+  ia3[4] = i;         // ok: assigns the value of i to an element in ia3
+
+  decltype(v) v2;                 // v2: int [3]
+#+end_src
+
+*** The Library =begin= and =end= Functions
+
+To make it easier and safer to use pointers, the new library includes
+two functions, named =begin= and =end=.  They take an argument that is
+an array.  =begin= returns a pointer to the first, and =end= returns a
+pointer one past the last element in the given array.  These functions
+are defined in the =<iterator>= header.
+#+begin_src cpp
+  #include <iostream>
+  #include <iterator>
+
+  int main(void) {
+      int v[] = {3, 1, 4, 1, 5, 9, 2, 6};
+      auto *pbeg = std::begin(v);
+      auto *pend = std::end(v);
+      while (pbeg != pend) {
+          std::cout << *pbeg << std::endl;
+          pbeg++;
+      }
+  }
+#+end_src
+
+*** Pointer Arithmetic
+
+The result of subtracting two pointers is a library type named
+=ptrdiff_t=.  Like =size_t=, the =ptrdiff_t= type is a
+machine-specific type and is defined in the =<cstddef>= header.
+Because subtraction might yield a negative distance, =ptrdiff_t= is a
+signed integral type.
+
+*** Subscripts and Pointers
+
+#+begin_src cpp
+  int ia[] = {0,2,4,6,8};
+
+  int *p = &ia[2];               // p points to the element indexed by 2
+  int j = p[1];                  // p[1] is equivalent to *(p + 1),
+                                 // p[1] is the same element as ia[3]
+  int k = p[-2];                 // p[-2] is the same element as ia[0]
+#+end_src
+
+This example points out an important difference between _arrays and
+library types_ such as =vector= and =string= that have subscript
+operators.  The library types *force* the index used with a subscript
+to be an *=unsigned= value*.  The built-in subscript operator does
+not. _The index used with the built-in subscript operator can be a
+negative value._
+
+Unlike subscripts for =vector= and =string=, the index of the built-in
+subscript operator is not an unsigned type.
+
+** C-Style Character Strings
+
+Although C++ supports C-style strings, they should not be used by C++
+programs.  C-style strings are a surprisingly rich source of bugs and
+are the root cause of many security problems.  They're also harder to
+use!
+
+** Interfacing to Older Code
+
+Programs written in modern C++ may have to interface to code that uses
+arrays and C-style character strings.
+
+We can use a null-terminated character array anywhere that we can use
+a string literal.  However, there is no direct way to use a library
+string when a C-style string is required.
+#+begin_src cpp
+  string s("Hello, World!");
+  char *str = s;        // error: can't initialize a char* from a string
+  const char *str = s.c_str();    // ok
+#+end_src
+
+The name =c_str= indicates that the function returns a C-style
+character string.  That is, it returns a pointer to the beginning of a
+null-terminated character array that holds the same data as the
+characters in the string.  The type of the pointer is *=const char*=*,
+which prevents us from changing the contents of the array.
+
+The array returned by =c_str= *is not guaranteed to be valid
+indefinitely*.  _Any subsequent use of =s= that might *change the
+value* of =s= can *invalidate* this array._ If a program needs
+*continuing* access to the c-style string, the program must *copy* the
+array returned by =c_str=.
+
+Modern C++ programs should use =vector=​s and iterators instead of
+built-in arrays and pointers, and use =string=​s rather than C-style
+array-based character strings.
+
+* Multidimensional Arrays 🧐
+
+Strictly speaking, there are no multidimensional arrays in C++.  What
+are commonly referred to as multidimensional arrays are actually
+*arrays of arrays*.
+
+#+begin_src cpp
+  int ia1[3][4] = {
+      {0, 1, 2, 3},
+      {4, 5, 6, 7},
+      {8, 9, 10, 11}
+  };
+  // The nested braces are optional.
+  int ia2[3][4] = {0,1,2,3,4,5,6,7,8,9,10,11};
+#+end_src
+
+We can initialize only the first element of each row as follows:
+#+begin_src cpp
+  // explicitly initialize only element 0 in each row
+  int ia[3][4] = {{ 0 }, { 4 }, { 8 }};
+#+end_src
+The remaining elements are *value initialized* in the same way as
+ordinary, single-dimension arrays.
+
+** Subscripting a Multidimensional Array
+
+#+begin_src cpp
+  int arr[10][20][30] = {};
+  // arr:          int [10][20][30]
+  // arr[0]:       int [20][30]
+  // arr[0][0]:    int [30]
+  // arr[0][0][0]: int
+
+  // binds row to the second four-element array in ia
+  int (&row)[4] = ia[1];
+#+end_src
+Here, =ia[1]= is an array of 4 =int=​s, and =row= is reference to an
+array of 4 =ints=​s.
+
+** Using a Range =for= with Multidimensional Arrays
+
+#+begin_src cpp
+  for (auto &row : ia) {         // for every element in the outer array
+      for (auto &col : row) {    // for every element in the inner array
+          // ...
+      }
+  }
+#+end_src
+
+In the previous example, we used references as our loop control
+variables because we wanted to change the elements in the array.
+However, there is a deeper reason for using references:
+#+begin_src cpp
+  for (const auto &row : ia) // for every element in the outer array
+      for (auto col : row) // for every element in the inner array
+          cout << col << endl;
+#+end_src
+This loop does not write to the elements, yet we _still define the
+control variable of the outer loop as a reference_.  We do so in order
+to *avoid the normal array to pointer conversion*.  Had we neglected
+the reference and written these loops as:
+#+begin_src cpp
+  for (auto row : ia)
+      for (auto col : row)
+#+end_src
+our program would not compile.  As before, the first for iterates
+through =ia=, whose elements are arrays of size 4.  Because =row= is
+not a reference, when the compiler initializes row it will *convert
+each array element to a pointer to that array's first element*.  As a
+result, in this loop the type of =row= is =int*=.  The inner =for=
+loop is illegal.  Despite our intentions, that loop attempts to
+iterate over an =int*=.
+
+#+begin_src cpp
+  for (auto row : ia)
+      cout << typeid(row).name() << endl; // int*
+
+  for (auto &row : ia)
+      cout << typeid(row).name() << endl; // int [4]
+#+end_src
+
+#+begin_red
+To use a multidimensional array in a range =for=, the loop control
+variable for all but the innermost array must be *references*.
+#+end_red
+
+** Pointers and Multidimensional Arrays
+
+#+begin_src cpp
+  int ia[3][4]; // array of size 3; each element is an array of ints of size 4
+  int (*p)[4] = ia;            // p points to an array of four ints
+  p = &ia[2];                  // p now points to the last element in ia
+#+end_src
+Applying the strategy from, we start by noting that =(*p)= says =p= is
+a pointer.  Looking right, we see that the object to which =p= points
+has _a dimension of size 4_, and looking left that _the element type
+is =int=_. Hence, =p= is a pointer to an array of four =int=​s.
+
+#+begin_src cpp
+  for (auto p = begin(ia); p != end(ia); p++)
+      for (auto q = begin(*p); q != end(*p); q++)
+          cout << *q << ' ';
+#+end_src
+
+-----
+
+Three different ways to iterate over =ia=:
+#+begin_src cpp
+  for (const int (&row)[4] : ia)
+      for (const int &col : row)
+          cout << col << ' ';
+
+  for (size_t i = 0; i != 3; i++)
+      for (size_t j = 0; j != 4; j++)
+          cout << ia[i][j] << ' ';
+
+  for (const int (*p)[4] = ia; p != ia + 3; p++)
+      for (const int *q = *p; q != *p + 4; q++)
+          cout << *q << ' ';
+#+end_src
+
+Using type alias:
+#+begin_src cpp
+  using int_array = int[4];       // [1] using
+  typedef int int_array[4];       // [2] typedef
+
+  for (const int_array &row : ia)
+      for (const int &col : row)
+          cout << col << ' ';
+
+  for (const int_array *p = ia; p != ia + 3; p++)
+      for (const int *q = *p; q != *p + 4; q++)
+          cout << *q << ' ';
+#+end_src
+
+* Defined Terms
