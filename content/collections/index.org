@@ -18,8 +18,22 @@
 
   我看见有的人住着几十元一天的大通铺，结算几千元一天的医药费。——[[https://www.zhihu.com/question/487165905/answer/2136855559][刘凯]]
   #+end_quote
+- [[https://www.zhihu.com/question/471105298/answer/1995471916][如何看待2022年秋招Java后端开发岗一片红海？ --- 圆角骑士魔理沙的回答]]
+  #+begin_quote
+  然后，乖乖的有整个cs的一个体系的学习。arch \to os \to compiler \to
+  database + (network->distributed system)。Basic Programming +
+  Algorithm + Discrete Math + Linear Algebra + PL + SE。去看顶级大学
+  （如四大）的公开课。大学设计这些为重要课程不是在逗你玩的，就是因为这
+  些东东进可攻，让你做 X for Y 方向，退可守，一个方向没岗位还能做其他
+  的。这是海量教授精确计算出来的，比我懂更比你懂。
+  #+end_quote
+- [[https://www.zhihu.com/question/39596383/answer/82267124][Java标准为什么不加入unsigned int类型?]]
+  #+begin_quote
+  那些个时髦语言不过是暂时裸体而已，等把程序员勾引到手了，最后会把脱掉的衣服一件件穿回去
+  #+end_quote
 
-** 关于编码 - UTF-8 遍地开花
+
+** 关于编码 --- UTF-8 遍地开花
 - [[http://www.hanselman.com/blog/why-the-askobama-tweet-was-garbled-on-screen-know-your-utf8-unicode-ascii-and-ansi-decoding-mr-president][Why the #AskObama Tweet was Garbled on Screen: Know your UTF-8,
   Unicode, ASCII and ANSI Decoding Mr. President]]
 - [[https://stackoverflow.com/questions/9254891/what-does-content-type-application-json-charset-utf-8-really-mean][What does “Content-type: application/json; charset=utf-8” really
