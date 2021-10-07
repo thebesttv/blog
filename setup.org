@@ -1,5 +1,7 @@
 # LaTeX CSS Theme
-#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="https://latex.now.sh/style.css"/>
+# #+HTML_HEAD: <link rel="stylesheet" type="text/css" href="https://latex.now.sh/style.css"/>
+# use Unpkg CDN instead
+#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="https://unpkg.com/latex.css/style.css"/>
 #+HTML_HEAD: <style> body { max-width: 100ch; } </style>
 
 # remove theme's default table caption, use org-mode's instead
