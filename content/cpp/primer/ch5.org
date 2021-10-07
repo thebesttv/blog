@@ -1,0 +1,326 @@
+#+title: Ch5 --- Statements
+
+* Simple Statements
+
+An expression, such as =ival + 5=, becomes an *expression statement*
+when it is followed by a semicolon.  Expression statements cause the
+expression to be *evaluated* and its result *discarded*.
+
+*Null Statements*: The simplest statement is the empty statement, also
+known as a null statement. A null statement is a single semicolon:
+#+begin_src cpp
+  ; // null statement
+#+end_src
+
+*Compound Statements*, *Blocks*: A compound statement, usually
+referred to as a block, is a (possibly empty) sequence of statements
+and declarations _surrounded by a pair of curly braces_.  A block is a
+scope.  A block is *not* terminated by a semicolon.  _An empty block
+is equivalent to a null statement._
+
+* Statement Scope
+
+We can define variables inside the control structure of the =if=,
+=switch=, =while=, and =for= statements.  Variables defined in the
+control structure are visible only within that statement and are out
+of scope after the statement ends:
+#+begin_src cpp
+  while (int i = get_num()) // i is created and initialized on each iteration
+      cout << i << endl;
+  i = 0;                    // error: i is not accessible outside the loop
+#+end_src
+Here, the =int i = get_num()= is an *initialized variable
+declaration*.
+
+* Conditional Statements
+
+A =switch= statement executes by evaluating the parenthesized
+expression that follows the keyword =switch=.  That expression may be
+an /initialized variable declaration/.  The expression is converted to
+integral type.  The result of the expression is compared with the
+value associated with each =case=.
+
+The =case= keyword and its associated value together are known as *the
+=case= label*.  =case= labels must be *integral constant expressions*:
+#+begin_src cpp
+  char ch = getVal();
+  int ival = 42;
+  switch(ch) {
+      case 3.14: // error: noninteger as case label
+      case ival: // error: nonconstant as case label
+      // . . .
+  }
+#+end_src
+
+It is an *error* for any two case labels to have the *same* value.
+
+The statements following the *=default= label* are executed when no
+=case= label matches the value of the =switch= expression.
+
+A label *may not stand alone*; it must precede a statement or another
+=case= label.  If a =switch= ends with a =default= case that has no
+work to do, then the =default= label must be followed by _a null
+statement or an empty block_.
+
+#+begin_src cpp -n 7
+  switch (x) {
+      default:
+  }
+#+end_src
+=clang++= will give an error:
+#+begin_src text
+  main.cpp:8:17: error: label at end of compound statement: expected statement
+          default:
+                  ^
+                   ;
+#+end_src
+
+** Variable Definitions inside the Body of a =switch=
+
+#+begin_red
+It is illegal to jump from a place where a variable *with an
+initializer* is *out of scope* to a place where that variable is *in
+scope*:
+#+end_red
+#+begin_src cpp
+  case true:
+      // this switch statement is illegal because these initializations
+      // might be bypassed
+      string file_name; // error: control bypasses an implicitly initialized variable
+      int ival = 0;     // error: control bypasses an explicitly initialized variable
+      int jval;         // ok: because jval is not initialized
+      break;
+  case false:
+      // ok: jval is in scope but is uninitialized
+      jval = next_num(); // ok: assign a value to jval
+      if (file_name.empty()) // file_name is in scope but wasn’t initialized
+          // . . .
+#+end_src
+If this code were legal, then any time control jumped to the =false=
+case, it would *bypass the initialization* of =file_name= and =ival=.
+Those variables would be in scope.  Code following =false= could use
+those variables.  However, these variables *would not have been
+initialized*.  As a result, the language does not allow us to jump
+over an initialization if the initialized variable is in scope at the
+point to which control transfers.
+
+If we need to define and initialize a variable for a particular
+=case=, we can do so by defining the variable *inside a* block,
+thereby ensuring that the variable is out of scope at the point of any
+subsequent label.
+#+begin_src cpp
+  case true: {
+          // ok: declaration statement within a statement block
+          string file_name = get_file_name();
+          // . . .
+      }
+      break;
+  case false:
+      if (file_name.empty()) // error: file_name is not in scope
+#+end_src
+
+* Iterative Statements
+
+
+
+Variables defined in a =while= condition or =while= body are created
+and destroyed *on each iteration*.
+
+A range =for= is defined in terms of the equivalent traditional =for=:
+#+begin_src cpp
+  for (auto beg = v.begin(), end = v.end(); beg != end; ++beg) {
+      auto &r = *beg;
+      // . . .
+  }
+#+end_src
+In a range =for=, the value of =end()= is *cached*.  If we add
+elements to (or remove them from) the sequence, the value of =end=
+might be invalidated.
+
+* Jump Statements
+
+Jump statements interrupt the flow of execution.  C++ offers four
+jumps: =break=, =continue=, =goto=, and =return=.
+
+** =goto=
+
+A =goto= statement provides an unconditional jump from the =goto= to a
+another statement *in the same function*.  As with a =switch=
+statement, a =goto= cannot transfer control from a point where an
+initialized variable is out of scope to a point where that variable is
+in scope:
+#+begin_src cpp -n 8
+      goto end;
+      int x = 10;
+  end:
+      x = 42;
+#+end_src
+Compliants of =g++=:
+#+begin_src text
+  main.cpp: In function ‘int main()’:
+  main.cpp:10:1: error: jump to label ‘end’
+     10 | end:
+        | ^~~
+  main.cpp:8:10: note:   from here
+      8 |     goto end;
+        |          ^~~
+  main.cpp:9:9: note:   crosses initialization of ‘int x’
+      9 |     int x = 10;
+        |         ^
+#+end_src
+Complaints of =clang++=:
+#+begin_src text
+  main.cpp:8:5: error: cannot jump from this goto statement to its label
+      goto end;
+      ^
+  main.cpp:9:9: note: jump bypasses variable initialization
+      int x = 10;
+          ^
+#+end_src
+还是 =clang++= 的看起来清楚点 😑
+
+A jump backward over an already executed definition is okay.  Jumping
+back to a point *before* a variable is defined _*destroys* the
+variable and *constructs* it again_ (just like in loops):
+#+begin_src cpp
+  // backward jump over an initialized variable definition is okay
+  begin:
+      int sz = get_size();
+      if (sz <= 0) {
+          goto begin;
+      }
+#+end_src
+Here =sz= is destroyed when the =goto= executes.  It is defined and
+initialized anew when control passes back through its definition after
+the jump back to =begin=.
+
+* =try= Blocks and Exception Handling
+
+Exceptions are *run-time anomalies* that exist outside the normal
+functioning of a program.  Dealing with anomalous behavior can be one
+of the most difficult parts of designing any system.
+
+Exception handling is generally used when one part of a program
+detects a problem that it *cannot resolve* and the problem is such
+that the detecting part of the program *cannot continue*. [哈哈感觉写
+得好好] In such cases, the /detecting part/ needs a way to signal that
+something happened and that it cannot continue.  Moreover, the
+detecting part needs a way to signal the problem _without knowing what
+part of the program will deal with the exceptional condition_.  Having
+signaled what happened, the detecting part stops processing.
+
+A program that contains code that might *raise* an exception (usually)
+has another part to *handle* whatever happened.  Exception handling
+supports this cooperation between the detecting and handling parts of
+a program.  In C++, exception handling involves
+- *=throw= expressions*, which the detecting part uses to indicate
+  that it encountered something it can't handle.  We say that _a
+  =throw= *raises* an exception_.
+- *=try= blocks*, which the handling part uses to deal with an
+  exception.  A =try= block starts with the keyword =try= and ends
+  with one or more *=catch= clauses*.  Exceptions thrown from code
+  executed inside a =try= block are usually handled by one of the
+  =catch= clauses.  Because they "handle" the exception, =catch=
+  clauses are also known as *exception handlers*.
+- A set of *=exception= classes* that are used to _pass information
+  about what happened between a =throw= and an associated =catch=_.
+
+** A =throw= Expression
+
+The detecting part of a program uses a =throw= expression to *raise an
+exception*.  A =throw= consists of the keyword =throw= followed by an
+expression.  *The type of the expression determines what kind of
+exception is thrown.* A throw expression is usually followed by a
+semicolon, making it into an /expression statement/.
+
+The type =runtime_error= is one of the standard library exception
+types and is defined in the =<stdexcept>= header.  We must initialize
+a =runtime_error= by giving it a =string= or a C-style character
+string.  That string provides additional information about the
+problem.
+
+** The =try= Block
+
+#+begin_src cpp
+  try {
+      program-statements
+  } catch (exception-declaration) {
+      handler-statements
+  } catch (exception-declaration) {
+      handler-statements
+  } // . . .
+#+end_src
+
+The =program-statements= inside the =try= constitute the normal logic
+of the program.  Like any other blocks, they can contain any C++
+statement, including declarations.  As with any block, variables
+declared inside a try block are *inaccessible outside the block*---in
+particular, they are *not accessible to the =catch= clauses*.
+
+Following the =try= block is a list of one or more _=catch= clauses_.
+A =catch= consists of three parts: the keyword =catch=, _the
+declaration of a *(possibly unnamed) object* within parentheses_
+(referred to as an *exception declaration*), and a block.  When a
+=catch= is selected to handle an exception, the associated block is
+executed.  Once the =catch= finishes, execution continues with the
+statement immediately following the last =catch= clause of the =try=
+block.
+
+Each of the library exception classes defines a member function named
+=what=.  These functions take no arguments and return a C-style
+character string (i.e., a =const char*=).  The =what= member of
+=runtime_error= returns a copy of the =string= used to initialize the
+particular object.
+
+If no appropriate =catch= is found, execution is transferred to a
+library function named =terminate=.  The behavior of that function is
+system dependent, but is guaranteed to _stop further execution of the
+program_.
+
+** Standard Exceptions
+
+The C++ library defines several classes that it uses to report
+problems encountered in the functions in the standard library.  These
+classes are defined in four headers:
+- The =<exception>= header defines the most general kind of exception
+  class named =exception=.  It communicates only that an exception
+  *occurred* but provides _no additional information_.
+- The =<stdexcept>= header defines several _general-purpose exception
+  classes_.
+- The =<new>= header defines the =bad_alloc= exception type.
+- The =<type_info>= header defines the =bad_cast= exception type.
+
+#+HTML: <br>
+#+caption: Standard Exception Classes Defined in =<stdexcept>=
+|        <c>         | <l>                                                                                  |
+|    =exception=     | The most general kind of problem.                                                    |
+|  =runtime_error=   | Problem that can be detected only at run time.                                       |
+|   =range_error=    | Run-time error: result generated outside the range of values that are meaningful.    |
+|  =overflow_error=  | Run-time error: computation that overflowed.                                         |
+| =underflow_error=  | Run-time error: computation that underflowed.                                        |
+|   =logic_error=    | Error in the logic of the program.                                                   |
+|   =domain_error=   | Logic error: argument for which no result exists.                                    |
+| =invalid_argument= | Logic error: inappropriate argument.                                                 |
+|   =length_error=   | Logic error: attempt to create an object larger than the maximum size for that type. |
+|   =out_of_range=   | Logic error: used a value outside the valid range.                                   |
+
+* Defined Terms
+
+*=case= label*: Constant expression that follows the keyword =case= in
+a =switch= statement.  No two =case= labels in the same switch
+statement may have the same value.
+
+*exception declaration*: The declaration in a =catch= clause.  This
+declaration specifies the type of exceptions the =catch= can handle.
+
+*exception handler*: Code that deals with an exception raised in
+another part of the program.  Synonym for =catch= clause.
+
+*exception safe*: Term used to describe programs that behave
+*correctly* when exceptions are thrown.
+
+*raise*: Often used as a synonym for /throw/.  C++ programmers speak
+of "throwing" or "raising" an exception interchangeably.
+
+*=terminate=*: Library function that is called if an exception is not
+caught.  =terminate= aborts the program.
