@@ -21,7 +21,7 @@
 - [[https://www.zhihu.com/question/471105298/answer/1995471916][如何看待2022年秋招Java后端开发岗一片红海？ --- 圆角骑士魔理沙的回答]]
   #+begin_quote
   然后，乖乖的有整个cs的一个体系的学习。arch \to os \to compiler \to
-  database + (network->distributed system)。Basic Programming +
+  database + (network \to distributed system)。Basic Programming +
   Algorithm + Discrete Math + Linear Algebra + PL + SE。去看顶级大学
   （如四大）的公开课。大学设计这些为重要课程不是在逗你玩的，就是因为这
   些东东进可攻，让你做 X for Y 方向，退可守，一个方向没岗位还能做其他
