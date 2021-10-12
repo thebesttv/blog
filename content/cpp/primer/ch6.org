@@ -1,0 +1,946 @@
+#+title: Ch6 --- Functions
+
+* Function Basics
+
+Although we know which argument initializes which parameter, we have
+*no guarantees* about the *order* in which arguments are evaluated.
+The compiler is free to evaluate the arguments in whatever order it
+prefers.
+
+** Function Parameter List
+
+For compatibility with C, we also can use the keyword =void= to
+indicate that there are *no parameters*.
+
+*Parameter names are optional.* However, there is _no way to use an
+unnamed parameter_.  Occasionally a function has a parameter that is
+not used.  Such parameters are often left unnamed, to indicate that
+they aren't used.  Leaving a parameter unnamed doesn't change the
+number of arguments that a call must supply.  A call must supply an
+argument for every parameter, even if that parameter isn't used.
+
+** Function Return Type
+
+The return type _may not be an array type or a function type_.
+However, a function may return a *pointer* to an array or a function.
+
+** Local Objects 🧐
+
+In C++, *names have /scope/*, and *objects have /lifetimes/*.  It is
+important to understand both of these concepts.
+- The */scope/* of a *name* is the part of the program's text in which
+  that name is *visible*.
+- The */lifetime/* of an *object* is the time _during the program's
+  execution_ that the object *exists*.
+
+Parameters and variables defined *inside* a function body are referred
+to as *local* variables.  They are "local" to that function and hide
+declarations of the same name made in an outer scope.
+
+Objects defined *outside* any function _exist throughout the program's
+execution_.  Such objects are created when the program starts and are
+not destroyed until the program ends.  The lifetime of a *local
+variable* depends on _how it is defined_.
+
+*** Automatic Objects
+
+The objects that correspond to ordinary local variables are created
+when the function's control path passes through the variable's
+definition.  They are destroyed when control passes through the end of
+the block in which the variable is defined.  Objects that exist _only
+while a block is executing_ are known as *automatic objects*.  After
+execution exits a block, the values of the automatic objects created
+in that block are undefined.
+
+_Parameters are automatic objects._ Storage for the parameters is
+allocated when the function begins.  Parameters are defined in the
+scope of the function body.  Hence they are destroyed when the
+function terminates.
+
+Automatic objects corresponding to the function's _parameters_ are
+initialized by the arguments passed to the function.  Automatic
+objects corresponding to _local variables_ are initialized if their
+definition contains an initializer.  Otherwise, they are *default
+initialized*, which means that _uninitialized local variables of
+built-in type have undefined values_.
+
+*** Local =static= Objects 🧐
+
+It can be useful to have a local variable whose lifetime *continues
+across calls to the function*.  We obtain such objects by _defining a
+local variable as =static=_.  Each *local =static= object* is
+_initialized *before* the first time execution passes through the
+object's definition_.  Local =static=​s _are not destroyed when a
+function ends_; they are destroyed when the program terminates.
+
+If a local =static= has no explicit initializer, it is *value
+initialized*, meaning that local =static=​s of built-in type are
+initialized to zero.
+
+** Function Declarations
+
+Like any other name, the name of a function must be declared before we
+can use it.  As with variables, a function may be defined only once
+but may be declared multiple times.  These three elements---the return
+type, function name, and parameter types---describe the function's
+/interface/.  They specify all the information we need to call the
+function.  Function declarations are also known as the *function
+prototype*.
+
+The source file that *defines* a function should include the header
+that contains that function's *declaration*.  That way the compiler
+will _verify that the definition and declaration are *consistent*_.
+
+** Separate Compilation
+
+#+begin_src cpp
+  // fact.cpp
+  #include "fact.h"
+
+  int fact(int n) {
+      int res = 1;
+      while (n > 1) {
+          res *= n--;
+      }
+      return res;
+  }
+#+end_src
+#+begin_src cpp
+  // fact.h
+  #ifndef FACT_H
+  #define FACT_H
+  int fact(int n);
+  #endif
+#+end_src
+#+begin_src cpp
+  // main.cpp
+  #include <iostream>
+  #include "fact.h"
+  using namespace std;
+
+  int main(void) {
+      cout << fact(6) << endl;
+      return 0;
+  }
+#+end_src
+#+begin_src bash
+  $ g++ main.cpp fact.cpp
+#+end_src
+#+begin_src bash
+  $ g++ -c main.cpp
+  $ g++ -c fact.cpp
+  $ g++ main.o fact.o
+#+end_src
+
+* Argument Passing
+
+Parameter initialization works the same way as variable
+initialization.
+
+** =const= Parameters and Arguments
+
+Just as in any other initialization, when we copy an argument to
+initialize a parameter, *top-level =const=​s are ignored*.  As a
+result, top-level =const= on parameters are ignored.
+
+The fact that top-level =const=​s are ignored on a parameter has one
+possibly surprising implication:
+#+begin_src cpp
+  void fcn(const int i) { /* fcn can read but not write to i */ }
+  void fcn(int i) { /* . . . */ } // error: redefines fcn(int)
+#+end_src
+We can overload functions only if their parameter lists are
+*sufficiently different*.  Because top-level =const=​s are ignored, we
+can pass exactly the same types to either version of =fcn=.  The
+second version of =fcn= is an error.  Despite appearances, its
+parameter list *doesn't differ* from the list in the first version of
+=fcn=.
+
+** Array Parameters
+
+#+begin_src cpp
+  void print(const int*);
+  void print(const int[]);
+  void print(const int[10]);
+#+end_src
+Regardless of appearances, these declarations are equivalent: Each
+declares a function with a single parameter of type =const int*=.
+
+*** Array Reference Parameters
+
+#+begin_src cpp
+  void print(int (&arr)[10]) {
+      for (auto elem : arr)
+          cout << elem << endl;
+  }
+#+end_src
+
+*** Passing a Multidimensional Array
+
+What appears to be a multidimensional array is an array of arrays.  As
+with any array, a multidimensional array is passed as a pointer to its
+first element.  Because we are dealing with an array of arrays, that
+element is an array, so the pointer is a pointer to an array.  The
+size of the *second (and any subsequent)* dimension is part of the
+element type and must be specified:
+#+begin_src cpp
+  print(int (*matrix)[10], int rowSize) { /* . . . */ }
+#+end_src
+declares matrix as a pointer to an array of ten =int=​s.  We can also
+define our function using array syntax.  As usual, the compiler
+*ignores the first dimension*, so it is best not to include it:
+#+begin_src cpp
+  void print(int matrix[][10], int rowSize) { /* . . . */ }
+#+end_src
+declares matrix to be what looks like a two-dimensional array.  In
+fact, the parameter is a pointer to an array of ten =int=​s.
+
+According to [[https://stackoverflow.com/a/49214662/11938767][this]] Stack Overflow answer, the first dimetion of an
+array is ignored and converted to a pointer when used as a parameter,
+i.e. the array *decays* to a pointer.
+
+#+begin_box "Arrays aren't pointers—they decay into pointers"
+- [[https://stackoverflow.com/q/1461432/11938767][What is array to pointer decay?]]
+- [[http://web.archive.org/web/20081208122434/http://www.transcendentaxis.com/dthompson/blog/archives/9][Pointer Decay in C++]]
+#+end_box
+
+** =main=: Handling Command-Line Options
+
+Command-line options are passed to =main= in two (optional)
+parameters:
+#+begin_src cpp
+  int main(int argc, char *argv[]) { ... }
+  int main(int argc, char **argv)  { ... }
+#+end_src
+The second parameter, =argv=, is an array of pointers to C-style
+character strings.  The first parameter, =argc=, passes the number of
+strings in that array.
+
+=argv[0]= points either to the _name of the program_ or to the _empty
+string_.  Subsequent elements pass the arguments provided on the
+command line.  =argv[argc]= is guaranteed to be 0.  For example, if
+the program is executed with:
+#+begin_src bash
+$ prog -d -o ofile data0
+#+end_src
+Then =argc= will be 5, and =argv= will be:
+#+begin_src text
+  argv[0]: "prog"
+  argv[1]: "-d"
+  argv[2]: "-o"
+  argv[3]: "ofile"
+  argv[4]: "data0"
+  argv[5]: nullptr
+#+end_src
+
+Two ways of iteration:
+#+begin_src cpp
+  char **p = argv;
+  while(*p) {
+      cout << *p++ << endl;
+  }
+
+  for (size_t i = 0; i != argc; ++i) {
+      cout << argv[i] << endl;
+  }
+#+end_src
+
+** Functions with Varying Parameters
+
+The new standard provides two primary ways to write a function that
+takes a varying number of arguments: If all the arguments have the
+*same* type, we can pass a library type named =initializer_list=.  If
+the argument types *vary*, we can write a special kind of function,
+known as a */variadic template/*.
+
+C++ also has a special parameter type, *ellipsis*, that can be used to
+pass a varying number of arguments.  However, it is worth noting that
+this facility ordinarily should be used _only in programs that need to
+interface to C functions_.
+
+An =initializer_list= is a library type that represents an *array* of
+values of the specified type.  This type is defined in the
+=<initializer_list>= header.
+
+#+HTML: <br>
+| <l>                                  | <l>                                                                                                                                                |
+| =initializer_list<T> lst;=           | Default initialization; an empty list of elements of type =T=.                                                                                     |
+| =initializer_list<T> lst{a,b,c...};= | =lst= has as many elements as there are initializers; elements are copies of the corresponding initializers.  Elements in the list are *=const=*.  |
+| =lst2(lst)=, =lst2 = lst=            | Copying or assigning an =initializer_list= does not copy the elements in the list. After the copy, the original and the copy *share* the elements. |
+| =lst.size()=                         | Number of elements in the list.                                                                                                                    |
+| =lst.begin()=, =lst.end()=           | Returns a pointer to the first and one past the last element in =lst=.                                                                             |
+
+Unlike =vector=, the elements in an =initializer_list= are always
+=const= values; there is no way to change the value of an element in
+an =initializer_list=.
+
+#+begin_src cpp
+  void error_msg(initializer_list<string> li) {
+      for (auto it = li.begin(); it != li.end(); ++it)
+          cout << *it << " ";
+  }
+#+end_src
+
+When we pass a sequence of values to an =initializer_list= parameter,
+we must _enclose the sequence in curly braces_:
+#+begin_src cpp
+  error_msg({"the", "best", "tv"});
+#+end_src
+
+* Return Types and the =return= Statement
+
+Failing to provide a =return= at the end of a function with a
+non-=void= return type is an error.  However, _many compilers will
+*not* detect such errors_.  =g++= and =clang++= only generates a
+warning.
+
+With a normal return type (non-pointer & non-reference), the return
+value is used to initialize a *temporary* at the call site, and that
+temporary is the result of the function call.
+#+begin_src cpp
+  string make_plural(size_t ctr, const string &word, const string &ending) {
+      return (ctr > 1) ? word + ending : word;
+  }
+#+end_src
+The return type of this function is =string=, which means the return
+value is copied to the call site.  This function returns *a copy of
+=word=*, or it returns *an unnamed temporary =string=* that results
+from adding =word= and =ending=.
+
+However, pointer & reference return types are a bit tricky.
+
+As with any other reference, when a function returns a reference, that reference
+is just _another name for the object to which it refers_.
+#+begin_src cpp
+  const string &shorterString(const string &s1, const string &s2) {
+      return s1.size() <= s2.size() ? s1 : s2;
+  }
+#+end_src
+The parameters and return type are references to =const string=.  The
+=string=​s are *not copied* when the result is returned.
+
+** Never Return a Reference or Pointer to a Local Object 🧐
+
+When a function completes, its storage is freed.  After a function
+terminates, references to *local objects* refer to memory that is *no
+longer valid*:
+#+begin_src cpp -n 8
+  // disaster: this function returns a reference to a local object
+  const string &manip() {
+      string ret;
+      // ...
+      if (!ret.empty())
+          return ret;         // WRONG: returning a reference to a local object!
+      else
+          return "thebesttv"; // WRONG: "thebesttv" is a local temporary string
+  }
+#+end_src
+Both of these =return= statements return an *undefined value*.  In the
+first =return=, it should be obvious that the function returns _a
+reference to a local object_.  In the second case, _the string literal
+is converted to a *local temporary =string= object*_.  That object,
+like the =string= named =ret=, is *local* to =manip=.  The storage in
+which the temporary resides is freed when the function ends.  Both
+=return=​s refer to memory that is no longer available.
+
+=clang++= will generate warnings on both =return=:
+#+begin_src text
+  main.cpp:13:16: warning: reference to stack memory associated with local variable 'ret' returned [-Wreturn-stack-address]
+          return ret;
+                 ^~~
+  main.cpp:15:16: warning: returning reference to local temporary object [-Wreturn-stack-address]
+          return "thebesttv";
+#+end_src
+
+#+begin_box
+One good way to ensure that the return is safe is to ask: To what
+*/preexisting/ object* is the reference referring?
+#+end_box
+
+#+HTML: <br>
+#+begin_box C++ Temporaries
+- [[https://stackoverflow.com/q/15130338][What are C++ temporaries?]]
+#+end_box
+
+** Reference Returns Are Lvalues
+
+Calls to functions that return *references* are lvalues; other return
+types yield rvalues.  A call to a function that returns a reference
+can be used in the same ways as any other lvalue.  In particular, we
+can assign to the result of a function that returns a reference to
+nonconst:
+#+begin_src cpp
+  char &get_val(string &str, string::size_type ix) {
+      return str[ix];
+  }
+
+  int main() {
+      string s("a value");
+      cout << s << endl;          // output: a value
+      get_val(s, 0) = 'A';        // changes s[0] to A
+      cout << s << endl;          // output: A value
+      return 0;
+  }
+#+end_src
+
+** List Initializing the Return Value
+
+Under the new standard, functions can return *a braced list of
+values*.  As in any other =return=, the list is used to *initialize
+the temporary* that represents the function's =return=.  If the list
+is empty, that temporary is *value initialized*.  Otherwise, the value
+of the return depends on the function's return type.
+
+#+begin_src cpp
+  vector<string> process() {
+      // ...
+      if (expected.empty())
+          return {};                    // return an empty vector
+      else if (expected == actual)
+          return {"functionX", "okay"}; // return list-initialized vector
+      else
+          return {"functionX", expected, actual};
+  }
+#+end_src
+
+In a function that returns a _built-in type_, a braced list may
+contain at most one value, and that value must not require a narrowing
+conversion (just as in definition =int i = {3};=).  If the function
+returns a _class type_, then the class itself defines how the
+intiailizers are used (same as in definition).
+
+** Return from =main=
+
+There is one exception to the rule that a function with a return type
+other than =void= must return a value: The =main= function is allowed
+to terminate *without* a =return=.  If control reaches the end of
+=main= and there is no =return=, then the compiler *implicitly inserts
+a return of 0*.
+
+A zero return indicates success; most other values indicate failure.
+_A nonzero value has a *machine-dependent* meaning._ To make return
+values machine independent, the =<cstdlib>= header defines two
+_preprocessor variables_ that we can use to indicate success or
+failure:
+#+begin_src cpp
+  #include <cstdlib>
+  int main() {
+      if (some_failure)
+          return EXIT_FAILURE;
+      else
+          return EXIT_SUCCESS;
+  }
+#+end_src
+
+** Recursion
+
+A function that recurs indefinitely is described as containing a
+*recursion loop*.  Note that the =main= function *may not* call
+itself.
+
+**  Returning a Pointer to an Array 🧐
+
+Recap of variable definition mixing arrays & pointers:
+#+begin_src cpp
+  int a[10];      // int [10]:      array of 10 ints
+  int *p1[10];    // int* [10]:     array of 10 pointers to int
+  int (*p2)[10];  // int (*) [10]:  pointer to array of 10 ints
+  int *(*p3)[10]; // int* (*) [10]: pointer to array of 10 pointers to int
+#+end_src
+The return type of functions are basically the same:
+#+begin_src cpp
+  int (* f(double x)) [10] { }
+#+end_src
+Here =f= is a function (taking a =double= as parameter) returning
+pointer to an array of 10 =int=​s.  We can also use =using= declaration
+or old =typedef= to simplify things:
+#+begin_src cpp
+  using arrT = int[10];
+  typedef int arrT[10];
+  arrT* f(double x) { }
+#+end_src
+
+#+begin_src cpp
+  #include <iostream>
+  #include <vector>
+  using namespace std;
+
+  int v[4][5];
+
+  int (*f (size_t i)) [5] {
+      return &v[i];
+  }
+
+  int main() {
+      int cnt = 0;
+      for (auto &row : v)
+          for (auto &col : row)
+              col = cnt++;
+      for (size_t i = 0; i != 4; ++i) {
+          auto p1 = f(i);            // int (*) [5]
+          auto p2 = *f(i);           // int*, array decays to pointer
+          decltype(*f(i)) a = *f(i); // int [5]
+          for (auto x : a)
+              cout << x << ' ';
+          cout << endl;
+      }
+      return 0;
+  }
+#+end_src
+
+*** Using a Trailing Return Type
+
+Under the new standard, another way to simplify the declaration of
+func is by using a *trailing return type*.  Trailing returns can be
+defined for any function, but are most useful for functions with
+_complicated return types_, such as pointers or references to arrays.
+A trailing return type follows the parameter list and is preceded by
+=->=.  To signal that the return follows the parameter list, we use
+*=auto=* where the return type ordinarily appears:
+#+begin_src cpp
+  // fcn takes an int argument and returns a pointer to an array of ten ints
+  auto func(int i) -> int(*)[10];
+#+end_src
+
+*** Using =decltype=
+
+#+begin_src cpp
+  int odd[] = {1,3,5,7,9};
+  int even[] = {0,2,4,6,8};
+  // returns a pointer to an array of five ints
+  decltype(odd) *arrPtr(int i) {
+      return (i % 2) ? &odd : &even; // returns a pointer to the array
+  }
+#+end_src
+The only tricky part is that we must remember that _=decltype= does
+not automatically convert an array to its corresponding pointer type_.
+The type returned by =decltype= is an array type, to which we must add
+a =*= to indicate that =arrPtr= returns a pointer.  Alternatively, we
+can simply take the address of the array:
+#+begin_src cpp
+  decltype(&odd) g1() { }         // int (*()) [5]
+  decltype(odd) *g2() { }         // int (*()) [5]
+#+end_src
+
+To summarize, when defining complex return types involving pointer or
+reference to array, we can use:
+- plain old decorators
+- type alias
+- trailing return type
+- =decltype=
+
+
+#+begin_src cpp
+  using strArr = string[10];
+  strArr sv = {"the", "best", "tv"};
+  // all return reference to array of 10 strings
+  string (& h1()) [10] { }
+  strArr &h2() { }
+  auto h3() -> string (&) [10] { }
+  decltype(sv) &h4() {}
+#+end_src
+
+* Overloaded Functions
+
+- The =main= function *may not* be overloaded.
+- It is an error for two functions to differ *only in terms of their
+  return types*.
+
+** Overloading and =const= Parameters
+
+Top-level =const= has no effect on the objects that can be passed to
+the function.  A parameter that has a top-level =const= is
+*indistinguishable* from one without a top-level =const=.
+
+On the other hand, we can overload based on whether the parameter is a
+reference (or pointer) *to =const= or non-=const=* version of a given
+type; such =const=​s are *low-level*:
+#+begin_src cpp
+  // declarations for four independent, overloaded functions
+  Record lookup(Account&);       // function that takes a reference to Account
+  Record lookup(const Account&); // new function that takes a const reference
+  Record lookup(Account*);       // new function, takes a pointer to Account
+  Record lookup(const Account*); // new function, takes a pointer to const
+#+end_src
+
+** =const_cast= and Overloading
+
+=const_casts= are most useful in the context of overloaded functions:
+#+begin_src cpp
+  const string &shorterString(const string &s1, const string &s2) {
+      return s1.size() < s2.size() ? s1 : s2;
+  }
+
+  string &shorterString (string &s1, string &s2) {
+      auto &r = shorterString(const_cast<const string &>(s1),
+                              const_cast<const string &>(s2));
+      return const_cast<string &>(r);
+  }
+#+end_src
+The latter one calls the =const= version of =shorterString= by
+*casting* its arguments to references to =const=.  That function
+returns a reference to a =const string=, which _we know is bound to
+one of our original, *non-=const=* arguments_.  Therefore, we know _it
+is safe to cast that string back to a plain =string&=_ in the return.
+
+** Calling an Overloaded Function
+
+*Function matching* (also known as *overload resolution*) is the
+process by which _a particular function call is *associated* with a
+specific function from a set of overloaded functions_.  The compiler
+determines which function to call by _comparing the arguments in the
+call with the parameters offered by each function in the overload set_.
+
+For any given call to an overloaded function, there are three possible
+outcomes:
+- The compiler finds *exactly one* function that is a *best match* for
+  the actual arguments and generates code to call that function.
+- There is *no* function with parameters that match the arguments in the
+  call, in which case the compiler issues an *error* message that there
+  was no match.
+- There is *more than one* function that matches and *none of the
+  matches is clearly best*.  This case is also an *error*; it is an
+  *ambiguous call*.
+
+** Overloading and Scope
+
+#+begin_src cpp
+  string read();
+  void print(const string &);
+  void print(double);             // overloads the print function
+  void fooBar(int ival) {
+      bool read = false; // new scope: hides the outer declaration of read
+      string s = read(); // error: read is a bool variable, not a function
+      // bad practice: usually it's a bad idea to declare functions at local scope
+      void print(int);   // new scope: hides previous instances of print
+      print("Value: ");  // error: print(const string &) is hidden
+      print(ival);       // ok: print(int) is visible
+      print(3.14);       // ok: calls print(int); print(double) is hidden
+  }
+#+end_src
+
+* Features for Specialized Uses
+
+** Default Arguments
+
+A default argument is specified as an *initializer* for a parameter in
+the parameter list.  If a parameter has a default argument, all the
+parameters that follow it must also have default arguments.
+
+*** Default Argument Declarations
+
+Although it is normal practice to declare a function once inside a
+header, it is legal to redeclare a function multiple times.  However,
+each parameter can have its default specified *only once _in a given
+scope_*.  Thus, any subsequent declaration can add a default only for
+a parameter that has not previously had a default specified.  As
+usual, defaults can be specified only if all parameters to the right
+already have defaults. For example, given
+#+begin_src cpp
+  // no default for the height or width parameters
+  string screen(sz, sz, char = ' ');
+#+end_src
+we cannot change an already declared default value:
+#+begin_src cpp
+  string screen(sz, sz, char = '*'); // error: redeclaration
+#+end_src
+but we can add a default argument as follows:
+#+begin_src cpp
+  string screen(sz = 24, sz = 80, char); // ok: adds default arguments
+#+end_src
+
+We can add default values _one by one within the same scope_:
+#+begin_src cpp
+  string screen(sz ht, sz wid, char background) { }
+
+  string screen(sz, sz, char = '*');
+  string screen(sz, sz = 10, char);
+  string screen(sz = 20, sz, char);
+
+  void f(){
+      string screen(sz = 30, sz = 10, char = ' ');
+  }
+#+end_src
+
+Since different translation units (source files) have different scope,
+we can specify different default values for different files:
+#+begin_src cpp
+  // print.cpp
+  #include <iostream>
+  void print(const char *str) {
+      std::cout << str << std::endl;
+  }
+#+end_src
+
+#+begin_src cpp
+  // ex1.cpp
+  void print(const char * = "ex1");
+  int main() {
+      print();
+      return 0;
+  }
+#+end_src
+
+#+begin_src cpp
+  // ex2.cpp
+  void print(const char * = "ex2");
+  int main() {
+      print();
+      return 0;
+  }
+#+end_src
+
+*** Default Argument Initializers
+
+用哪个变量(或函数)在编译时确定,而变量的值在运行时获取.
+
+Local variables *may not* be used as a default argument.  Excepting
+that restriction, a default argument can be any expression that has a
+type that is convertible to the type of the parameter:
+#+begin_src cpp
+  // the declarations of wd, def, and ht must appear outside a function
+  sz wd = 80;
+  char def = ' ';
+  sz ht();
+  string screen(sz = ht(), sz = wd, char = def);
+  string window = screen(); // calls screen(ht(), 80, ' ')
+#+end_src
+Names used as default arguments are resolved in the scope of the
+function declaration.  The value that those names represent is
+*evaluated at the time of the call*:
+#+begin_src cpp
+  void f2() {
+      def = '*';   // changes the value of a default argument
+      sz wd = 100; // hides the outer definition of wd but does not change the default
+      window = screen(); // calls screen(ht(), 80, '*')
+  }
+#+end_src
+Inside =f2=, we changed the value of =def=.  The call to screen
+*passes this updated value*.  Our function also declared a local
+variable that *hides the outer =wd=*.  However, the local named =wd=
+is _*unrelated* to the default argument passed to =screen=_.
+
+** =inline= Functions
+
+The =inline= specification is only a *request* to the compiler.  The
+compiler _may choose to ignore this request_.
+
+**  =constexpr= Functions
+
+A =constexpr= function is a function that can be used in a constant
+expression.  A =constexpr= function is defined like any other function
+but must meet certain restrictions: The return type and the type of
+each parameter must be *literal type* (arithmetic, pointer, reference,
+literal class, =enum= ...), and the function body must contain
+_exactly one =return= statement_:
+#+begin_src cpp
+  constexpr int new_sz() { return 42; }
+  constexpr int foo = new_sz();   // ok: foo is a constant expression
+#+end_src
+
+A =constexpr= function body may contain other statements so long as
+those statements *generate no actions at run time*.
+
+A constexpr function is permitted to _return a value that is *not* a
+constant_:
+#+begin_src cpp
+  // scale(arg) is a constant expression if arg is a constant expression
+  constexpr size_t scale(size_t cnt) {
+      return new_sz() * cnt;
+  }
+
+  int arr[scale(2)];     // ok: scale(2) is a constant expression
+  int i = 2;             // i is not a constant expression
+  int a2[scale(i)];      // error: scale(i) is not a constant expression
+#+end_src
+
+*A =constexpr= function is not required to return a constant
+expression.*  =constexpr= functions are *implicitly =inline=*.
+
+Unlike other functions, =inline= and =constexpr= functions may be
+defined *multiple times* in the program.  After all, the compiler
+needs the *definition*, not just the declaration, in order to _expand
+the code_.  However, all of the definitions of a given =inline= or
+=constexpr= must *match exactly*.  As a result, inline and constexpr
+functions normally are *defined in headers*.
+
+** Aids for Debugging
+
+*** The =assert= Preprocessor *Macro*
+
+=assert= is a *preprocessor macro* defined in the =<cassert>= header.
+It takes a single expression and uses it as a condition:
+#+begin_src cpp
+  assert(expr);
+#+end_src
+evaluates =expr= and if the expression is =false=, then =assert=
+writes a message and terminates the program.  If the expression is
+=true=, then =assert= does nothing.
+
+=assert= states that something is *always true*.
+
+*** The =NDEBUG= Preprocessor *Variable*
+
+The behavior of =assert= depends on the status of a preprocessor
+variable named =NDEBUG=.  If =NDEBUG= is defined, =assert= does
+nothing.  By default, =NDEBUG= is not defined, so, by default,
+=assert= performs a run-time check.
+
+#+begin_src cpp
+  void print(const int ia[], size_t size) {
+  #ifndef NDEBUG
+  // __func__ is a local static defined by the compiler
+  // that holds the function's name
+      cerr << __func__ << ": array size is " << size << endl;
+  #endif
+  // . . .
+#+end_src
+Here we use a variable named =__func__= to print the name of the
+function we are debugging.  The compiler defines =__func__= in every
+function.  It is a local static array of =const char= that holds the
+name of the function.  In addition to =__func__=, which the C++
+*compiler* defines, the *preprocessor* defines four other names that
+can be useful in debugging:
+- =__FILE__= string literal containing the name of the file
+- =__LINE__= integer literal containing the current line number
+- =__TIME__= string literal containing the time the file was *compiled*
+- =__DATE__= string literal containing the date the file was *compiled*
+
+* Function Matching 🧐
+
+The first step of *function matching* identifies the set of overloaded
+functions *considered* for the call.  The functions in this set are
+the */candidate functions/*.  A candidate function is a function with
+the *same name* as the called function and for which a declaration is
+*visible* at the point of the call.
+
+The second step selects from the set of candidate functions those
+functions that can be _called with the arguments in the given call_.
+The selected functions are the */viable functions/*.  To be viable, a
+function must have the *same* number of parameters as there are
+arguments in the call, and the type of each argument must *match*---or
+be *convertible to*---the type of its corresponding parameter.
+
+The third step of function matching determines which viable function
+provides the *best match* for the call.  This process _looks at each
+argument_ in the call and selects the viable function (or functions)
+for which the corresponding parameter best matches the argument.
+
+The compiler then determines, *argument by argument*, which function
+is (or functions are) the best match.  There is an overall best match
+if there is one and only one function for which
+- The match for each argument is *no worse* than the match required by
+  anyother viable function
+- There is *at least one* argument for which the match is *better*
+  than the match provided by any other viable function
+If after looking at each argument there is no single function that is
+preferable, then the call is *in error*.  The compiler will complain
+that the call is *ambiguous*.
+
+* Pointers to Functions
+
+Like any other pointer, a function pointer points to a particular
+type.  A function's type is determined by _its return type and the
+types of its parameters_.  The function's name is not part of its
+type.
+
+When we use the name of a function as a value, the function is
+automatically converted to a pointer.
+#+begin_src cpp
+  bool lengthCompare(const string &, const string &);
+  bool (*pf)(const string &, const string &);
+  pf = lengthCompare;  // pf now points to the function named lengthCompare
+  pf = &lengthCompare; // equivalent assignment: address-of operator is optional
+#+end_src
+Moreover, we can use a pointer to a function to call the function to
+which the pointer points.  We can do so *directly*---there is no need
+to dereference the pointer:
+#+begin_src cpp
+  bool b1 = pf("hello", "goodbye");            // calls lengthCompare
+  bool b2 = (*pf)("hello", "goodbye");         // equivalent call
+  bool b3 = lengthCompare("hello", "goodbye"); // equivalent call
+#+end_src
+
+When we declare a pointer to an overloaded function the compiler uses
+the type of the pointer to determine which overloaded function to use.
+The type of the pointer must match one of the overloaded functions
+exactly.
+
+** Function Pointer Parameters
+
+As with arrays, we can write a parameter that looks like a function
+type, but it will be *treated as a pointer*:
+#+begin_src cpp
+  // third parameter is a function type and is automatically treated as
+  // a pointer to function
+  void useBigger(const string &s1, const string &s2,
+                 bool pf(const string &, const string &));
+  // equivalent declaration: explicitly define the parameter as a
+  // pointer to function
+  void useBigger(const string &s1, const string &s2,
+                 bool (*pf)(const string &, const string &));
+#+end_src
+
+** Returning a Pointer to Function
+
+#+begin_src cpp
+  int (*f1(int))(int*, int);
+  auto f1(int) -> int (*)(int*, int);
+#+end_src
+Here, =f1= is a function (=int=) returning pointer to function
+(=int*=, =int=) returning =int=.
+
+* Defined Terms
+
+*ambiguous call*: _Compile-time error_ that results during function
+matching when two or more functions provide _an equally good match_
+for a call.
+
+*automatic objects*: Objects that exist *only during the execution of
+a function*.  They are created when control passes through their
+definition and are _destroyed at the end of the block in which they
+are defined_.
+
+*function prototype*: _Function declaration_, consisting of the name,
+return type, and parameter types of a function.  To call a function,
+its prototype must have been declared before the point of call.
+
+*hidden names*: Names declared inside a scope hide previously declared
+entities with the same names declared outside that scope.
+
+*local static objects*: Local objects whose value *persists across
+calls to the function*.  Local static objects that are created and
+initialized *before* control reaches their use and are destroyed when
+the program ends.
+
+*object code*: Format into which the compiler transforms our source
+code.
+
+*object file*: File holding object code generated by the compiler from
+a given source file.  An executable file is generated from one or more
+object files after the files are linked together.
+
+*object lifetime*: Every object has an associated lifetime.
+- Non-=static= objects that are defined _inside a block_ exist from when
+  their definition is encountered until the end of the block in which
+  they are defined.
+- Global objects are created during program startup.
+- Local =static= objects are created before the first time execution
+  passes through the object's definition.
+- Global objects and local =static= objects are destroyed when the
+  =main= function ends.
+
+*overload resolution*: same as function matching.
+
+*trailing return type*: Return type specified *after* the parameter
+list.
+
+*candidate functions*: Set of functions that are considered when
+resolving a function call.  The candidate functions are all the
+functions with the name used in the call for which a declaration is
+*in scope* at the time of the call.
+
+*viable functions*: Subset of the candidate functions that could match
+a given call.  Viable functions have the same number of parameters as
+arguments to the call, and each argument type can be converted to the
+corresponding parameter type.

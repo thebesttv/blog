@@ -1,0 +1,11 @@
+#+title: C++
+
+- [[https://www.stroustrup.com/bs_faq.html][Bjarne Stroustrup's FAQ]]
+- The Design and Evolution of C++
+  #+begin_quote
+  If you want to know why C++ is the way it is, have a look at [[https://www.stroustrup.com/dne.html][The
+  Design and Evolution of C++]] (D&E).  Understanding the design
+  criteria and constraints helps writing better programs.  [[https://dl.acm.org/doi/pdf/10.1145/3386320][Thriving in
+  a Crowded and Changing World: C++ 2006--2020]] can be seen as an
+  up-to-date follow-up to D&E.
+  #+end_quote
