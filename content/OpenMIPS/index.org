@@ -1,0 +1,12 @@
+#+title: 自己动手写CPU笔记
+
+[[https://book.douban.com/subject/25960657/][自己动手写CPU]]
+
+* ModelSim
+
+在[[https://fpgasoftware.intel.com/20.1.1/?edition=standard&product=modelsim_ae&platform=linux#tabs-2][这里]]下载 ModelSim, 选择 *Standard* edition, 在下面的 *Individual
+Files* 里下载名为 "ModelSim-Intel FPGA Edition (includes Starter
+Edition)" 的安装包.  附上可能会坏掉的直链: [[https://download.altera.com/akdlm/software/acdsinst/20.1std.1/720/ib_installers/ModelSimSetup-20.1.1.720-linux.run][Linux版]].
+
+ps. 下载需要注册 Intel 的帐号, 用 163 收不到邮件, 还是 Outlook 比较靠
+谱 😒

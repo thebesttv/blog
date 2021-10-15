@@ -1,0 +1,15 @@
+#+title: Ch2 --- Verilog HDL
+
+实现了一个很简单的 IFU (Instruction Fecth Unit), 由 PC (=pc_reg=), 指
+令内存 (=rom=), 取指模块 (=inst_fetch=) 三个模块组成.
+
+#+include: "pc_reg.v" src verilog
+#+include: "rom.v" src verilog
+#+include: "inst_fetch.v" src verilog
+
+其中 =rom= 在仿真时使用 =rom.data= 初始化内存.  =rom.data= 是一个纯文
+本, 每一行对应着一个地址内容.
+#+include: "rom.data" src text
+
+最后用 =inst_fetch_tb= 仿真
+#+include: "inst_fetch_tb.v" src verilog
