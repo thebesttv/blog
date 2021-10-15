@@ -77,7 +77,10 @@
             (insert (format "#+SETUPFILE: %s/setup.org\n" eserver-blog))
             (insert-file-contents path)
             ;; (httpd-log `(inserted file contents under ,path))
-            (org-export-to-buffer 'html buffer))
+            (let ((default-directory
+                    (expand-file-name (file-name-directory path)
+                                      eserver-blog)))
+              (org-export-to-buffer 'html buffer)))
           (with-current-buffer buffer
             (replace-string
              "***6a05b631-e547-4f89-b411-7ea4c1ac94d1***"
@@ -247,7 +250,5 @@ string."
 
 ;;; use org-special-block-extras
 (use-package org-special-block-extras
-  :ensure t
   :hook (org-mode . org-special-block-extras-mode))
-
 (require 'org-special-block-extras)
