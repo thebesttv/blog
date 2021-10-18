@@ -32,6 +32,27 @@
   那些个时髦语言不过是暂时裸体而已，等把程序员勾引到手了，最后会把脱掉的衣服一件件穿回去
   #+end_quote
 - [[https://blog.cyyself.name/first-3-years-undergraduate/][大学前三年的流水账 --- CYY]]
+- [[http://tenfourfox.blogspot.com/2020/04/the-end-of-tenfourfox-and-what-ive.html][The end of TenFourFox and what I've learned from it]]
+  #+begin_quote
+  For better or for worse, web browsers' primary role is no longer to
+  view documents; it is to view *applications that, by sheer
+  coincidence, sometimes resemble documents*.
+
+  What should you do?  Phrase it better.  Post your reports with the
+  attitude that you are just one user, using free software, from the
+  humility of your own personal experience on your own system.  Make
+  it clear you don't expect anything from the report, you are grateful
+  the software exists, you intend to keep using it and this is your
+  small way of giving back.  Say this in words because I can't see
+  your face or hear your voice.  Write "thank you" and mean it.
+  Acknowledge the costs in time and money to bring it to you.  Tell me
+  what's good about it and what you use it for.  That's how you create
+  a relationship where *I can see you as a person and not a demand
+  request*, and where *you can see me as a maintainer and not a
+  vending machine*.  Value my work so that I can value your insights
+  into it.  Politeness, courtesy and understanding didn't go out the
+  window just because we're interacting through a computer screen.
+  #+end_quote
 
 
 ** 关于编码 --- UTF-8 遍地开花

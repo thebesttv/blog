@@ -1,7 +1,8 @@
 #+title: Ch2 --- Verilog HDL
 
 实现了一个很简单的 IFU (Instruction Fecth Unit), 由 PC (=pc_reg=), 指
-令内存 (=rom=), 取指模块 (=inst_fetch=) 三个模块组成.
+令内存 (=rom=), 取指模块 (=inst_fetch=) 三个模块组成.  指令都是4字节,
+按字寻址, 每次PC+1.
 
 #+include: "pc_reg.v" src verilog
 #+include: "rom.v" src verilog
