@@ -84,7 +84,10 @@
           (with-current-buffer buffer
             (replace-string
              "***6a05b631-e547-4f89-b411-7ea4c1ac94d1***"
-             (eserver-blog-postamble host-name)))
+             (eserver-blog-postamble host-name)
+             nil (point-min) (point-max))
+            (replace-string "​" ""        ; delete zero width space
+             nil (point-min) (point-max)))
           (with-httpd-buffer proc "text/html; charset=utf-8"
             (insert-buffer buffer)))))))
 
