@@ -1,0 +1,21 @@
+#+title: 测试的实现
+
+这边目前还是针对 Ch5-2 的测试
+
+#+begin_src text
+  .
+  ├── dp.sh              # 对拍主体
+  ├── compare
+  ├── compare.cpp        # 比较 Mars 和 MIPS core 的输出
+  ├── generator
+  ├── generator.cpp      # 随机生成 MIPS 代码
+  ├── Makefile           # 跑一次对拍一次
+  ├── Mars-registers.jar # Mars 源码压缩成的 jar 文件
+  └── mars_src           # 修改后的 Mars 源码, 输出每步后的寄存器状态
+#+end_src
+
+- [[file:dp.sh][dp.sh]]
+- [[file:compare.cpp][compare.cpp]]
+- [[file:generator.cpp][generator.cpp]]
+- [[file:Makefile][Makefile]]
+- Mars 的源码就先不放了, 太 rough, 将来再说😉

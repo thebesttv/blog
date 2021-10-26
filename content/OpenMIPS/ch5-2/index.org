@@ -1,0 +1,13 @@
+#+title: Ch5 下 --- 逻辑, 移位, 空指令的实现
+
+这里添加了主要的逻辑指令和位移指令, 虽然加了不少, 但其实只改了
+=defines.v=, =id.v= 和 =ex.v=.
+
+- [[file:defines.v][defines.v]]
+- [[file:id.v][id.v]]
+- [[file:ex.v][ex.v]]
+
+为了检验我有没有抄错, 稍微改了下 [[http://www.cs.missouristate.edu/MARS/][Mars]], 让它输出每条指令后寄存器的状态,
+然后在 =regfile= 里 monitor 寄存器, 最后再随机生成指令并且比较就好啦.
+
+- [[file:regfile.v][regfile.v]]

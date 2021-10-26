@@ -1,0 +1,69 @@
+#+title: Ch4 --- 第一条指令 ori 的实现
+
+流水线就真...挺神奇的 🧐
+
+这一章实现了最初等的MIPS五级流水线, 只能执行 =ori=.
+
+#+caption: 最简五级流水线
+{{{image(100)}}}
+[[./pipeline.jpg]]
+
+ID阶段生成的 =wd= 和 =wreg=, 还有EX阶段得到的 =wdata= 都被一路传递下去,直
+到最后的WB阶段才被放到Regfile里面.  还有每个阶段之间的 buffer, 还不是
+很难理解的样子.
+
+注意: PC 的输出 =pc= 和 =ce= 都是会给到外部的指令存储器 =inst_rom= 的,
+在 =openmips= 模块中两个信号是输出 (=rom_addr_o=, =rom_ce_o=), 还有一
+个指令输入 =rom_data_i=.
+
+#+caption: 模块接口及关系
+{{{image(100)}}}
+[[./modules.jpg]]
+
+这个最简实现几乎不考虑任何的 hazard.  这意味着不能写这样的代码:
+#+begin_src mips
+  # 直接相邻的不行
+          ori         $1, $0, 0x1100
+          ori         $2, $1, 0x0020
+  # 间隔1个的也不行
+          ori         $1, $0, 0x1100
+          ori         $3, $0, 0xffff
+          ori         $2, $1, 0x0020
+#+end_src
+简单的 Read-After-Write hazard 的处理会在第五章实现.
+
+用没有 hazard 的指令测试:
+#+include: "inst_rom.s" src mips
+
+{{{image(100)}}}
+[[./waveform.jpg]]
+
+可以看到, 从 210000ps 开始得到第一条指令, 一直到 310000ps, 过了五个时
+钟周期寄存器被写入.
+
+先是各种宏定义:
+#+include: "defines.v" src verilog
+
+然后是 =pc_reg=, =if_id=, =regfile=, =id=, =id_ex=, =ex=, =ex_mem=,
+=mem=, =mem_wb=:
+#+include: "pc_reg.v" src verilog
+#+include: "if_id.v" src verilog
+#+include: "regfile.v" src verilog
+#+include: "id.v" src verilog
+#+include: "id_ex.v" src verilog
+#+include: "ex.v" src verilog
+#+include: "ex_mem.v" src verilog
+#+include: "mem.v" src verilog
+#+include: "mem_wb.v" src verilog
+
+然后用 =openmips= 把它们都连起来:
+#+include: "openmips.v" src verilog
+
+有了 CPU 核, 还需要外围的指令存储器 =inst_rom=:
+#+include: "inst_rom.v" src verilog
+
+酱就可以搭建 SOPC 啦:
+#+include: "openmips_min_sopc.v" src verilog
+
+最后的 test bench:
+#+include: "openmips_min_sopc_tb.v" src verilog

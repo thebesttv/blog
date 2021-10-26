@@ -4,9 +4,30 @@
 
 * ModelSim
 
+** 下载安装
+
 在[[https://fpgasoftware.intel.com/20.1.1/?edition=standard&product=modelsim_ae&platform=linux#tabs-2][这里]]下载 ModelSim, 选择 *Standard* edition, 在下面的 *Individual
 Files* 里下载名为 "ModelSim-Intel FPGA Edition (includes Starter
 Edition)" 的安装包.  附上可能会坏掉的直链: [[https://download.altera.com/akdlm/software/acdsinst/20.1std.1/720/ib_installers/ModelSimSetup-20.1.1.720-linux.run][Linux版]].
 
 ps. 下载需要注册 Intel 的帐号, 用 163 收不到邮件, 还是 Outlook 比较靠
 谱 😒
+
+** 波形文件
+
+好不容易选出了仿真需要的各种信号, 可以将信号列表保存成 =.do= 文件 (如
+=wave.do=).  下次再模拟时, 可以选择 File \to Load \to Macro File, 再选
+中那个 =.do= 文件就好啦. 😉
+
+* 光盘
+
+好孩子看不见
+
+#+HTML: <div style="opacity: 0;">
+#+begin_white
+- [[http://bookcd.muc.edu.cn/bookcd/index/index.do][中央民族大学光盘数据库]]
+- [[http://opac.muc.edu.cn/opac/item.php?marc_no=7732496576587978706164666c3035744f61544558413d3d][自己动手写CPU - 中央民族大学图书馆书目检索系统]]
+- [[http://discx.yuntu.io/disc/explore/512/0972201197875][自己动手写CPU 光盘]]
+- [[http://discx.yuntu.io/][联图云.光盘]]
+#+end_white
+#+HTML: </div>
