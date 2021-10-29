@@ -1,12 +1,15 @@
 #+title: 测试的实现
 
-这边目前还是针对 Ch5-2 的测试
+针对 Ch6 的测试, =generator= 根据 =instructions.txt= 提供的指令格式,
+随机生成指令.  由于有的指令可能不会改变寄存器, 所以把 =$monitor= 放到
+=openmips.v= 里面, 并且监控 =pc=.
 
 #+begin_src text
   .
   ├── dp.sh              # 对拍主体
   ├── compare
   ├── compare.cpp        # 比较 Mars 和 MIPS core 的输出
+  ├── instructions.txt   # 指令及其格式
   ├── generator
   ├── generator.cpp      # 随机生成 MIPS 代码
   ├── Makefile           # 跑一次对拍一次
@@ -16,6 +19,7 @@
 
 - [[file:dp.sh][dp.sh]]
 - [[file:compare.cpp][compare.cpp]]
+- [[file:instructions.txt][instructions.txt]]
 - [[file:generator.cpp][generator.cpp]]
 - [[file:Makefile][Makefile]]
 - Mars 的源码就先不放了, 太 rough, 将来再说😉

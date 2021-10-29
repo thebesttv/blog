@@ -1,0 +1,26 @@
+and r r r
+or  r r r
+xor r r r
+nor r r r
+
+movn r r r
+movz r r r
+
+sllv r r r
+srlv r r r
+srav r r r
+
+sll r r i(5)
+srl r r i(5)
+sra r r i(5)
+
+andi r r i(16)
+ori  r r i(16)
+xori r r i(16)
+
+lui r i(16)
+
+mfhi r
+mflo r
+mthi r
+mtlo r

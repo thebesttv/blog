@@ -1,5 +1,5 @@
-CMD_CNT = 100
-REGS = 1 2 3 4
+CMD_CNT = 160
+REGS = 1 2 3 4 hi lo
 MARS_OUT = mars-out
 CORE_OUT = core-out
 
@@ -13,7 +13,7 @@ test-once: generator compare
 	../bin2mem inst_rom.bin inst_rom.data
 	-rm inst_rom.o inst_rom.om inst_rom.bin
 
-	vvp ../ch5-2/a.out > ${CORE_OUT}
+	vvp ../ch6/a.out > ${CORE_OUT}
 
 	./compare ${MARS_OUT} ${CORE_OUT} ${REGS}
 

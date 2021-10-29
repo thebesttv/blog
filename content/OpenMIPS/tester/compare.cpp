@@ -13,6 +13,7 @@ public:
         ss.unsetf(std::ios::hex);
         ss.unsetf(std::ios::oct);
         unsigned r; int i = 0;
+        ss >> r;                // ignore PC
         while (ss >> r) {
             regs[registers[i++]] = r;
         }
@@ -23,7 +24,7 @@ public:
         }
     }
 
-    uint32_t regs[32];
+    uint32_t regs[34];
 };
 
 bool equal(const Regfile &r1, const Regfile &r2) {
@@ -79,22 +80,30 @@ int main(int argc, char *argv[]) {
     }
 
     for (int i = 3; i < argc; ++i) {
-        registers.push_back(atoi(argv[i]));
+        if (isdigit(argv[i][0])) {
+            registers.push_back(atoi(argv[i]));
+        } else if (argv[i][0] == 'h') {
+            registers.push_back(32);
+        } else if (argv[i][0] == 'l') {
+            registers.push_back(33);
+        }
     }
     sort(registers.begin(), registers.end());
 
     read(argv[1], mars);        // mars
-    read(argv[2], core);        // core
+    read(argv[2], core);  // core
 
-    if (mars.size() != core.size()) {
-        printf("ERROR: mars %u lines, while core %u lines\n",
+    if (mars.size() > core.size()) {
+        printf("ERROR: mars %lu lines, while core %lu lines\n",
                mars.size(), core.size());
         return 1;
     }
+    printf("mars %lu lines, core %lu lines\n",
+           mars.size(), core.size());
 
     for (size_t i = 0; i < mars.size(); ++i) {
         if (!equal(mars[i], core[i])) {
-            printf("ERROR at line %u:\n", i + 1);
+            printf("ERROR at line %lu:\n", i + 1);
             printf("Mars:\n");
             mars[i].print();
             printf("Core:\n");
