@@ -1,0 +1,136 @@
+#+title: Dissection Font
+
+起因是看到阮一峰的周报里面有这个 [[http://erikdemaine.org/fonts/dissect/?text=thebesttv&both=1&4piece=1][Dissection Font]], 感觉还挺好玩的, 就把
+网页上的结果给弄下来放到 Longan 上显示了.  其实我也不太清楚这是啥, 只
+是把它当成字体了😂
+
+扒一段网页上的介绍:
+#+begin_quote
+In these fonts, each letter or digit or ampersand (=&=) can be
+*dissected* (cut into pieces such that those pieces re-arrange) into a
+6\times6 square.  The dissections all happen to be polyomino
+dissections, and they allow _translation, rotation, and reflection in
+the piece re-arrangement_.  There are four different fonts, each using
+up to 2, 3, or 4 pieces in each dissection.  Of course, with more
+pieces, it is easier to get nicer-looking letters.  The 2- and 4-piece
+*disconnected* fonts use some disconnected pieces (but still *each
+piece moves as a single unit*), while the 2- and 3-piece *connected*
+fonts use connected pieces.  In the disconnected fonts, we achieve
+_uniform letter heights_.
+#+end_quote
+
+Dissection Font 主要有四种, 每种包括原始的字母和字母拆分重组成的正方形:
+- 4-piece disconnected font
+  {{{image(40)}}}
+  [[./dissection-font/4-disconnected.png]]
+- 2-piece disconnected font
+  {{{image(40)}}}
+  [[./dissection-font/2-disconnected.png]]
+- 3-piece connected font
+  {{{image(40)}}}
+  [[./dissection-font/3-connected.png]]
+- 2-piece connected font
+  {{{image(40)}}}
+  [[./dissection-font/2-connected.png]]
+
+大概啥意思已经清楚了, 现在就想办法弄到 Longan 上.
+
+四种字体中的每个字符都保存在 =Font= 里, 包括原始字母和重组后的正方型.
+每个字符有以像素为单位的宽高, 和像素的信息.  因为都能重组成 6\times6
+的正方形, 字符都是由36个像素组成的, 每个像素包括块号(上文图片中不同颜
+色代表不同块)和座标.
+#+begin_src c
+  struct Font {
+      uint8_t width;
+      uint8_t height;
+      uint8_t pixels[36][3];
+  };
+#+end_src
+
+网页源码里有几个主要的 =js= 文件:
+#+begin_src html
+  <SCRIPT TYPE="text/javascript" src="Knuth.js"></SCRIPT>
+  <SCRIPT TYPE="text/javascript" src="2piece.js"></SCRIPT>
+  <SCRIPT TYPE="text/javascript" src="2piece-discon.js"></SCRIPT>
+  <SCRIPT TYPE="text/javascript" src="index.js"></SCRIPT>
+#+end_src
+这四个文件最后的结果基本就是一个 =fonts=, 里面有四种字体的数据. 把它们
+都下下来, 新建一个 =process.js= 把字体输出成 C 的8个 =Font= 数组:
+#+begin_src js
+  var nameMp = {
+      '4piece_solved': 'n4_disconnected_letter',
+      '4piece_square': 'n4_disconnected_square',
+
+      '2piece-discon_solved': 'n2_disconnected_letter',
+      '2piece-discon_square': 'n2_disconnected_square',
+
+      '3piece_solved': 'n3_connected_letter',
+      '3piece_square': 'n3_connected_square',
+
+      '2piece_solved': 'n2_connected_letter',
+      '2piece_square': 'n2_connected_square',
+  };
+
+  function printNode(node, str) {
+      console.log("  // " + str);
+      console.log("  {" + node["width"] + ", " + node["height"] + ", {");
+      for (var j = 0; j < 36; j += 3) {
+          process.stdout.write("    ");
+          process.stdout.write("{" + node["pixels"][j] + "}, ");
+          process.stdout.write("{" + node["pixels"][j+1] + "}, ");
+          process.stdout.write("{" + node["pixels"][j+2] + "},");
+          process.stdout.write("\n");
+      }
+      process.stdout.write("  }},\n");
+  }
+
+  for (const key in fonts) {
+      console.log("const struct Font " + nameMp[key] + "[] = {");
+      for (var i = 0; i < 10; ++i) {
+          var node = fonts[key][i];
+          printNode(node, i);
+      }
+      for (var i = 0; i < 26; ++i) {
+          var x = String.fromCharCode(i + 65);
+          var node = fonts[key][x];
+          printNode(node, x);
+      }
+      if (key == '2piece_solved' || key == '2piece_square') {
+          // do nothing
+      } else {
+          printNode(fonts[key]['&'], '&');
+      }
+      console.log("};");
+  }
+#+end_src
+
+最后就是把这5个文件合并, 再用 =node= 跑一下:
+#+begin_src bash
+  $ cat Knuth.js 2piece.js 2piece-discon.js index.js process.js > main.js
+  $ node main.js > font_data.h
+#+end_src
+酱就得到字体数据啦.
+
+项目的话, 主要是三个文件:
+- =font_data.h=: 包含了八个 =Font= 数组, 每个数组长度为36或37.  每类字
+  体都能显示数字和大写字母, 除 2-piece connected font 外都能显示
+  ampersand (=&=).  数组中先存数字, 再字母, 最后有的话再存 ampersand.
+- =font.h=: 定义了 =Font= 和各种输出和显示字体的函数.  被 =main.c= 前
+  要先选择字体.  靠 =main.c= 的选择确定 =fonts_letter=, =fonts_square=
+  和 =FONT_SIZE= 的值, 用来在 =main.c= 中输出字体.
+- =main.c=: 先选择字体, 再include =font.h=.  =main= 中用串口读输入, 然
+  后把读到的显示出来.  输入回车(='\r'=)的话能把之前的输入循环显示, 再
+  按一下的话就清空.
+  #+begin_src c
+    // choose only one of these
+    #define USE_4_DISCONNECTED
+    // #define USE_2_DISCONNECTED
+    // #define USE_3_CONNECTED
+    // #define USE_2_CONNECTED
+
+    #include "font.h"
+  #+end_src
+
+说实话然后就没啥了.
+
+最后附上 [[https://github.com/thebesttv/Dissection-Font][repo]].
