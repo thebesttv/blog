@@ -61,8 +61,24 @@
 - [[https://stackoverflow.com/questions/9254891/what-does-content-type-application-json-charset-utf-8-really-mean][What does “Content-type: application/json; charset=utf-8” really
   mean?]]  =simple-httpd= 在 header 就忘了加 =charset=utf-8= ，花了我一
   晚上才发现，呜呜😣
-- [[http://winestockwebdesign.com/Essays/Lisp_Curse.html][The Lisp Curse --- Rudolf Winestock]] The power of Lisp is its own
-  worst enemy.
+- [[https://trojansource.codes/][Trojan Source: Invisible Source Code Vulnerabilities]] 眼见不一定为实
+  #+begin_src text
+    // 为了节目效果, 特地没有上高亮😉
+    #include <cstdio>
+    int main() {
+        bool isMe = true;
+        /*‮ } ⁦if (!isMe)⁩ ⁦ begin tbt only */
+            printf("This is not thebesttv.\n");
+        /* end tbt only ‮ { ⁦*/
+        return 0;
+    }
+  #+end_src
+  #+begin_src bash
+    $ g++ main.cpp && ./a.out
+    This is not thebesttv.
+    $ clang++ main.cpp && ./a.out
+    This is not thebesttv.
+  #+end_src
 
 ** Code, Talk, & Thoughts
 
@@ -73,6 +89,8 @@
   people's stuff, the more able you are to invent your own in the
   future.
 - [[http://www.yinwang.org/blog-cn/2019/09/11/talk-is-not-cheap][Talk is not cheap --- 王垠]] 听君一席话，胜读十年书
+- [[http://winestockwebdesign.com/Essays/Lisp_Curse.html][The Lisp Curse --- Rudolf Winestock]] The power of Lisp is its own
+  worst enemy.
 
 * 宝藏博主
 
