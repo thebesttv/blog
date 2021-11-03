@@ -1,0 +1,1082 @@
+#+title: Ch7 --- Classes
+
+The fundamental ideas behind classes are *data abstraction* and
+*encapsulation*.  /Data abstraction/ is a programming (and design)
+technique that relies on _the separation of interface and
+implementation_.  /Encapsulation/ enforces the separation of a class'
+interface and implementation.  A class that is encapsulated hides its
+implementation---users of the class can use the interface but have no
+access to the implementation.
+
+A class that uses data abstraction and encapsulation defines an
+*/abstract data type/*.  In an abstract data type, the class designer
+worries about how the class is implemented.  Programmers who use the
+class need not know how the type works.  They can instead think
+abstractly about what the type does.
+
+* Defining Abstract Data Types
+
+When we design the interface of a class, we should think about how
+easy it will be to use the class.  When we use the class, we shouldn't
+think about how the class works.  A well-designed class has _an
+interface that is intuitive and easy to use_ and has _an
+implementation that is efficient enough for its intended use_.
+
+_Member functions_ must be /declared/ *inside* the class, but may be
+/defined/ _inside_ or _outside_ the class body.
+
+*Functions defined in the class are implicitly =inline=.*
+
+** =Sales_data= Class
+#+begin_src cpp
+  struct Sales_data {
+      std::string isbn() const { return this->bookNo; }
+      Sales_data& combone(const Sales_data &);
+      double avg_price() const;
+
+      std::string bookNo;
+      unsigned units_sold = 0;
+      double revenue = 0.0;
+  };
+
+  Sales_data add(const Sales_data &lhs, const Sales_data &rhs);
+  std::istream &read(std::istream &is, Sales_data &item);
+  std::ostream &print(std::ostream &os, const Sales_data &item);
+
+  double Sales_data::avg_price() const {
+      if (units_sold)
+          return revenue / units_sold;
+      else
+          return 0;
+  }
+
+  Sales_data& Sales_data::combine(const Sales_data &rhs) {
+      units_sold += rhs.units_sold;
+      revenue += rhs.revenue;
+      return *this;
+  }
+#+end_src
+
+#+begin_src cpp
+  std::istream &read(std::istream &is, Sales_data &item) {
+      double price;
+      is >> item.bookNo >> item.units_sold >> price;
+      item.revenue = item.units_sold * price;
+      return is;
+  }
+
+  std::ostream &print(std::ostream &os, const Sales_data &item) {
+      os << item.isbn()  << " " << item.units_sold << " "
+         << item.revenue << " " << item.avg_price();
+      return os;
+  }
+
+  Sales_data add(const Sales_data &lhs, const Sales_data &rhs) {
+      Sales_data sum = lhs;
+      sum.combine(rhs);
+      return sum;
+  }
+#+end_src
+
+When we call a member function we do so *on behalf of the object*.
+Member functions access the object on which they were called through
+an extra, implicit parameter named =this=.  When we call a member
+function, =this= is initialized with the address of the object on
+which the function was invoked.  *=this= is a =const= pointer*---we
+cannot change the address that =this= holds.
+
+*** Introducing *=const= Member Functions* 🧐
+
+The other important part about the =isbn= function is _the keyword
+=const= that follows the parameter list_.  The purpose of that =const=
+is to *modify the type of the implicit =this= pointer*.
+
+By default, the type of =this= is _a =const= pointer to the
+non-=const= version of the class type_.  For example, by default, the
+type of =this= in a =Sales_data= member function is =Sales_data *
+const=.  Although =this= is implicit, it follows the normal
+initialization rules, which means that (by default) we cannot bind
+=this= to a =const= object.  This fact, in turn, means that *we cannot
+call an ordinary member function on a =const= object*.
+
+A =const= following the parameter list indicates that =this= is *a
+pointer to =const=*.  Member functions that use =const= in this way
+are *=const= member functions*.
+
+Objects that are =const=, and references or pointers to =const=
+objects, may call *only* =const= member functions.
+
+*** Class Scope and Member Functions
+
+Recall that _a =class= is itself a scope_.  The definitions of the member
+functions of a class are nested inside the scope of the class itself.
+
+The compiler processes classes in two steps---the *member
+declarations* are compiled first, after which the *member function
+bodies*, if any, are processed.  Thus, member function bodies may use
+other members of their class _regardless of where in the class those
+members appear_.
+
+** Defining Nonmember Class-Related Functions
+
+Functions that are _conceptually part of a class_, but not defined
+inside the class, are typically _declared (but not defined) in the
+same header as the class itself_.  That way users need to include only
+one file to use any part of the interface.
+
+There are two points worth noting about these functions.
+- First, both =read= and =print= take a *reference* to their
+  respective _IO class types_.  _The IO classes are types that *cannot
+  be copied*, so we may only pass them by reference._ Moreover,
+  _reading or writing to a stream *changes that stream*_, so both
+  functions take *ordinary references*, not references to =const=.
+- The second thing to note is that =print= does not print a newline.
+  Ordinarily, functions that do output should do *minimal formatting*.
+  That way user code can decide whether the newline is needed.
+
+** Constructors
+
+The job of a constructor is to initialize the data members of a class
+object.  _A constructor is run whenever an object of a class type is
+created._
+
+Constructors have the same name as the class.  Unlike other functions,
+*constructors have no return type*.  Like other functions,
+constructors have a (possibly empty) parameter list and a (possibly
+empty) function body.  A class can have *multiple constructors*.  Like
+any other overloaded function, the constructors must differ from each
+other in the number or types of their parameters.
+
+Unlike other member functions, _constructors may not be declared as
+=const=_.  When we create a =const= object of a class type,
+_the object does not assume its "constness" *until after* the
+constructor completes the object's initialization_.  Thus,
+_constructors can write to =const= objects during their construction_.
+
+*** The Synthesized Default Constructor
+
+#+begin_src cpp
+  Sales_data trans;
+  Sales_data total;
+#+end_src
+=total= and =trans= are /default initialized/.  Classes control
+default initialization by defining a special constructor, known as the
+*default constructor*.  _The default constructor is one that takes *no
+arguments*._
+
+If our class does not explicitly define any constructors, _the
+compiler will implicitly define the default constructor for us_.
+
+The compiler-generated constructor is known as the *synthesized
+default constructor*.  For most classes, this synthesized constructor
+initializes each data member of the class as follows:
+- If there is an in-class initializer, use it to initialize the
+  member.
+- Otherwise, default-initialize the member.
+
+Because =Sales_data= provides initializers for =units_sold= and
+=revenue=, the synthesized default constructor uses those values to
+initialize those members.  It default initializes =bookNo= to the
+empty string.
+
+The compiler generates a default constructor automatically only if a
+class declares *no* constructors.
+
+*** Defining the =Sales_data= Constructors
+
+#+begin_src cpp
+  struct Sales_data {
+      Sales_data() = default;
+      Sales_data(const std::string &s): bookNo(s) { }
+      Sales_data(const std::string &s, unsigned n, double p):
+                 bookNo(s), units_sold(n), revenue(p * n) { }
+      Sales_data(std::istream&);
+
+      std::string isbn() const { return this->bookNo; }
+      Sales_data& combine(const Sales_data &);
+      double avg_price() const;
+
+      std::string bookNo;
+      unsigned units_sold = 0;
+      double revenue = 0.0;
+  };
+#+end_src
+
+*** What == default= Means
+
+#+begin_src cpp
+  Sales_data() = default;
+#+end_src
+This constructor defines the *default constructor* because it takes no
+arguments.  Under the new standard, if we want _the default behavior_,
+we can _ask the compiler to generate the constructor for us_ by writing
+== default= after the parameter list.  The == default= can appear
+with the declaration /inside/ the class body or on the definition
+/outside/ the class body.  Like any other function, if the == default=
+appears inside the class body, the default constructor will be
+inlined; if it appears on the definition outside the class, the member
+will not be inlined by default.
+
+*** Constructor Initializer List
+
+#+begin_src cpp
+  Sales_data(const std::string &s): bookNo(s) { }
+  Sales_data(const std::string &s, unsigned n, double p):
+             bookNo(s), units_sold(n), revenue(p * n) { }
+#+end_src
+
+A *constructor initializer list* specifies initial values for one or
+more data members of the object being created.  The constructor
+initializer is a list of member names, each of which is followed by
+that member's initial value in parentheses (or inside curly braces).
+Multiple member initializations are separated by commas.
+
+When a member is omitted from the constructor initializer list, it is
+_implicitly initialized using the same process as is used by the
+synthesized default constructor_.  In this case, those members
+(=units_sold= & =revenue=) are initialized by the _in-class
+initializers_.
+
+Constructors should not _override_ in-class initializers except to use
+a _different initial value_.
+
+*** Defining a Constructor outside the Class Body
+
+#+begin_src cpp
+  Sales_data::Sales_data(std::istream &is) {
+      read(is, *this);
+  }
+#+end_src
+Even though the constructor initializer list is empty, the members of
+this object are still _initialized *before* the constructor body is
+executed_.  Members that do not appear in the constructor initializer
+list are initialized by the corresponding in-class initializer (if
+there is one) or are default initialized.  For =Sales_data= that means
+that _when the function body starts executing_, =bookNo= will be the
+empty string, and =units_sold= and =revenue= will both be 0.
+
+** Copy, Assignment, and Destruction
+
+In addition to defining how objects of the class type are initialized, classes also
+control what happens when we _copy, assign, or destroy_ objects of the class type.
+- Objects are /copied/ in several contexts, such as when we _initialize
+  a variable_ or when we _pass or return an object by value_.
+- Objects are /assigned/ when we use the assignment operator. (Recall
+  that initialization \ne assignment.)
+- Objects are /destroyed/ when they cease to exist, such as when a local
+  object is destroyed on exit from the block in which it was created.
+
+* Access Control and Encapsulation
+
+We use *access specifiers* to enforce encapsulation:
+- Members defined after a =public= specifier are accessible to all
+  parts of the program.  The =public= members define the *interface*
+  to the class.
+- Members defined after a =private= specifier are accessible to _the
+  member functions of the class_ but are not accessible to code that
+  uses the class.  The =private= sections *encapsulate the
+  implementation*.
+
+A class may define members before the first access specifier.  Access
+to such members depends on how the class is defined.
+- If we use the =struct= keyword, the members defined before the first
+  access specifier are =public=;
+- If we use =class=, then the members are =private=.
+
+** Friends
+
+A class can allow another /class/ or /function/ to access its
+non-=public= members by making that class or function a */friend/*.  A
+class makes a function its friend by including a *declaration* for
+that function _preceded by the keyword =friend=_:
+#+begin_src cpp
+  class Sales_data {
+      friend Sales_data add(const Sales_data &lhs, const Sales_data &rhs);
+      friend std::istream &read(std::istream &is, Sales_data &item);
+      friend std::ostream &print(std::ostream &os, const Sales_data &item);
+  public:
+      Sales_data() = default;
+      // ...
+  };
+  // Rriend declaration only specifies class access control.
+  // Real function declaration is still needed.
+  Sales_data add(const Sales_data &lhs, const Sales_data &rhs);
+  std::istream &read(std::istream &is, Sales_data &item);
+  std::ostream &print(std::ostream &os, const Sales_data &item);
+#+end_src
+
+Friend declarations may appear only inside a class definition; they
+may appear *anywhere* in the class.  Friends are *not members of the
+class* and are *not affected* by the access control of the section in
+which they are declared.
+
+A friend declaration *only specifies access*.  It is *not* a +general
+declaration+ of the function.  If we want users of the class to be
+able to call a friend function, then we must also _declare the
+function separately from the friend declaration_.
+
+* Additional Class Features
+
+** Class Members Revisited
+
+*** Defining a /Type Member/
+
+In addition to defining data and function members, a class can define
+its own _local names for types_.  Type names defined by a class are
+*subject to the same access controls* as any other member and may be
+either =public= or =private=:
+#+begin_src cpp
+  class Screen {
+  public:
+      using pos = std::string::size_type;
+      Screen() = default;
+      Screen(pos ht, pos wd, char c):  // cursor is implicitly in-class initialized
+          height(ht), width(wd), contents(ht * wd, c) { }
+
+      char get() const { return contents[cursor]; } // implicitly inline
+      inline char get(pos r, pos c) const;          // explicitly inline
+      Screen &move(pos r, pos c);                   // can be made inline later
+  private:
+      pos cursor = 0;
+      pos height = 0, width = 0;
+      std::string contents;
+  };
+#+end_src
+
+Unlike ordinary members, members that define types must appear
+*before* they are used.  As a result, _type members usually appear at
+the beginning of the class_.
+
+*** Making Members =inline=
+
+Member functions defined inside the class are automatically =inline=.
+We can explicitly declare a member function as =inline= as _part of
+its declaration inside the class body_.  Alternatively, we can specify
+=inline= _on the function definition that appears outside the class
+body_.
+#+begin_src cpp
+  char Screen::get(pos r, pos c) const { // decleared as inline in the class
+      return contents[r * width + c];
+  }
+  inline Screen &Screen::move(pos r, pos c) { // specify inline on the definition
+      cursor = r * width + c;
+      return *this;
+  }
+#+end_src
+
+For the same reasons that we _define =inline= functions in headers_,
+=inline= member functions should be defined _in the same header as the
+corresponding class definition_.
+
+*** =mutable= Data Members
+
+It sometimes happens that a class has a data member that we want to be
+able to modify, _even inside a =const= member function_.  We indicate
+such members by including the =mutable= keyword in their declaration.
+A =mutable= data member is *never =const=*, even when it is a member
+of a =const= object.  Accordingly, _a =const= member function may
+change a =mutable= member_.
+#+begin_src cpp
+  class Screen {
+  public:
+      void some_member() const;
+  private:
+      mutable size_t access_ctr = 0; // may change even in a const object
+      // ...
+  };
+
+  void Screen::some_member() const {
+      ++access_ctr;
+  }
+#+end_src
+
+*** Initializers for Data Members of Class Type
+
+Under the new standard, the best way to specify this default value is as
+an in-class initializer:
+#+begin_src cpp
+  class Window_mgr {
+  private:
+      // Screens this Window_mgr is tracking.  By default, a Window_mgr
+      // has one standard sized blank Screen
+      std::vector<Screen> screens{Screen(24, 80, ’ ’)};
+  };
+#+end_src
+
+** Functions That Return =*this=
+
+We can overload a member function based on whether it is =const= for
+the same reasons that we can overload a function based on whether a
+pointer parameter points to =const=.  The non-=const= version will not
+be viable for =const= objects; we can only call =const= member
+functions on a =const= object.  We can call either version on a
+non-=const= object, but the non-=const= version will be a better
+match.
+#+begin_src cpp
+  class Screen {
+  public:
+      Screen &display(std::ostream &os) {
+          do_display(os); return *this;
+      }
+      const Screen &display(std::ostream &os) const {
+          do_display(os); return *this;
+      }
+  private:
+      // implicitly inline
+      void do_display(std::ostream &os) const { os << contents; }
+  };
+#+end_src
+
+** Class Types
+
+Just as we can _declare a function apart from its definition_, we can
+also declare a class without defining it:
+#+begin_src cpp
+  class Screen; // declaration of the Screen class
+#+end_src
+
+This declaration, sometimes referred to as a *forward declaration*,
+introduces the name =Screen= into the program and indicates that
+=Screen= refers to a class type.  After a declaration and before a
+definition is seen, the type =Screen= is an *incomplete type*---it's
+known that =Screen= is a class type but not known what members that
+type contains.
+
+We can use an incomplete type in only *limited ways*: We can define
+_pointers or references to such types_, and we can *declare* (but not
+define) _functions that use an incomplete type as a parameter or
+return type_.
+
+A class must be *defined*---not just declared---before we can write
+code that creates objects of that type.  Otherwise, the compiler does
+not know how much storage such objects need.  Similarly, the class
+must be defined before a reference or pointer is used to access a
+member of the type.  After all, if the class has not been defined, the
+compiler can't know what members the class has.
+
+With one exception (=static= member type), _data members_ can be
+specified to be of a class type only if the class has been defined.
+The type must be complete because the compiler needs to know how much
+storage the data member requires.  Because a class is not defined
+until its class body is complete, _a class cannot have data members of
+its own type_.  However, a class is considered declared (but not yet
+defined) as soon as its class name has been seen.  Therefore, a class
+can have data members that are pointers or references to its own type:
+#+begin_src cpp
+  class Link_screen {
+      Screen window;
+      Link_screen *next;
+      Link_screen *prev;
+  };
+#+end_src
+
+** Friendship Revisited
+
+A class can also make _another class_ its friend or it can declare
+_specific member functions of another (previously defined) class_ as
+friends.  In addition, a friend function can be *defined* inside the
+class body.  Such functions are implicitly =inline=.
+
+*** Friendship between Classes
+
+#+begin_src cpp
+  class Screen {
+      friend class Window_mgr;
+      // ...
+  }
+#+end_src
+#+begin_src cpp
+  class Window_mgr {
+  public:
+      using ScreenIndex = std::vector<Screen>::size_type;
+      void clear(ScreenIndex idx);
+  private:
+      std::vector<Screen> screens {Screen(24, 80, ' ')};
+  };
+
+  void Window_mgr::clear(ScreenIndex idx) {
+      Screen &s = screens[idx];
+      s.contents = std::string(s.height * s.width, ' ');
+  }
+#+end_src
+
+Because =Screen= *grants friendship* to =Window_mgr=, all the members
+of =Screen= are accessible to the functions in =Window_mgr=.
+
+It is important to understand that *friendship is not transitive*.
+That is, if class =Window_mgr= has its own friends, those friends have
+no special access to =Screen=.  *Each class controls which classes or
+functions are its friends.*
+
+*** Making A Member Function a Friend
+
+Rather than making the +entire+ =Window_mgr= class a friend, =Screen=
+can instead specify that _only the =clear= member is allowed access_.
+When we declare a member function to be a friend, we must specify the
+class of which that function is a member:
+#+begin_src cpp
+  class Screen {
+      // Window_mgr::clear must have been declared before class Screen
+      friend void Window_mgr::clear(ScreenIndex);
+      // ...
+  };
+#+end_src
+Making a member function a friend requires *careful structuring* of
+our programs to accommodate *interdependencies* among the declarations
+and definitions.  In this example, we must order our program as
+follows:
+- First, define the =Window_mgr= class, which *declares*, but cannot
+  +define+, =clear=.  =Screen= must be declared before =clear= can use
+  the members of =Screen=.
+- Next, define class =Screen=, including a friend declaration for
+  =clear=.
+- Finally, define =clear=, which can now refer to the members in
+  =Screen=.
+
+#+begin_box
+For this to work, we need to define =Window_mgr= before defining
+=Screen=.  But =Window_mgr= needs =Screen= in its definition,
+especially when in-class initializing =screens= with ={Screen(24, 80,
+' ')}=.  This creats a dilemma---​=Window_mgr= needs the full
+definition of =Screen= in advance and =Screen= needs =Window_mgr='s
+full definition in advance as well.  No forward declaration could help
+in this situation.
+
+Only if we abandon the in-class initialization can we then bypass the
+problem.
+#+begin_src cpp
+  class Screen;                   // forward declaration
+
+  class Window_mgr {
+  public:
+      using ScreenIndex = std::vector<Screen>::size_type;
+      void clear(ScreenIndex idx);
+  private:
+      std::vector<Screen> screens; // can't use Screen's constructor
+      // std::vector<Screen> screens {Screen(24, 80, ' ')};
+  };
+
+  class Screen {
+      friend void Window_mgr::clear(ScreenIndex);
+      // ...
+  }
+
+  void Window_mgr::clear(ScreenIndex idx) {
+      Screen &s = screens[idx];
+      s.contents = std::string(s.height * s.width, ' ');
+  }
+#+end_src
+#+end_box
+
+*** Overloaded Functions and Friendship
+
+Although overloaded functions share a common name, they are still
+*different functions*.  Therefore, a class must declare as a friend
+each function in a set of overloaded functions that it wishes to make
+a friend.
+
+*** Friend Declarations and Scope 🧐
+
+/Classes/ and /nonmember functions/ need not have been declared before
+they are used in a friend declaration. [But member functions of a
+class needs to be declared, i.e. the class of that member function
+needs to be defined.]  When a name first appears in a friend
+declaration, that name is implicitly assumed to be part of the
+surrounding scope.  However, the friend itself is *not actually
+declared* in that scope.
+
+Even if we define the function inside the class, we must still
+*provide a declaration outside of the class itself to make that
+function visible*.  A declaration must exist even if we only call the
+friend from members of the friendship granting class:
+
+#+begin_src cpp -n 5
+  struct X {
+      friend void f() { cout << "123" << endl; }
+      X() { f(); }                // error: no declaration for f
+      void g();
+      void h();
+  };
+
+  void X::g() { f(); }         // error: f hasn't been declared
+  void f();                    // declares the function defined inside X
+  void X::h() { f(); }         // ok: declaration for f is now in scope
+#+end_src
+=g++= gives:
+#+begin_src text
+  ex1.cpp: In constructor ‘X::X()’:
+  ex1.cpp:7:11: error: ‘f’ was not declared in this scope
+      7 |     X() { f(); }
+        |           ^
+  ex1.cpp: In member function ‘void X::g()’:
+  ex1.cpp:12:15: error: ‘f’ was not declared in this scope
+     12 | void X::g() { f(); }
+        |               ^
+#+end_src
+
+#+begin_red
+It is important to understand that a friend declaration affects
+*access* but is *not* a declaration in an ordinary sense.
+#+end_red
+
+#+begin_details Complete definition of Screen & Window_mgr
+#+begin_src cpp
+  class Screen;
+
+  class Window_mgr {
+  public:
+      using ScreenIndex = std::vector<Screen>::size_type;
+      void clear(ScreenIndex idx);
+  private:
+      std::vector<Screen> screens; // can't use Screen's constructor
+  };
+
+  class Screen {
+      friend void Window_mgr::clear(ScreenIndex);
+  public:
+      using pos = std::string::size_type;
+      Screen() = default;
+      Screen(pos ht, pos wd, char c):  // cursor is implicitly in-class initialized
+          height(ht), width(wd), contents(ht * wd, c) { }
+
+      char get() const { return contents[cursor]; } // implicitly inline
+      inline char get(pos row, pos col) const;      // explicitly inline
+      Screen &move(pos row, pos col);               // can be made inline later
+      void some_member() const;
+
+      Screen &set(char ch);
+      Screen &set(pos row, pos col, char ch);
+
+      Screen &display(std::ostream &os) {
+          do_display(os); return *this;
+      }
+      const Screen &display(std::ostream &os) const {
+          do_display(os); return *this;
+      }
+  private:
+      pos cursor = 0;
+      pos height = 0, width = 0;
+      std::string contents;
+      mutable size_t access_ctr = 0;
+
+      void do_display(std::ostream &os) const { os << contents; }
+  };
+
+  char Screen::get(pos row, pos col) const {
+      return contents[row * width + col];
+  }
+  inline Screen &Screen::move(pos row, pos col) {
+      cursor = row * width + col;
+      return *this;
+  }
+
+  inline Screen &Screen::set(char ch) {
+      contents[cursor] = ch;
+      return *this;
+  };
+  inline Screen &Screen::set(pos row, pos col, char ch) {
+      contents[row * width + col] = ch;
+      return *this;
+  };
+
+  void Screen::some_member() const {
+      ++access_ctr;
+  }
+
+  void Window_mgr::clear(ScreenIndex idx) {
+      Screen &s = screens[idx];
+      s.contents = std::string(s.height * s.width, ' ');
+  }
+#+end_src
+#+end_details
+
+* Class Scope
+
+The fact that *a class is a scope* explains why we must provide the
+class name as well as the function name when we define a member
+function outside its class.  _Outside of the class, the names of the
+members are hidden._ Once the class name is seen, the remainder of the
+definition---including the parameter list and the function body---is
+in the scope of the class.  As a result, we can refer to other class
+members without qualification.
+
+#+begin_src cpp
+  void Window_mgr::clear(ScreenIndex idx) {
+      Screen &s = screens[idx];
+      s.contents = std::string(s.height * s.width, ' ');
+  }
+#+end_src
+Because the compiler sees the parameter list *after* noting that we
+are in the scope of class =Window_mgr=, there is no need to specify
+that we want the =ScreenIndex= that is defined by =Window_mgr=.  For
+the same reason, the use of =screens= in the function body refers to
+name declared inside class =Window_mgr=.
+
+On the other hand, the _return type_ of a function normally appears
+*before* the function's name.  When a member function is defined
+outside the class body, any name used in the return type is *outside*
+the class scope.  As a result, the return type must specify the class
+of which it is a member.  For example, we might give =Window_mgr= a
+function, named =addScreen=.  This member will return a =ScreenIndex=
+value that the user can subsequently use to locate this =Screen=:
+#+begin_src cpp
+  class Window_mgr {
+  public:
+      ScreenIndex addScreen(const Screen &s);
+      // ...
+  };
+
+  // return type is seen before we're in the scope of Window_mgr
+  Window_mgr::ScreenIndex Window_mgr::addScreen(const Screen &s) {
+      screens.push_back(s);
+      return screens.size() - 1;
+  }
+#+end_src
+Because the return type appears *before* the name of the class is
+seen, it appears *outside* the scope of class =Window_mgr=.  To use
+=ScreenIndex= for the return type, we must specify the class in which
+that type is defined.
+
+One way to avoid the scoping issue is to use trailing return type:
+#+begin_src cpp
+  auto Window_mgr::addScreen(const Screen &s) -> ScreenIndex {
+      screens.push_back(s);
+      return screens.size() - 1;
+  }
+#+end_src
+
+** Name Lookup and Class Scope 🧐
+
+Class definitions are processed in *two phases*.
+- First, the *member declarations* are compiled.
+- Function bodies are compiled only _*after* the entire class has been
+  seen_.
+
+Classes are processed in this two-phase way to _make it easier to
+organize class code_.  Because member function bodies are not
+processed until the entire class is seen, they can use any name
+defined inside the class.
+
+*** Name Lookup for Class Member Declarations
+
+This two-step process applies only to names used in the *body* of a
+member function.  Names used in /declarations/, including _names used
+for the return type and types in the parameter list_, must be seen
+*before* they are used.  If a member declaration uses a name that has
+not yet been seen inside the class, the compiler will look for that
+name in the scope(s) in which the class is defined.
+
+#+begin_src cpp -n 5
+  class A {
+  public:
+      D f() { return x; }
+      using D = double;
+  private:
+      D x = 0;
+  };
+#+end_src
+#+begin_src text
+  ex1.cpp:7:5: error: ‘D’ does not name a type
+      7 |     D f() { return x; }
+        |     ^
+#+end_src
+
+*** Type Names Are Special 🧐
+
+Ordinarily, an inner scope can redefine a name from an outer scope
+even if that name has already been used in the inner scope.  However,
+in a class, if *a member uses* a name from an outer scope and that
+name is a type, then the class may not subsequently redefine that
+name:
+#+begin_src cpp
+  typedef double Money;
+  class Account {
+  public:
+      Money balance() { return bal; } // uses Money from the outer scope
+  private:
+      typedef double Money;       // error: cannot redefine Money
+      Money bal;
+      // . . .
+  };
+#+end_src
+It is worth noting that even though the definition of =Money= inside
+=Account= uses the same type as the definition in the outer scope,
+this code is still in error.
+
+Although it is an error to redefine a type name, *compilers are not
+required to diagnose this error*.  Some compilers will quietly accept
+such code, even though the program is in error.
+
+#+begin_box Don't Redefine Type Names!
+The two-stage naming lookup in classes makes redefining type names
+inside the class error-prone.  See [[https://stackoverflow.com/a/45385086/11938767][this]] Stack Overflow answer for
+more.
+#+end_box
+
+* Constructors Revisited
+
+** Constructor Initializer List
+
+If we do not explicitly initialize a member in the constructor
+initializer list, that member is _default initialized before the
+constructor body starts executing_.
+
+#+begin_src cpp
+  Sales_data::Sales_data(const string &s, unsigned cnt, double price) {
+      bookNo = s;
+      units_sold = cnt;
+      revenue = cnt * price;
+  }
+#+end_src
+This version and our original definition have the same effect: When
+the constructor finishes, the data members will hold the same values.
+The difference is that the original version *initializes* its data
+members, whereas this version *assigns* values to the data members.
+
+We must use the constructor initializer list to provide values for
+members that are =const=, reference, or of a class type that _does not
+have a default constructor_.
+
+*** Order of Member Initialization 🧐
+
+Not surprisingly, each member may be named *only once* in the
+constructor initializer.
+
+Members are initialized _in the order in which they appear in the
+*class definition*_: The first member is initialized first, then the
+next, and so on.  The order in which initializers appear in the
+constructor initializer list does not change the order of
+initialization.
+
+It is a good idea to write constructor initializers in the same order
+as the members are declared.  Moreover, when possible, avoid using
+members to initialize other members.
+
+*** Default Arguments and Constructors
+
+#+begin_src cpp
+  class Sales_data {
+  public:
+      Sales_data(std::string s = ""): bookNo(s) { }
+      // ...
+  };
+#+end_src
+
+A constructor that _supplies default arguments for all its parameters_
+also defines the default constructor.  Of course, a class can't have
+more than one such constructors: otherwise it would mean multiple
+default constructors.
+
+** Delegating Constructors
+
+The new standard extends the use of constructor initializers to let us
+define so-called *delegating constructors*.  A delegating constructor
+_uses another constructor from its own class_ to perform its
+initialization.  It is said to "delegate" some (or all) of its work to
+this other constructor.
+
+#+begin_src cpp
+  class Sales_data {
+  public:
+      Sales_data(const std::string &s, unsigned n, double p):
+              bookNo(s), units_sold(n), revenue(p * n) { }
+      Sales_data(): Sales_data("", 0, 0) { }
+      Sales_data(const std::string &s): Sales_data(s, 0, 0) { }
+  };
+#+end_src
+
+** The Role of the Default Constructor
+
+The default constructor is used automatically whenever an object is
+default or value initialized.
+
+Default initialization happens
+- When we define non-=static= variables or arrays at block scope
+  without initializers
+- When a class that itself has members of _class type that uses the
+  synthesized default constructor_
+- When members of class type are not explicitly initialized in a
+  constructor initializer list
+
+Value initialization happens
+- During array initialization when we provide fewer initializers than
+  the size of the array
+- When we define a local static object without an initializer
+- When we explicitly request value initialization by writing an
+  expressions of the form =T()= where =T= is the name of a type (The
+  vector constructor that takes a single argument to specify the
+  vectors size uses an argument of this kind to value initialize its
+  element initializer.)
+
+Classes must have a default constructor in order to be used in these
+contexts.
+
+** Implicit Class-Type Conversions
+
+Every constructor that can be called with a *single argument* defines
+an implicit conversion *to* the class type.
+#+begin_src cpp
+  string null_book = "9-999-99999-9";
+  // constructs a temporary Sales_data object
+  item.combine(null_book);
+#+end_src
+
+*** Only One Class-Type Conversion Is Allowed
+
+The compiler will automatically apply only one class-type conversion.
+#+begin_src cpp
+  // error: requires two user-defined conversions:
+  //     (1) convert "9-999-99999-9" to string
+  //     (2) convert that (temporary) string to Sales_data
+  item.combine("9-999-99999-9");
+#+end_src
+If we wanted to make this call, we can do so by explicitly converting
+the character string to either a =string= or a =Sales_data= object:
+#+begin_src cpp
+// ok: explicit conversion to string, implicit conversion to Sales_data
+item.combine(string("9-999-99999-9"));
+// ok: implicit conversion to string, explicit conversion to Sales_data
+item.combine(Sales_data("9-999-99999-9"));
+#+end_src
+
+*** Suppressing Implicit Conversions Defined by Constructors
+
+We can *prevent* the use of a constructor in a context that requires
+an implicit conversion by declaring the constructor as =explicit=:
+#+begin_src cpp
+  class Sales_data {
+  public:
+      Sales_data() = default;
+      Sales_data(const std::string &s, unsigned n, double p):
+              bookNo(s), units_sold(n), revenue(p*n) { }
+      explicit Sales_data(const std::string &s): bookNo(s) { }
+      explicit Sales_data(std::istream&);
+  };
+
+  item.combine(null_book);     // error: string constructor is explicit
+  item.combine(cin);           // error: istream constructor is explicit
+#+end_src
+
+The =explicit= keyword is meaningful only on constructors that can be
+called with a single argument.  Constructors that require more
+arguments are not used to perform an implicit conversion, so there is
+no need to designate such constructors as =explicit=.  The =explicit=
+keyword is _used only on the constructor declaration *inside* the
+class_.  It is not repeated on a definition made outside the class
+body.
+
+** Aggregate Classes 🧐
+
+An aggregate class gives users direct access to its members and has
+special initialization syntax.  A class is an aggregate if
+- All of its data members are =public=
+- It does not define any constructors
+- It has *no in-class initializers*
+- It has no base classes or =virtual= functions
+
+We can initialize the data members of an aggregate class by providing
+a braced list of member initializers:
+#+begin_src cpp
+  struct Data {
+      int ival;
+      string s;
+  };
+
+  // val1.ival = 0; val1.s = string("Anna")
+  Data val1 = { 0, "Anna" };
+#+end_src
+As with initialization of array elements, if the list of initializers
+has fewer elements than the class has members, _the trailing members
+are value initialized_.
+
+- [[https://stackoverflow.com/q/4178175/11938767][What are Aggregates and PODs and how/why are they special?]]
+- [[https://stackoverflow.com/q/146452/11938767][What are POD types in C++?]]
+
+** Literal Classes 🧐
+
+???
+
+* =static= Class Members 🧐
+
+*** *Declaring* =static= Members
+
+#+begin_src cpp
+  class Account {
+  public:
+      void calculate() { amount += amount * interestRate; }
+      static double rate() { return interestRate; }
+      static void rate(double);
+  private:
+      std::string owner;
+      double amount;
+
+      static double interestRate; // decleared but not defined
+      static double initRate();
+  };
+#+end_src
+
+We say a member is associated with the /class/ by adding the keyword
+=static= to its declaration.
+
+=static= member functions are not bound to any object; they do not
+have a =this= pointer.  As a result, =static= member functions may not
+be declared as =const=, and we may not refer to =this= in the body of
+a =static= member.
+
+*** *Defining* =static= Members
+
+As with any other member function, we can define a =static= member
+function _inside or outside_ of the class body.  When we define a
+=static= member outside the class, we do not repeat the =static=
+keyword.  The keyword appears only with _the declaration inside the
+class body_.
+
+Because =static= data members are *not part of* individual objects of
+the class type, they are not defined when we create objects of the
+class.  As a result, they are not initialized by the class'
+constructors.  Moreover, in general, _we may not initialize a =static=
+member inside the class_.  Instead, we must define and initialize each
+=static= data member *outside* the class body.  Like any other object,
+a =static= data member may be defined only once.
+
+#+begin_src cpp
+  // define and initialize a static class member
+  double Account::interestRate = initRate();
+#+end_src
+Once the class name is seen, the remainder of the definition is _in
+the scope of the class_.  As a result, we can use =initRate= without
+qualification as the initializer for =interestRate=.
+
+*** In-Class Initialization of =static= Data Members
+
+???
+
+* Defined Terms
+
+- *aggregate class*: Class with only public data members that has no
+  in-class initializers or constructors.  Members of an aggregate can
+  be initialized by a brace-enclosed list of initializers.
+- *class declaration*: The keyword =class= (or =struct=) followed by
+  the class name followed by a semicolon.  If a class is declared but
+  not defined, it is an *incomplete type*.
+- *class scope*: Each class defines a scope.  Class scopes are more
+  complicated than other scopes---member functions defined within the
+  class body may use names that appear even after the definition.
+- *constructor initializer list*: Specifies initial values of the data
+  members of a class.  The members are initialized to the values
+  specified in the initializer list before the body of the constructor
+  executes.  Class members that are not initialized in the initializer
+  list are _default initialized_.
+- *converting constructor* A non-=explicit= constructor that can be
+  called with a single argument.  Such constructors implicitly convert
+  from the argument's type to the class type.
+- *default constructor*: Constructor that is used if no initializer is
+  supplied.
+- *delegating constructor*: Constructor with a constructor-initializer
+  list that has one entry that _designates another constructor of the
+  same class_ to do the initialization.
+- *synthesized default constructor*: The default constructor created
+  (synthesized) by the compiler for classes that do not explicitly
+  define any constructors.  This constructor initializes the data
+  members from their in-class initializers, if present; otherwise it
+  default initializes the data members.
