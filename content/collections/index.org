@@ -1,6 +1,6 @@
 #+title: 收藏夹
 
-这里大概会放一些我喜欢的东西🥰。
+这里大概会放一些我喜欢的东西🥰
 
 * 妙妙文章
 
@@ -53,7 +53,16 @@
   into it.  Politeness, courtesy and understanding didn't go out the
   window just because we're interacting through a computer screen.
   #+end_quote
+- [[https://www.zhihu.com/question/356443075/answer/927761559][大学老师上课时没人听是什么感觉？ --- 邸敬棋的回答]] 好可爱的老师
 
+  还有个很可爱的回复:
+  #+begin_quote
+  我抬头是QAQ? \\
+  老师通常会是OwO! \\
+  然后我继续QAQ? \\
+  然后老师继续OAO! \\
+  然后我就QwQ了 ——[[https://www.zhihu.com/people/zhang-rui-zhe-20][Dueta张]]
+  #+end_quote
 
 ** 关于编码 --- UTF-8 遍地开花
 - [[http://www.hanselman.com/blog/why-the-askobama-tweet-was-garbled-on-screen-know-your-utf8-unicode-ascii-and-ansi-decoding-mr-president][Why the #AskObama Tweet was Garbled on Screen: Know your UTF-8,
@@ -102,3 +111,8 @@
 
 - [[https://pinecast.com/feed/emacscast][这个网站]]是 XML 格式的 RSS feed，不过仿佛加了一层 stylesheet 啥的🤔，
   酱打开链接就有介绍了，有意思🤓
+- [[https://github.com/Kameldieb/raytracing_demo][RayTracing Demo]]: 有意思的ASCII光线跟踪Demo, 方向键控制位置, Shift+方
+  向键控制视角.  可能是我电脑唯一跑得动的光追了🤣
+  #+begin_src bash
+  $ g++ demo_linux.cpp -lX11 -O3  # 编译时链接X11库, 开O3
+  #+end_src
