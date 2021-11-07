@@ -101,6 +101,20 @@
 - [[http://winestockwebdesign.com/Essays/Lisp_Curse.html][The Lisp Curse --- Rudolf Winestock]] The power of Lisp is its own
   worst enemy.
 
+** 关于算法
+
+- [[https://yonatankra.com/how-to-find-a-unique-number-in-a-list-of-pairs/][How to find a unique number in a list containing *pairs*?]] 注意这里其
+  他的数都是成对出现的, 那直接对整个list异或就行啦~ 如果其他数的出现次
+  数不是偶数, 也可以用hash.
+
+* 棒棒视频
+
+- [[https://www.bilibili.com/video/BV16U4y1u7U6][市值上亿的老板，家中只有4m^2​小天地？！ --- 可以去你家嘛]] 原来君茹在差
+  评工作呀😯
+  #+begin_quote
+  现实就是像火山一样很残酷很冰冷, 但我们好像从火山口喷发出了我们的五颜六色.
+  #+end_quote
+
 * 宝藏博主
 
 - [[https://idealclover.top/][翠翠 / Idealclover]]
