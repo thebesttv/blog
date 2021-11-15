@@ -63,6 +63,8 @@
   然后老师继续OAO! \\
   然后我就QwQ了 ——[[https://www.zhihu.com/people/zhang-rui-zhe-20][Dueta张]]
   #+end_quote
+- [[https://www.nextplatform.com/2021/07/12/gutting-decades-of-architecture-to-build-a-new-kind-of-processor/][Gutting Decades Of Architecture To Build A New Kind Of Processor]] 神
+  奇的 [[https://en.wikipedia.org/wiki/No_instruction_set_computing][NISC]]
 
 ** 关于编码 --- UTF-8 遍地开花
 - [[http://www.hanselman.com/blog/why-the-askobama-tweet-was-garbled-on-screen-know-your-utf8-unicode-ascii-and-ansi-decoding-mr-president][Why the #AskObama Tweet was Garbled on Screen: Know your UTF-8,
@@ -114,6 +116,8 @@
   #+begin_quote
   现实就是像火山一样很残酷很冰冷, 但我们好像从火山口喷发出了我们的五颜六色.
   #+end_quote
+- [[https://www.bilibili.com/video/BV1EW411u7th][计算机科学速成课]] 有趣的视频, 有趣的字幕组
+- [[https://youtube.com/playlist?list=PLhwVAYxlh5dvB1MkZrcRZy6x_a2yORNAu][CS-224 Computer Organization]] William Sawyer 老爷子上课好有激情
 
 * 宝藏博主
 
