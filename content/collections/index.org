@@ -65,6 +65,18 @@
   #+end_quote
 - [[https://www.nextplatform.com/2021/07/12/gutting-decades-of-architecture-to-build-a-new-kind-of-processor/][Gutting Decades Of Architecture To Build A New Kind Of Processor]] 神
   奇的 [[https://en.wikipedia.org/wiki/No_instruction_set_computing][NISC]]
+- [[https://www.zhihu.com/question/499597731/answer/2228661271][如何看待 CVPR2022 截稿时间因为微软服务器崩溃延长 36 小时？ ---
+  Yulong的回答]] 😂
+  #+begin_quote
+  paper第一定律： \\
+  paper可以凭空产生，但不会消失 \\
+  只会从一种格式换成另外一种格式 \\
+  或是从一个会议转投另外一个会议 \\
+  在此过程中，paper总量遵循摩尔定律 \\
+  即每18个月总投稿量翻一倍 \\
+  因此，应该是服务器没扩容
+  #+end_quote
+- [[https://0xffff.one/d/358-ji-suan-ji-ru-men-zhuan-ti-step-1-xin-tai-pian][计算机入门 Step 1 心态篇 --- 0x0001]] 一些关于大学, 关于CS的总结
 
 ** 关于编码 --- UTF-8 遍地开花
 - [[http://www.hanselman.com/blog/why-the-askobama-tweet-was-garbled-on-screen-know-your-utf8-unicode-ascii-and-ansi-decoding-mr-president][Why the #AskObama Tweet was Garbled on Screen: Know your UTF-8,
@@ -134,3 +146,5 @@
   #+begin_src bash
   $ g++ demo_linux.cpp -lX11 -O3  # 编译时链接X11库, 开O3
   #+end_src
+- [[https://deskto.ps/][desktop.ps]] 分享你的桌面😎
+- [[https://10mtweet.netmeister.org/][10 Minute Tweet]] 推后即焚😉
