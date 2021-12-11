@@ -77,6 +77,12 @@
   因此，应该是服务器没扩容
   #+end_quote
 - [[https://0xffff.one/d/358-ji-suan-ji-ru-men-zhuan-ti-step-1-xin-tai-pian][计算机入门 Step 1 心态篇 --- 0x0001]] 一些关于大学, 关于CS的总结
+- [[https://web.archive.org/web/20210629030926/https://www.163.com/dy/article/GDBA12M70536O239.html][中国未来最大的挑战 --- 饶毅]]
+  #+begin_quote
+  我们中华民族缺乏科学传统，科学在中国的发展历史短暂，加上实用主义的文
+  化，我们如何扭转科技人才质量下滑、人数减少，激励一定数量的高质量的人
+  才加入科学技术，正面影响中国的未来，是很大的挑战。
+  #+end_quote
 
 ** 关于编码 --- UTF-8 遍地开花
 - [[http://www.hanselman.com/blog/why-the-askobama-tweet-was-garbled-on-screen-know-your-utf8-unicode-ascii-and-ansi-decoding-mr-president][Why the #AskObama Tweet was Garbled on Screen: Know your UTF-8,
