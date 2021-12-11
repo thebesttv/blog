@@ -398,7 +398,7 @@ $00\ldots0 = -2^{n-1}$​，最大值 $11\ldots1 = 2^{n-1}-1$​。
 阶码
 \[\begin{align*}
   P_\max^E &= 0\;11\ldots11 = 2^m - 1 \to 2^{2^m - 1} \\
-  N_\min^E &= 1\;11\ldots11 = -(2^m - 1) \to 2^{-(2^m - 1)} \\
+  P_\min^E &= 1\;11\ldots11 = -(2^m - 1) \to 2^{-(2^m - 1)} \\
 \end{align*}\]
 
 浮点数
@@ -426,7 +426,7 @@ $00\ldots0 = -2^{n-1}$​，最大值 $11\ldots1 = 2^{n-1}-1$​。
 阶码
 \[\begin{align*}
   P_\max^E &= 0\;11\ldots11 = 2^m - 1 \to 2^{2^m - 1} \\
-  N_\min^E &= 1\;00\ldots00 = -2^m    \to 2^{-2^m}    \\
+  P_\min^E &= 1\;00\ldots00 = -2^m    \to 2^{-2^m}    \\
 \end{align*}\]
 
 浮点数
@@ -444,7 +444,7 @@ $00\ldots0 = -2^{n-1}$​，最大值 $11\ldots1 = 2^{n-1}-1$​。
 除了阶码的机器码改变，其余不变（阶码范围也不变）
 \[\begin{align*}
   P_\max^E &= 1\;11\ldots11 = 2^m - 1 \to 2^{2^m - 1} \\
-  N_\min^E &= 0\;00\ldots00 = -2^m    \to 2^{-2^m}    \\
+  P_\min^E &= 0\;00\ldots00 = -2^m    \to 2^{-2^m}    \\
 \end{align*}\]
 
 *** IEEE 754 浮点数
@@ -668,7 +668,41 @@ Cyclic Redundancy Check (CRC)
 
 - [[http://ross.net/crc/][The CRC Pitstop]]
 - [[http://ross.net/crc/crcpaper.html][A Painless Guide to CRC Error Detection Algorithms]]
+  #+begin_quote
+  CRC arithmetic is primarily about *XORing particular values at
+  various shifting offsets*.
+  #+end_quote
 - [[https://zlib.net/#:~:text=CRC%20(Cyclic%20Redundancy%20Check)%20Bonus%20Information][CRC (Cyclic Redundancy Check) Bonus Information]]
+
+The width (position of the highest 1 bit) of the poly is very
+important as it dominates the whole calculation.  Typically, widths of
+16 or 32 are chosen so as to simplify implementation on modern
+computers.  The width of a poly is _the actual bit position of the
+highest bit_.  For example, the width of 10011 is *4*, not 5.  For the
+purposes of example, we will chose a poly of 10011 (of width W of 4).
+
+Having chosen a poly, we can proceed with the calculation. This is
+simply a division (in CRC arithmetic) of the message by the poly. The
+only trick is that W zero bits are appended to the message before the
+CRC is calculated. Thus we have:
+#+begin_src text
+  Original message                : 1101011011
+  Poly                            :      10011
+  Message after appending W zeros : 11010110110000
+#+end_src
+
+The division yields a quotient, which we throw away, and a remainder,
+which is the calculated checksum.  This ends the calculation.
+
+Usually, the checksum is then appended to the message and the result
+transmitted.  In this case the transmission would be: 11010110111110.
+
+At the other end, the receiver can do one of two things:
+1. Separate the message and checksum.  Calculate the checksum for the
+   message (after appending W zeros) and compare the two checksums.
+2. Checksum the whole lot (without appending zeros) and see if it
+   comes out as zero!
+
 
 以下是脑瘫作业
 #+begin_src text
