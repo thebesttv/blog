@@ -1,4 +1,4 @@
-#+title: thebesttv's blog
+#+title: 小渴栈
 
 * 这是啥
   我的新博客。
