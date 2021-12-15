@@ -83,6 +83,21 @@
   化，我们如何扭转科技人才质量下滑、人数减少，激励一定数量的高质量的人
   才加入科学技术，正面影响中国的未来，是很大的挑战。
   #+end_quote
+- [[https://www.zhihu.com/question/506002000/answer/2271193155][毛星云意外身故，如何评价他在游戏开发圈的影响力？ --- 怪力乱神的回答]]
+  对回答下面的一个评论比较有感触:
+  #+begin_quote
+  没必要生气，把你摆在那个认知水平下，你也只会得出类似的结论。
+
+  从吃着人血馒头，对一切苦难和不公都麻木不仁的晚清群众，到为了革命抛头
+  颅洒热血的近代人民，靠的是教育，无论是书本上的知识教育，还是现实生活
+  中的经历教育，都能让人蜕变。
+
+  在大多数群众认知水平普遍低下的时候，国家和社会倾尽全力养育出一批知识
+  分子，不是让你们学成之后回过头来对着群众破口大骂的，而是让你们想办法
+  去扭转、改变这一局面，让大多数人都能变得更智慧、更文明的。
+
+  ——[[https://www.zhihu.com/people/tang-huan-tao-81][金闪闪尼古尼古​]]
+  #+end_quote
 
 ** 关于编码 --- UTF-8 遍地开花
 - [[http://www.hanselman.com/blog/why-the-askobama-tweet-was-garbled-on-screen-know-your-utf8-unicode-ascii-and-ansi-decoding-mr-president][Why the #AskObama Tweet was Garbled on Screen: Know your UTF-8,
