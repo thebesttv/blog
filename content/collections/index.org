@@ -98,6 +98,24 @@
 
   ——[[https://www.zhihu.com/people/tang-huan-tao-81][金闪闪尼古尼古​]]
   #+end_quote
+- [[https://www.zhihu.com/question/23577025/answer/132373616][什么时候会觉得自己需要一个女朋友? --- 画狮秋石的回答]]
+  #+begin_quote
+  有一天我吃完泡面发现洗洁精用光了，我随手用剃须膏洗碗时，会觉得可能要
+  是有一个女朋友就好了。
+
+  并不是因为有个女朋友就可以不吃泡面，也不是因为有个女朋友就有人会帮忙
+  洗碗，是我想在洗完碗转身回去时会有个人在那里，等着我一脸神秘的说
+
+  “嘿！你猜我刚刚用什么洗的碗”？
+  #+end_quote
+  还有下面的一个评论:
+  #+begin_quote
+  生活里发生了好多有趣的事情，在路上拍了好多照片，就是希望跟某个人分享。
+  后来有趣的事情不断被琐事淹没，照片卡爆了内存被删掉，我从未找到那个人。
+
+  ——[[https://www.zhihu.com/people/li-ying-jiu-62][SS109]]
+  #+end_quote
+
 
 ** 关于编码 --- UTF-8 遍地开花
 - [[http://www.hanselman.com/blog/why-the-askobama-tweet-was-garbled-on-screen-know-your-utf8-unicode-ascii-and-ansi-decoding-mr-president][Why the #AskObama Tweet was Garbled on Screen: Know your UTF-8,
