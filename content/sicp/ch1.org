@@ -35,11 +35,11 @@ conjure v. / 'kʌndʒə(r) /
    - they hoped to conjure up the spirit of their dead friend.
      他们希望能施魔法召来已逝朋友的灵魂。
 
-
 * Applicative order vs. normal order
-In applicative order, the interpreter first evaluates the operator &
+
+In /applicative order/, the interpreter first evaluates the operator &
 operands and then applies the resulting procedure to the resulting
-arguments.  But in normal order: the interpreter would not evaluate
+arguments.  But in /normal order/: the interpreter would not evaluate
 the operands _until their values were needed_.  And the value is
 evaluated every time it is needed, instead of once on entrance.
 
@@ -76,6 +76,7 @@ result would be =(sum-of-squares 2 2)=, which is very wrong.
           ((and (<= b a) (<= b c)) (sum-of-squares a c))
           (else                    (sum-of-squares a b))))
 #+end_src
+
 ** Ex 1.4 -- value of operator
 #+begin_quote
 Observe that our model of evaluation allows for combinations _whose
@@ -87,6 +88,7 @@ describe the behavior of the following procedure:
     ((if (> b 0) + -) a b))
 #+end_src
 #+end_quote
+
 ** Ex 1.5 -- applicative-order & normal-order
 #+begin_quote
 Ben Bitdiddle has invented a test to determine whether the interpreter
@@ -115,13 +117,16 @@ predicate expression is evaluated first, and the result determines
 whether to evaluate the consequent or the alternative expression.)
 #+end_quote
 
-In applicative-order evaluation, the interpreter will try to determine
-the value of =y= by evaluating =(p)=, which is, sadly, a recursive
-expression that never ends.  So the whole expression will not evaluate
-to any result.
+In applicative-order evaluation, the interpreter will first evaluate
+all its operands.  This means it will evaluate =(p)=, which is, sadly,
+a recursive expression that never ends.  So the whole expression will
+not evaluate to any result.
 
-However, in normal-order evaluation, =y= will not be evaluated.  So
-the whole expression evaluates to =0=.
+However, in normal-order evaluation, the interpreter first expands the
+expression into ~(if (= 0 0) 0 (p))~.  The operand =(p)= will not be
+evaluated until needed.  Since the predicate is =#t=, =(p)= is never
+needed.  The whole expression evaluates to =0=.
+
 ** Ex 1.16 -- iterative fast exponentiation
 
 #+begin_quote
