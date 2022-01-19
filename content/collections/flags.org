@@ -4,4 +4,7 @@
 
 - [[https://c9x.me/compile/bib/][Resources for Amateur Compiler Writers]]
 - [[https://github.com/sdiehl/wiwinwlh][What I Wish I Knew When Learning Haskell]]
-- 
+
+* Fonts
+
+- [[https://fonts.google.com/knowledge][Fonts Knowledge]] 谷歌的字体intro
