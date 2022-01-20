@@ -25,3 +25,12 @@
 * Linux
 
 - [[https://sollove.com/2013/03/03/my-first-5-minutes-on-a-server-or-essential-security-for-linux-servers/][My First 5 Minutes On A Server; Or, Essential Security for Linux Servers]]
+
+* Curl
+
+- [[https://everything.curl.dev/][Everything curl]]---an extensive guide for all things curl.
+
+* PoC || GTFO
+
+- [[https://evmn.github.io/post/2021-12-31-PoC-or-GTFO.html][合集]]
+- [[https://pocorgtfo.hacke.rs/][Archives of POC||GTFO]]

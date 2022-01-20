@@ -115,6 +115,17 @@
 
   ——[[https://www.zhihu.com/people/li-ying-jiu-62][SS109]]
   #+end_quote
+- [[https://phabricator.wikimedia.org/T273741][Investigate unusual media traffic pattern for AsterNovi-belgii-flower-1mb.jpg on Commons]]
+  #+begin_quote
+  维基百科发现，每天有来自印度不同 ISP 的9000万个请求，都在读取一张花
+  朵的照片，占到网站总流量的20%。这些请求都是真实的，不像是 DDoS 攻击，
+  但是 HTTP 请求的头信息没有提供任何线索。
+
+  这是官方的调查过程，讲述如何从有限的信息里面，推测出到底这是怎么一回
+  事。
+
+  ——科技爱好者周刊（第 147 期）
+  #+end_quote
 
 
 ** 关于编码 --- UTF-8 遍地开花
