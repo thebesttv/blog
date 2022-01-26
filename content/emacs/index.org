@@ -195,3 +195,14 @@ or children matching a specific name:
 基本就是安装 =authbind=​，然后去 =/etc/authbind/byport/= 里面建一个以端
 口号命名的文件（比如 =/etc/authbind/byport/80=​），当前用户对其要有
 execute 权限，最后用 =authbind= 来启动命令即可。
+
+* 定时更新并重启 EServer
+
+感觉还是tmux最方便,直接一个shell脚本就行了:
+#+begin_src shell
+  while true; do
+      ./update.sh
+      ./restart-server.sh
+      sleep 3600
+  done
+#+end_src
