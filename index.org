@@ -10,17 +10,19 @@
 
   顺便就[[http:/blog/content/emacs/index.org][在这里]]记录一下各种奇奇怪怪的问题&解决吧。
 
-* World Community Grid
-#+begin_src elisp :exports results :results html
-  (wcg-html "thebesttv")
-#+end_src
+# 有时候WCG会维护,导致博客主页出错,就暂且注释掉吧.
+# * World Community Grid
+# #+begin_src elisp :exports results :results html
+#   (wcg-html "thebesttv")
+# #+end_src
 
-* 文件结构
-#+BEGIN_SRC sh :exports results :results code
-  tree -I '*~'                    # ignore files ending with tilde
-#+END_SRC
+# 感觉用处不大,也先注释掉
+# * 文件结构
+# #+BEGIN_SRC sh :exports results :results code
+#   tree -I '*~'                    # ignore files ending with tilde
+# #+END_SRC
 
-** =emoji/=
+# ** =emoji/=
 
 * 文章列表
 
