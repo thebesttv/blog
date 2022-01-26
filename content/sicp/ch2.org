@@ -145,15 +145,19 @@ As in Ex 2.5, you can also represent a pair $a$ and $b$ with $2^a 3^b$:
 #+end_src
 
 * Sequences as Conventional Interfaces
-** Sequence Operations
 
 #+begin_src scheme
   (define (filter predicate sequence)
-    (cond ((null? sequence) '())
-          ((predicate (car sequence))
-           (cons (car sequence)
-                 (filter predicate (cdr sequence))))
-          (else (filter predicate (cdr sequence)))))
+    (if (null? sequence)
+        '()
+        (let ([first (car sequence)]
+              [rest  (cdr sequence)])
+          (if (predicate first)
+              (cons first
+                    (filter predicate rest))
+              (filter predicate rest)))))
+
+  (filter odd? '(1 2 3 4 5 6))            ; (1 3 5)
 
   (define (accumulate op initial sequence)
     (if (null? sequence)
@@ -161,27 +165,45 @@ As in Ex 2.5, you can also represent a pair $a$ and $b$ with $2^a 3^b$:
         (op (car sequence)
             (accumulate op initial (cdr sequence)))))
 
-  (accumulate cons '() '(1 2 3 4 5))
-  ;;; Value: (1 2 3 4 5)
+  (accumulate * 1 '(1 2 3 4 5))           ; 120
+  (accumulate cons '() '(1 2 3 4 5))      ; (1 2 3 4 5)
 
-  (define (enumerate-interval low high)
+  (define (map f sequence)
+    (accumulate (lambda (first rest)
+                  (cons (f first)
+                        rest))
+                '()
+                sequence))
+
+  (map 1+ '(1 2 3))                       ; (2 3 4)
+
+  (define (append s1 s2)
+    (accumulate cons s2 s1))
+
+  (append '(1 2 3) '(4 5 6))              ; (1 2 3 4 5 6)
+
+  (define (length s)
+    (accumulate (lambda (_ c)
+                  (1+ c))
+                0 s))
+
+  (length '(1 2 3))                       ; 3
+
+  (define (enumerate-interfal low high)
     (if (> low high)
         '()
         (cons low
-              (enumerate-interval (+ 1 low)
-                                  high))))
+              (enumerate-interfal (+ low 1) high))))
 
-  (enumerate-interval 2 7)
-  ;;; Value: (2 3 4 5 6 7)
+  (enumerate-interfal 2 7)                ; (2 3 4 5 6 7)
 
   (define (enumerate-tree tree)
-    (cond ((null? tree) '())
-          ((not-pair? tree) (list tree))
-          (else (append (enumerate-tree (car tree))
-                        (enumerate-tree (cdr tree))))))
+    (cond [(null? tree) '()]
+          [(atom? tree) (list tree)]
+          [else (append (enumerate-tree (car tree))
+                        (enumerate-tree (cdr tree)))]))
 
-  (enumerate-tree '(1 (2 (3 4) (5))))
-  ;;; Value: (1 2 3 4 5)
+  (enumerate-tree '(1 (2 (3 4)) 5))       ; (1 2 3 4 5)
 
 
   (define (sum-odd-squares tree)
@@ -200,6 +222,55 @@ As in Ex 2.5, you can also represent a pair $a$ and $b$ with $2^a 3^b$:
     (accumulate max 0
                 (map salary
                      (filter programmer? records))))
+#+end_src
+
+* Folding left & right
+
+Both =fold-left= and =fold-right= takes
+- =op=: a procedure with two arguments
+- =initial=: the initial value
+- =sequence=: the sequence to be accumulated/folded.
+
+#+begin_src scheme
+  (define (fold-left op initial sequence)
+    (define (iter result rest)
+      (if (null? rest)
+          result
+          (iter (op result (car rest))
+                (cdr rest))))
+    (iter initial sequence))
+
+  (define (fold-right op initial sequence)
+    (if (null? sequence)
+        initial
+        (op (car sequence)
+            (fold-right op initial (cdr sequence)))))
+#+end_src
+
+But they apply =op= in different directions.
+=fold-left= folds from left to right, calls =(op running-sum current-value)=.
+=fold-right= folds from right to left, calls =(op current-value running-sum)=.
+
+For operators that satisfy transitivity, the result is the same, but
+for others such as division and =cons=, the resutls are different.
+#+begin_src scheme
+  (fold-left / 1 '(1 2 3))                ; (((1 / 1) / 2) / 3) -> 1/6
+  (fold-right / 1 '(1 2 3))               ; (1 / (2 / (3 / 1))) -> 3/2
+#+end_src
+
+You can implement =reverse= using either, but with different =op=:
+#+begin_src scheme
+  (define (reverse sequence)
+    (fold-left (lambda (sum cur)
+                 (cons cur sum))
+               '()
+               sequence))
+
+  (define (reverse sequence)
+    (fold-right (lambda (cur sum)
+                  (append sum (list cur)))
+                '()
+                sequence))
 #+end_src
 
 * Exercises
@@ -290,44 +361,36 @@ understand =@_@=
 ** Ex 2.20 -- dotted-tail notation
 #+begin_quote
 The procedures =+=, =*=, and =list= take arbitrary numbers of
-arguments. One way to define such procedures is to use define with
-/dotted-tail notation/. In a procedure definition, a parameter list
+arguments.  One way to define such procedures is to use define with
+/dotted-tail notation/.  In a procedure definition, a parameter list
 that has a dot before the last parameter name indicates that, when the
 procedure is called, the initial parameters (if any) will have as
 values the initial arguments, as usual, but the final parameter's
-value will be a /list/ of any remaining arguments. For instance, given
-the definition
+value will be a /list/ of any remaining arguments.  For instance,
+given the definition
 #+begin_src scheme
   (define (f x y . z) <body>)
 #+end_src
-
-the procedure =f= can be called with two or more arguments. If we
-evaluate
-
+the procedure =f= can be called with two or more arguments.
+If we evaluate
 #+begin_src scheme
   (f 1 2 3 4 5 6)
 #+end_src
-
 then in the body of =f=, =x= will be 1, =y= will be 2, and =z= will be
-the list =(3 4 5 6)=. Given the definition
-
+the list =(3 4 5 6)=.  Given the definition
 #+begin_src scheme
   (define (g . w) <body>)
 #+end_src
-
-the procedure =g= can be called with zero or more arguments. If we
-evaluate
-
+the procedure =g= can be called with zero or more arguments.
+If we evaluate
 #+begin_src scheme
   (g 1 2 3 4 5 6)
 #+end_src
-
 then in the body of =g=, w will be the list =(1 2 3 4 5 6)=.
 
 Use this notation to write a procedure =same-parity= that takes one or
 more integers and returns a list of all the arguments that have the
-same even-odd parity as the first argument. For example,
-
+same even-odd parity as the first argument.  For example,
 #+begin_src scheme
   (same-parity 1 2 3 4 5 6 7)
   (1 3 5 7)
@@ -337,11 +400,23 @@ same even-odd parity as the first argument. For example,
 #+end_src
 #+end_quote
 
-对于相同奇偶性的检测，可以 =let= 一个变量 =yes?= ，如果 =frist= 是奇数
-=yes?= 就是 =odd?= ，否则 =yes?= 就是 =even?= 。使用 iterative 的方法，
-得到的 =res= 是倒序，就 =reverse= 一下，最后 =cons= 上 =first= 就行啦。
-
 #+begin_src scheme
+  (define (same-parity first . rest)
+    (let ([pred (if (odd? first)
+                    odd?
+                    even?)])
+      (define (iter l)
+        (if (null? l)
+            '()
+            (let ([first (car l)]
+                  [rest  (cdr l)])
+              (if (pred first)
+                  (cons first (iter rest))
+                  (iter rest)))))
+      (cons first
+            (iter rest))))
+
+  ;;; old solution
   (define (same-parity first . rest)
     (let ((yes? (if (odd? first)
                     odd?
@@ -353,6 +428,57 @@ same even-odd parity as the first argument. For example,
       (cons first
             (reverse (iter rest '())))))
 #+end_src
+
+** Ex 2.27 -- deep reverse
+
+#+begin_quote
+Modify your =reverse= procedure of Exercise 2.18 to produce a
+=deep-reverse= procedure that takes a list as argument and returns as
+its value the list with its elements reversed and with all sublists
+deep-reversed as well.  For example,
+#+begin_src scheme
+  (define x (list (list 1 2) (list 3 4))) ; ((1 2) (3 4))
+  (reverse x)                             ; ((3 4) (1 2))
+  (deep-reverse x)                        ; ((4 3) (2 1))
+#+end_src
+#+end_quote
+
+#+begin_src scheme
+  (define (deep-reverse tree)
+    (if (atom? tree)
+        tree
+        (reverse (map deep-reverse tree))))
+#+end_src
+
+** Ex 2.28 -- fringe
+
+#+begin_quote
+Write a procedure =fringe= that takes as argument a tree (represented as
+a list) and returns a list whose elements are all the leaves of the
+tree arranged in left-to-right order.  For example,
+#+begin_src scheme
+  (define x (list (list 1 2) (list 3 4)))
+  (fringe x)                              ; (1 2 3 4)
+  (fringe (list x x))                     ; (1 2 3 4 1 2 3 4)
+#+end_src
+#+end_quote
+
+#+begin_src scheme
+  (define (fringe tree)
+    (cond [(null? tree) '()]
+          [(atom? tree) (list tree)]
+          [else (append (fringe (car tree))
+                        (fringe (cdr tree)))]))
+
+  (define (fringe tree)
+    (define (iter tree res)
+      (cond [(null? tree) res]
+            [(atom? tree) (cons tree res)]
+            [else (iter (car tree)
+                        (iter (cdr tree) res))]))
+    (iter tree '()))
+#+end_src
+
 ** Ex 2.32 -- subset
 #+begin_quote
 We can represent a set as a list of distinct elements, and we can
@@ -374,9 +500,45 @@ and give a clear explanation of why it works:
 #+begin_src scheme
   (define (subsets s)
     (if (null? s)
-        '(())
-        (let ((rest (subsets (cdr s))))
-          (append rest (map (lambda (x)
-                              (cons (car s) x))
-                            rest)))))
+        (list '())
+        (let ([rest (subsets (cdr s))])
+          (append rest
+                  (map (lambda (x)
+                         (cons (car s) x))
+                       rest)))))
+#+end_src
+
+** Ex 2.35 -- counting leaves
+
+#+begin_quote
+Redefine count-leaves from Section 2.2.2 as an accumulation.
+#+end_quote
+
+#+begin_src scheme
+  (define (count-leaves tree)
+    (accumulate + 0
+                (map (lambda (tree)
+                       (if (atom? tree)
+                           1
+                           (count-leaves tree)))
+                     tree)))
+#+end_src
+This seems fine, but it will count the empty list as a leaf:
+#+begin_src scheme
+  (count-leaves '(1 2 (3 (4 5) 6) 7))     ; 7
+  (count-leaves '(1 2 (3 (4 5) 6) 7 ()))  ; 8
+#+end_src
+
+Take into consideration the empty list ='()=:
+#+begin_src scheme
+  (define (count-leaves tree)
+    (accumulate + 0
+                (map (lambda (tree)
+                       (cond [(null? tree) 0]
+                             [(atom? tree) 1]
+                             [else (count-leaves tree)]))
+                     tree)))
+
+  (count-leaves '(1 2 (3 (4 5) 6) 7))     ; 7
+  (count-leaves '(1 2 (3 (4 5) 6) 7 ()))  ; 7
 #+end_src
