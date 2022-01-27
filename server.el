@@ -252,4 +252,7 @@ string."
 ;;; use org-special-block-extras
 (use-package org-special-block-extras
   :hook (org-mode . org-special-block-extras-mode))
-(require 'org-special-block-extras)
+
+;;; explicitly turn on org-mode to enable things like
+;;; `org-special-block-extras-mode'
+(org-mode)
