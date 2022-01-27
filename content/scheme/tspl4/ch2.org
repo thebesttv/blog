@@ -1,0 +1,262 @@
+#+title: Chapter 2. Getting Started
+
+=define= establishes variable bindings, =lambda= creates procedures.
+
+A =quote= expression is *not a procedure application*, since it
+_inhibits the evaluation of its subexpression_.  It is an entirely
+different syntactic form.  Scheme supports several other syntactic
+forms in addition to procedure applications and quote expressions.
+Each syntactic form is evaluated differently.
+
+#+begin_src scheme
+  (quote hello) ; -> hello
+#+end_src
+
+The symbol =hello= must be quoted in order to prevent Scheme from
+treating =hello= as a variable.  Just as quoting a list tells Scheme
+to treat a parenthesized form as a list rather than as a procedure
+application, quoting an identifier tells Scheme to treat the
+identifier as a *symbol* rather than as a variable.
+
+You might wonder why _applications and variables share notations with
+lists and symbols_.  The shared notation allows *Scheme programs* to
+be represented as *Scheme data*, simplifying the writing of
+interpreters, compilers, editors, and other tools in Scheme.
+
+#+begin_src scheme
+  (quote cons)                            ; cons
+  (quote (quote cons))                    ; (quote cons)
+  ''cons                                  ; (quote cons)
+  (car (quote (quote cons)))              ; quote
+#+end_src
+
+A =let=-bound variable is visible everywhere within the body of its
+let expression *except where it is /shadowed/*.
+
+* Section 2.5. Lambda Expressions
+
+** Optional arguments
+
+A procedure can take
+- a fixed number of arguments
+  #+begin_src scheme
+    (define (f a b c)
+      (list a b c))
+
+    (define f
+      (lambda (a b c)
+        (list a b c)))
+  #+end_src
+
+- any number of arguments
+  #+begin_src scheme
+    (define (f . args)
+      args)
+
+    (define f
+      (lambda args
+        args))
+
+    (f)                                     ; ()
+    (f 1 2)                                 ; (1 2)
+  #+end_src
+
+- a combination of both
+  #+begin_src scheme
+    (define (f x y . rest)
+      (list x y rest))
+
+    (define f
+      (lambda (x y . rest)
+        (list x y rest)))
+
+    (f 1 2)                                 ; (1 2 ())
+    (f 1 2 3 4)                             ; (1 2 (3 4))
+  #+end_src
+
+* Section 2.9. Assignment
+** Static & shared variables
+
+If a procedure needs to maintain an internal state, it can use a
+variable outside its scope.
+#+begin_src scheme
+  (define next 0)
+  (define count
+    (lambda ()
+      (let ([v next])
+        (set! next (+ next 1))
+        v)))
+
+  (count) ; 0
+  (count) ; 1
+#+end_src
+
+However, this makes =next= visible at top level.  We can hide =next=
+by =let=-binding =next= inside =define=, but outside function's lambda
+expression.
+#+begin_src scheme
+  (define count
+    (let ([next 0])
+      (lambda ()
+        (let ([v next])
+          (set! next (+ next 1))
+          v))))
+#+end_src
+
+The latter solution generalizes easily to provide multiple counters,
+each with its own local counter.  The procedure =make-counter= returns
+a new counting procedure each time it is called.
+#+begin_src scheme
+  (define make-counter
+    (lambda ()                            ; [1]
+      (let ([next 0])                     ; [2]
+        (lambda ()                        ; [3]
+          (let ([v next])
+            (set! next (+ next 1))
+            v)))))
+
+  (define c1 (make-counter))
+  (define c2 (make-counter))
+
+  (c1) ; 0
+  (c1) ; 1
+  (c2) ; 0
+  (c2) ; 1
+#+end_src
+
+The =let=-binding [2] is inside the function's lambda expression [1],
+so a new =next= is created every time =make-counter= is called.  This
+means each counter has its own state variable.
+
+If a state variable must be _shared by more than one procedure defined
+at top level_, but we do not want the state variable to be visible at
+top level, we can use =let= to bind the variable and =set!= to make
+the procedures visible at top level.
+#+begin_src scheme
+  (define shhh #f)                 ; initially, set both procedure to #f
+  (define tell #f)
+  (let ([secret 0])                ; shared variable
+    (set! shhh                     ; define procedure inside `let'
+      (lambda (message)
+        (set! secret message)))
+    (set! tell
+      (lambda ()
+        secret)))
+
+  (shhh "sally likes harry")
+  (tell) ; "sally likes harry"
+  secret ; exception: Unbound variable: secret
+#+end_src
+
+** Lazy evaluation
+
+#+begin_quote
+By delaying the evaluation, we might avoid computing the value
+altogether, and by saving the value, we avoid computing it more than
+once.
+#+end_quote
+
+Assuming =f= takes no argument and computes the same result every time
+it's called.  Then we can make a lazily evaluated =f= by warping it
+around a =let=-binding with =computed= and =value=:
+#+begin_src scheme
+  (define (make-lazy f)                ; assuming `f' takes no argument
+    (let ([computed #f]
+          [value #f])
+      (lambda ()
+        (unless computed
+            (set! value (f))
+            (set! computed #t))
+        value)))
+
+  (define (f)
+    (display "f called")
+    (newline)
+    1024)
+
+  (define f-lazy (make-lazy f))
+
+  (f-lazy) ; f called, => 1024
+  (f-lazy) ; 1024
+#+end_src
+
+** Stack
+
+A stack is an procedure that takes a command =cmd= and possible some
+argument =args=.  As with the counters created by =make-counter=, the
+state maintained by each stack object is *directly accessible only
+within the object*.
+
+#+begin_src scheme
+  (define (make-stack)
+    (let ([stack '()])
+      (lambda (cmd . args)
+        (cond [(eqv? cmd 'empty?) (null? stack)]
+              [(eqv? cmd 'push!) (set! stack (cons (car args) stack))]
+              [(eqv? cmd 'top) (car stack)]
+              [(eqv? cmd 'pop!) (set! stack (cdr stack))]
+              [else "oops"]))))
+
+  (define st (make-stack))
+  (st 'empty?)                            ; #t
+  (st 'push! 'tv)
+  (st 'push! 'best)
+  (st 'push! 'the)
+  (st 'empty?)                            ; #f
+  (st 'top)                               ; the
+  (st 'pop!)
+  (st 'top)                               ; best
+  (st 'pop!)
+  (st 'top)                               ; tv
+  (st 'pop!)
+  (st 'empty?)                            ; #t
+#+end_src
+
+** Queue
+
+#+caption: /tconc/ structure
+{{{image(50)}}}
+[[./ch2/tconc.gif]]
+
+This is a /tconc/, short for "tail concatenate".  A tconc consists of
+a nonempty list and a header.  The header is a pair whose =car= points
+to the head of the list and whose =cdr= points to the tail of the
+list.  The tail of the list is one past its last element.
+
+#+begin_src scheme
+  (define make-queue
+    (lambda ()
+      ;; initially, the queue is empty, so both head & tail points to `end'
+      (let* ([end (cons 'ignored '())]
+             [q (cons end end)])
+        (lambda (cmd . args)
+          (cond [(eqv? cmd 'empty?) (eqv? (car q) (cdr q))]
+                [(eqv? cmd 'push)
+                 (let ([end (cons 'ignored '())])    ; make a new `end'
+                   (set-car! (cdr q) (car args)) ; push to the last element
+                   (set-cdr! (cdr q) end)
+                   (set-cdr! q end))]
+                [(eqv? cmd 'head) (caar q)]
+                [(eqv? cmd 'pop) (set-car! q (cdar q))]
+                [(eqv? cmd 'clear) (set-car! q (cdr q))]
+                [else "oops"])))))
+
+  (define q (make-queue))
+
+  (q 'empty?)                             ; #t
+  (q 'push 'the) (q 'push 'best) (q 'push 'tv)
+  (q 'head)                               ; the
+  (q 'pop)
+  (q 'head)                               ; best
+  (q 'pop)
+  (q 'head)                               ; tv
+  (q 'pop)
+  (q 'empty?)                             ; #t
+
+  (q 'push 'the) (q 'push 'best) (q 'push 'tv)
+  (q 'empty?)                             ; #f
+  (q 'clear)
+  (q 'empty?)                             ; #t
+#+end_src
+
+Related: [[https://srfi.schemers.org/srfi-117/srfi-117.html][SRFI 117]].

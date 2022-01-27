@@ -1,0 +1,23 @@
+#+title: Ch1. Introduction
+
+In Scheme, a procedure definition may appear within another block or
+procedure, and the procedure may be invoked at any time thereafter,
+even if the enclosing block has completed its execution. To support
+lexical scoping, a procedure carries the lexical context (environment)
+along with its code.
+
+Scheme supports the definition of *arbitrary control structures* with
+/continuations/. A continuation is a procedure that embodies the
+remainder of a program at a given point in the program. A continuation
+may be obtained at any time during the execution of a program. As with
+other procedures, a continuation is a first-class object and may be
+invoked at any time after its creation. Whenever it is invoked, the
+program immediately continues from the point where the continuation
+was obtained. Continuations allow the implementation of complex
+control mechanisms including explicit backtracking, multithreading,
+and coroutines.
+
+While the two languages are similar, Common Lisp includes more
+specialized constructs, while Scheme includes more general-purpose
+building blocks out of which such constructs (and others) may be
+built.
