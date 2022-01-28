@@ -189,13 +189,13 @@ As in Ex 2.5, you can also represent a pair $a$ and $b$ with $2^a 3^b$:
 
   (length '(1 2 3))                       ; 3
 
-  (define (enumerate-interfal low high)
+  (define (enumerate-interval low high)
     (if (> low high)
         '()
         (cons low
-              (enumerate-interfal (+ low 1) high))))
+              (enumerate-interval (+ low 1) high))))
 
-  (enumerate-interfal 2 7)                ; (2 3 4 5 6 7)
+  (enumerate-interval 2 7)                ; (2 3 4 5 6 7)
 
   (define (enumerate-tree tree)
     (cond [(null? tree) '()]
@@ -351,6 +351,63 @@ Note the use of quotes (='=).  We're talking about the symbol =+= and
   ;;          0))
   ;;; updated make-sum & make-product
   ;; => (+ (* a (+ x x)) b)
+#+end_src
+
+* Flatmap
+
+To produce a list of ordered pairs $(i, j)$ s.t. $1 \le i \le j \le
+n$, first we nest two =map=​s:
+#+begin_src scheme
+  (let ([n 3])
+    (map (lambda (i)
+           (map (lambda (j) (list i j))
+                (enumerate-interval i n)))
+         (enumerate-interval 1 n)))
+  ;; (((1 1) (1 2) (1 3))
+  ;;  ((2 2) (2 3))
+  ;;  ((3 3)))
+#+end_src
+
+The result is a list of lists.  Use =accumulate= on the outer list to
+flatten it:
+#+begin_src scheme
+  (let ([n 3])
+    (accumulate append '()
+                (map (lambda (i)
+                       (map (lambda (j) (list i j))
+                            (enumerate-interval i n)))
+                     (enumerate-interval 1 n))))
+  ;; ((1 1) (1 2) (1 3) (2 2) (2 3) (3 3))
+#+end_src
+
+The combination of mapping and accumulating with append is so common
+in this sort of program that we will isolate it as a separate
+procedure:
+#+begin_src scheme
+  (define (flatmap proc seq)
+    (accumulate append '()
+                (map proc seq)))
+#+end_src
+
+Then we can define ordered pairs and even ordered triplets:
+#+begin_src scheme
+  (define (ordered-pairs n)
+    (flatmap (lambda (i)
+               (map (lambda (j) (list i j))
+                    (enumerate-interval 1 n)))
+             (enumerate-interval 1 n)))
+
+  (ordered-pairs 3)
+  ;; ((1 1) (1 2) (1 3) (2 1) (2 2) (2 3) (3 1) (3 2) (3 3))
+
+  (define (ordered-triplets n)
+    (flatmap (lambda (x)
+               (map (lambda (l) (cons x l))
+                    (ordered-pairs n)))
+             (enumerate-interval 1 n)))
+
+  (ordered-triplets 2)
+  ;; ((1 1 1) (1 1 2) (1 2 1) (1 2 2) (2 1 1) (2 1 2) (2 2 1) (2 2 2))
 #+end_src
 
 * Exercises
