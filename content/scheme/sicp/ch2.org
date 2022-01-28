@@ -1,4 +1,4 @@
-#+title: Chapter 2 -- Building Abstractions with Data
+#+title: Chapter 2 --- Building Abstractions with Data
 
 * What is meant by data?
 
