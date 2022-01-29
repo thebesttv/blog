@@ -83,7 +83,7 @@
               (org-export-to-buffer 'html buffer)))
           (with-current-buffer buffer
             (replace-string
-             "***6a05b631-e547-4f89-b411-7ea4c1ac94d1***"
+             eserver-blog-postamble-uid
              (eserver-blog-postamble host-name)
              nil (point-min) (point-max))
             (replace-string "​" ""        ; delete zero width space
@@ -219,15 +219,19 @@ string."
 ;;; Postamble
 
 ;;; change original postamble
-(setq org-html-postamble
-      "***6a05b631-e547-4f89-b411-7ea4c1ac94d1***")
+(setq eserver-blog-postamble-uid "***6a05b631-e547-4f89-b411-7ea4c1ac94d1***")
+(setq org-html-postamble t)          ; use `org-html-postamble-format'
+(setq org-html-postamble-format
+      (let ((postamble (concat
+                        "<hr>"
+                        "<p class=\"author\">Author: %a</p>" ; get author of the org file
+                        eserver-blog-postamble-uid)))        ; then append custom postamble
+        (list (list "en" postamble))))
 
 ;;; add ICP licensing number to postamble
 (defun eserver-blog-postamble (host-name)
   (let ((icp-number (cdr (assoc-string host-name eserver-icp-number))))
     (concat
-     "<hr>"
-     "<p class=\"author\">Author: thebesttv</p>"
      (when icp-number
        (concat
         "<p style=\"text-align: center;\">"
