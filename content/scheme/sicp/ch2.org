@@ -506,7 +506,7 @@ Flattening a tree into list using inorder traversal:
   (tree->list-2 tree)                     ; (1 3 5 7 9 11)
 #+end_src
 
-Converting an ordered list to a balanced tree: (Ex.2.64)
+Converting an ordered list to a balanced tree: (Ex 2.64)
 #+begin_quote
 The following procedure =list->tree= converts an ordered list to a
 balanced binary tree.  The helper procedure =partial-tree= takes as
@@ -539,6 +539,163 @@ list of elements *not included in the tree*.
   (tree->list-1 (list->tree '(1 2 3 4)))  ; (1 2 3 4)
 #+end_src
 #+end_quote
+
+* Huffman encoding tree
+
+In a huffman tree, a /node/ is either a general tree, or a leaf.  In
+the following code, =node= refers to either a general tree or a leaf,
+=leaf= refers specifically to a leaf, and =tree= a general tree.
+
+A /leaf/ is represented by a list consisting of the symbol =leaf=, the
+symbol at the leaf, and its weight.
+#+begin_src scheme
+  (define (make-leaf symbol weight)
+    (list 'leaf symbol weight))
+  (define (leaf? node) (eq? (car node) 'leaf))
+  (define (symbol-leaf leaf) (cadr leaf))
+  (define (weight-leaf leaf) (caddr leaf))
+#+end_src
+
+A /general tree/ is a list of a left branch, a right branch, a set of
+symbols, and a weight.  The procedures =symbols= and =weight= must do
+something slightly different depending on whether they are called with
+a leaf or a general tree.
+#+begin_src scheme
+  (define (make-code-tree left right)
+    (list left
+          right
+          (append (symbols left) (symbols right))
+          (+ (weight left) (weight right))))
+  (define (left-branch tree) (car tree))
+  (define (right-branch tree) (cadr tree))
+  (define (symbols node)
+    (if (leaf? node)
+        (list (symbol-leaf node))
+        (caddr node)))
+  (define (weight node)
+    (if (leaf? node)
+        (weight-leaf node)
+        (cadddr node)))
+#+end_src
+
+The decode process is not hard.  It takes =bits= (a list of 0's and
+1's) and the Huffman tree.  At each run, if
+1. =node= is a leaf, it means the bit just processed ends a symbol,
+   and the remaining =bits= can either be empty [2], or represent yet
+   more symbols [3,4].  So we =cons= that symbol to the result, and
+   restart at the root of the tree.
+2. =node= is not a leaf and =bits= is empty, then the decode process
+   ends.
+3. the bit is 0, then go to the left branch.
+4. the bit is 1, then go to the right branch.
+5. the bit is neither 0 or 1, there's a bad bit in =bits=.
+
+#+begin_src scheme
+  (define (decode bits tree)
+    (define (run bits node)
+      (cond [(leaf? node) (cons (symbol-leaf node) (run bits tree))] ; [1]
+            [(null? bits) '()]                                       ; [2]
+            [(= (car bits) 0) (run (cdr bits) (left-branch node))]   ; [3]
+            [(= (car bits) 1) (run (cdr bits) (right-branch node))]  ; [4]
+            [else (error "bad bit in DECODE" (car bits))]))          ; [5]
+    (run bits tree))
+#+end_src
+
+Example of decode:
+#+begin_src scheme
+  (define sample-tree
+    (make-code-tree (make-leaf 'A 4)
+                    (make-code-tree (make-leaf 'B 2)
+                                    (make-code-tree (make-leaf 'D 1)
+                                                    (make-leaf 'C 1)))))
+
+  (define sample-bits '(0 1 1 0 0 1 0 1 0 1 1 1 0))
+  (define sample-message '(A D A B B C A))
+
+  (equal? (decode sample-bits sample-tree) sample-message) ; #t
+#+end_src
+
+The encode process:
+#+begin_src scheme
+  (define (encode msg tree)
+    (define (encode-symbol symbol node)
+      (if (leaf? node)
+          '()
+          (let ([left (left-branch node)]
+                [right (right-branch node)])
+            (cond [(memq symbol (symbols left))
+                   (cons 0 (encode-symbol symbol left))]
+                  [(memq symbol (symbols right))
+                   (cons 1 (encode-symbol symbol right))]
+                  [else (error "Symbol not in tree:" symbol)]))))
+    (if (null? msg)
+        '()
+        (append (encode-symbol (car msg) tree)
+                (encode (cdr msg) tree))))
+
+  (equal? (encode sample-message sample-tree) sample-bits) ; #t
+#+end_src
+
+In building the Huffman tree, the symbol-frequency pairs are given
+where all the symbols are unique.  The =pairs= are first converted by
+=make-leaf-set= to an ordered set (list) of leaves, and then merged to
+the final tree (which we'll talk later).  =adjoin-set= adds =node=
+(note this is a /node/, not just a /leaf/) to an ordered list =set=.
+It assumes =node= is never in =set=.
+#+begin_src scheme
+  ;;; This is defined later.
+  ;; (define (generate-huffman-tree pairs)
+  ;;   (successive-merge (make-leaf-set pairs)))
+
+  (define (adjoin-set node set)
+    (cond [(null? set) (list node)]
+          [(< (weight node) (weight (car set))) (cons node set)]
+          [else (cons (car set)
+                      (adjoin-set node (cdr set)))]))
+
+  (define (make-leaf-set pairs)
+    (if (null? pairs)
+        '()
+        (let ([pair (car pairs)]
+              [rest (cdr pairs)])
+          (adjoin-set (make-leaf (car pair) (cadr pair))
+                      (make-leaf-set rest)))))
+
+  (define sample-pairs '((A 4) (B 2) (C 1) (D 1)))
+  (make-leaf-set sample-pairs)
+  ;; ((leaf D 1) (leaf C 1) (leaf B 2) (leaf A 4))
+#+end_src
+
+=successive-merge= uses =make-code-tree= to successively merge the
+smallest-weight elements of the set until there's only one element
+left.  The ordered set originally contains only leaves, but the leaves
+are merged to become general tree nodes.
+#+begin_src scheme
+  (define (generate-huffman-tree pairs)
+    (define (successive-merge set)
+      (if (null? (cdr set))
+          (car set)                 ; only one wlement left, it's the tree
+          (let ([first (car set)]
+                [second (cadr set)]
+                [rest (cddr set)])
+            (successive-merge
+             (adjoin-set (make-code-tree first second) ; merge first & second
+                         rest)))))                     ; and join with rest
+    (successive-merge (make-leaf-set pairs)))
+
+  (generate-huffman-tree sample-pairs)
+  ;; ((leaf A 4)
+  ;;  ((leaf B 2)
+  ;;   ((leaf D 1) (leaf C 1) (D C) 2)
+  ;;   (B D C)
+  ;;   4)
+  ;;  (A B D C)
+  ;;  8)
+
+  (let ([tree (generate-huffman-tree sample-pairs)])
+    (and (equal? (encode sample-message tree) sample-bits)
+         (equal? (decode sample-bits tree) sample-message))) ; #t
+#+end_src
 
 * Exercises
 
