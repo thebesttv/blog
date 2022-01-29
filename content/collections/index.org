@@ -170,6 +170,12 @@
   The power of Lisp is its own worst enemy.
 - [[http://wingolog.org/archives/2013/01/07/an-opinionated-guide-to-scheme-implementations][an opinionated guide to scheme implementations]]
   Which Scheme should I use? 🤔
+- [[http://www.trollope.org/scheme.html][High School Computing: The Inside Story]] Less syntax.
+  #+begin_quote
+  I don't want another kid's enthusiasm snuffed out by a pile of
+  library books.  I want students who study computer science to be
+  inspired to create their own game.
+  #+end_quote
 
 ** 关于算法
 
