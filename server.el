@@ -44,6 +44,16 @@
        ;;           (string-prefix-p "." (file-name-base file))))))))
        (not (string-prefix-p "." (file-name-base file)))))))
 
+(defun assoc-parameter (key parameters)
+  "Get key from parameters.
+For example, the URL ends with ?dataurl=t&raw, then `parameters' will be
+  ((\"dataurl\" \"t\")
+   (\"raw\"))
+
+(assoc-parameter \"dataurl\" parameters) => (\"dataurl\" \"t\")
+(assoc-parameter \"raw\" parameters) => (\"raw\")"
+  (assoc key parameters 'string=))
+
 (defun httpd/blog (proc path parameters &rest args)
   (let* ((default-directory eserver-blog)
          (available-files (eserver-blog-available-files))
@@ -64,32 +74,37 @@
             (insert (format "  %s\n" file))))
       ;; file exists, check for extension
       (if (not (string-suffix-p ".org" path))
-          ;; regular file, simple send file
+          ;; regular file, simply send file
           (httpd-send-file proc path)
-        ;; if .org file, convert to html before sending
-        (setq eserver-blog-current-path path)
-        (let ((buffer (get-buffer-create "*tbt: org html*"))
-              (eserver-blog-image-dataurl
-               (or eserver-blog-image-dataurl ; from customization
-                   (equal '("t")              ; from url parameter
-                          (alist-get "dataurl" parameters nil nil 'string=)))))
-          (with-temp-buffer
-            (insert (format "#+SETUPFILE: %s/setup.org\n" eserver-blog))
-            (insert-file-contents path)
-            ;; (httpd-log `(inserted file contents under ,path))
-            (let ((default-directory
-                    (expand-file-name (file-name-directory path)
-                                      eserver-blog)))
-              (org-export-to-buffer 'html buffer)))
-          (with-current-buffer buffer
-            (replace-string
-             eserver-blog-postamble-uid
-             (eserver-blog-postamble host-name)
-             nil (point-min) (point-max))
-            (replace-string "​" ""        ; delete zero width space
-             nil (point-min) (point-max)))
-          (with-httpd-buffer proc "text/html; charset=utf-8"
-            (insert-buffer buffer)))))))
+        ;; .org file
+        (if (assoc-parameter "raw" parameters)
+            ;; display in raw form (text/plain)
+            (with-httpd-buffer proc "text/plain; charset=utf-8"
+              (insert-file-contents path))
+          ;; not raw form, convert to html before sending
+          (setq eserver-blog-current-path
+                (expand-file-name path eserver-blog))
+          (let ((buffer (get-buffer-create "*tbt: org html*"))
+                (eserver-blog-image-dataurl
+                 (or eserver-blog-image-dataurl                ; from customization
+                     (assoc-parameter "dataurl" parameters)))) ; from url parameter
+            (with-temp-buffer
+              (insert (format "#+SETUPFILE: %s/setup.org\n" eserver-blog))
+              (insert-file-contents path)
+              ;; (httpd-log `(inserted file contents under ,path))
+              (let ((default-directory
+                      (expand-file-name (file-name-directory path)
+                                        eserver-blog)))
+                (org-export-to-buffer 'html buffer)))
+            (with-current-buffer buffer
+              (replace-string
+               eserver-blog-postamble-uid
+               (eserver-blog-postamble host-name)
+               nil (point-min) (point-max))
+              (replace-string "​" ""        ; delete zero width space
+                              nil (point-min) (point-max)))
+            (with-httpd-buffer proc "text/html; charset=utf-8"
+              (insert-buffer buffer))))))))
 
 ;; Image Data URL encoding
 
