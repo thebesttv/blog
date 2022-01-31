@@ -4,7 +4,7 @@
 conjure v. / 'kʌndʒə(r) /
 1. =~ / ~ sth=: make sth appear, disappear, or change as if by magic
    - Her grandfather taught her to *conjure*.
-     她的祖父教她 *变魔术* 。
+     她的祖父教她​*变魔术*​。
    - He could conjure coins *from behind* people's ears.
      他可以从人们的耳朵后面变出硬币来。
    - The magician conjured a rabbit out of his hat.
@@ -31,7 +31,8 @@ conjure v. / 'kʌndʒə(r) /
      她已想不起她母亲的脸长得什么样了。
    - a special tune that conjures up a particular time and place.
      令人想起特别时刻及场合的专用曲调。
-3. call upon (a spirit or ghost) to appear by means of a magic ritual.施魔法召唤（神灵，鬼魂）。
+3. call upon (a spirit or ghost) to appear by means of a magic ritual.
+   施魔法召唤（神灵，鬼魂）。
    - they hoped to conjure up the spirit of their dead friend.
      他们希望能施魔法召来已逝朋友的灵魂。
 
@@ -39,17 +40,17 @@ conjure v. / 'kʌndʒə(r) /
 
 In /applicative order/, the interpreter first evaluates the operator &
 operands and then applies the resulting procedure to the resulting
-arguments.  But in /normal order/: the interpreter would not evaluate
+arguments.  But in /normal order/, the interpreter would not evaluate
 the operands _until their values were needed_.  And the value is
 evaluated every time it is needed, instead of once on entrance.
 
 * Find the smallest divisior
 #+begin_src scheme
-  (define (smallest-divisor n)            ; find the smallest divisior of n
+  (define (smallest-divisor n)         ; find the smallest divisior of n
     (define (find-divisior n test-divisior)
-      (cond ((> (square test-divisior) n) n)
-            ((divides? test-divisior n) test-divisior)
-            (else (find-divisior n (+ test-divisior 1)))))
+      (cond [(> (square test-divisior) n) n]
+            [(divides? test-divisior n) test-divisior]
+            [else (find-divisior n (+ test-divisior 1))]))
     (define (divides? a b)
       (= (remainder b a) 0))
     (find-divisior n 2))
@@ -94,7 +95,6 @@ Both =sum= and =prod= can be defined in terms of =accumulate=.
     (sum cube a 1+ b))
 
   (define (sum-integers a b)
-    (define (identity x) x)
     (sum identity a 1+ b))
 
   (define (pi-sum a b)
@@ -108,23 +108,14 @@ Both =sum= and =prod= can be defined in terms of =accumulate=.
           1
           1+
           n))
-
-  (define (pi n)
-    (* 4.0
-       (prod (lambda (x)
-               (/ (* (-1+ x) (1+ x)) (square x)))
-             3.0
-             (lambda (x) (+ x 2))
-             n)))
 #+end_src
 
 * Local variables
 
 Functions take parameters.  We can use these parameters as local
-variables.  Take for example this function:
+variables.  Take for example the function:
 \[ f(x, y) = x(1+xy)^2 + y(1-y) + (1+xy)(1-y). \]
-We make two local variables: $a = (1+xy)$, $b = (1-y)$.  Then the
-equation becomes $f(x, y) = x a^2 + y b + a b$.
+Let $a = (1+xy)$, $b = (1-y)$, so $f(x, y) = x a^2 + y b + a b$.
 #+begin_src scheme
   (define (f x y)
     (define (f-helper a b)           ; use parameters as local variables
@@ -135,7 +126,7 @@ equation becomes $f(x, y) = x a^2 + y b + a b$.
               (- 1 y)))              ; b = 1 - y
 #+end_src
 
-The helper function need not have a name, so can be replaced with a
+The helper function is called only once, so it can be replaced with a
 lambda expression:
 #+begin_src scheme
   (define (f x y)
@@ -164,47 +155,46 @@ local variables.  A =let= expression is simply syntactic sugar for the
 underlying lambda application.
 #+end_quote
 
-Since =let= is simply syntatic sugar, the local variables are
+Since =let= is only syntactic sugar, the local variables are
 calculated in the same way as function parameters, meaning:
 - They are computed in parallel.  The expression
   #+begin_src scheme
-    (let ((a 10)
-          (b (+ a a)))
+    (let ([a 10]
+          [b (+ a a)])
       b)
   #+end_src
-  results in error "Unbound variable: a".
+  results in error "Unbound variable: =a=".
   =b= cannot use the value of the preceding variable =a=.
 - As a result, the expression
   #+begin_src scheme
     (define x 2)                            ; [1]
-    (let ((x 3)                             ; [2]
-          (y (+ x 2)))
+    (let ([x 3]                             ; [2]
+          [y (+ x 2)])
       (* x y))
   #+end_src
   has 12 as the result.  The value of =y= is computed using the global
-  variable =x= ([1]).
+  variable =x= in [1].
 
 * Fixed-point & Newton's method
 
 ** Fixed-point
 
 A number $x$ is called a /fixed point/ of a function $f$ if $f(x) = x$.
-For some functions $f$ we can locate a fixed point by beginning with
+For some function $f$ we can locate a fixed point by beginning with
 an initial guess and applying $f$ repeatedly,
 $$ f(x), \quad f(f(x)), \quad f(f(f(x))), \quad \ldots $$
 until the value does not change very much.
 #+begin_src scheme
-  (define tolerance 0.00001)
-  (define (close-enough? a b)
-    (< (abs (- a b)) tolerance))
-
-  (define (fixed-point f first-guess)
+  (define (fixed-point f initial-guess)
+    (define tolerance 0.001)
+    (define (close-enough? a b)
+      (< [abs (- a b)] tolerance))
     (define (try guess)
-      (let ((next (f guess)))
+      (let ([next (f guess)])
         (if (close-enough? guess next)
             next
             (try next))))
-    (try first-guess))
+    (try initial-guess))
 #+end_src
 
 To find $\sqrt{x}$ means finding the fixed point of the function $f(y)
@@ -213,10 +203,11 @@ $y_2 = f(y_1) = x / y_1$, and the next one $y_3 = f(y_2) = x / (x /
 y_1) = y_1$.  The guesses will oscillate between $y_1$ and $y_2$,
 never converging.
 
-Applying the technique of average damping can solve this issue.
+Applying the technique of /average damping/ can solve this problem.
+Here =average-damp= is a procedure that takes a procedure =f= and
+returns another procedure---the average damped version of =f=.
 #+begin_src scheme
-  (define (average x y)
-    (/ (+ x y) 2))
+  (define (average x y) (/ (+ x y) 2))
 
   (define (average-damp f)
     (lambda (x) (average x (f x))))
@@ -224,6 +215,8 @@ Applying the technique of average damping can solve this issue.
   (define (sqrt x)
     (fixed-point (average-damp (lambda (y) (/ x y)))
                  1.0))
+
+  (sqrt 9)                                ; 3.000000001396984
 #+end_src
 
 Notice that cube root is the fixed point of the function $f(y) = x / y^2$:
@@ -231,6 +224,8 @@ Notice that cube root is the fixed point of the function $f(y) = x / y^2$:
   (define (cube-root x)
     (fixed-point (average-damp (lambda (y) (/ x (square y))))
                  1.0))
+
+  (cube-root 27)                          ; 2.9998228753561564
 #+end_src
 
 ** Newton's method
@@ -239,20 +234,22 @@ If $g(x)$ is a differentiable function, then a solution of $g(x)=0$ is
 a fixed point of the function $f(x)$, where
 $$ f(x) = x - \frac{g(x)}{g'(x)}. $$
 
-First we expression the idea of derivative:
+First we expression the idea of a derivative:
 $$ g'(x) = \frac{g(x + dx) - g(x)}{dx}. $$
-Just like average damping, derivative transforms a function into
-another funtion:
+Just like average damping, =deriv= transforms a function into another
+function:
 #+begin_src scheme
   (define (deriv g)
-    (define dx 0.000001)
-    (lambda (x) (/ (- (g (+ x dx))
-                      (g x))
-                   dx)))
+    (define dx 0.001)
+    (lambda (x)
+      (/ (- (g (+ x dx))
+            (g x))
+         dx)))
 #+end_src
 
 With the aid of =deriv=, we can express Newton's method as a
-fixed-point process:
+fixed-point process.  Here =newton-transform= converts the problem of
+finding $g(x) = 0$ to finding $f(x) = x$.
 #+begin_src scheme
   (define (newton-transform g)
     (lambda (x)
@@ -263,20 +260,23 @@ fixed-point process:
     (fixed-point (newton-transform g) guess))
 #+end_src
 
-Thus we can calculate square:
+Thus we can calculate $\sqrt{x}$:
 #+begin_src scheme
   (define (sqrt x)
     (newtons-method (lambda (y) (- (square y) x))
                     1.0))
+
+  (sqrt 9)                                ; 3.0000000174227237
 #+end_src
 
-Note that the resulting lambda expression of =newton-transform=
-calculates the derivative of $g$ *every time* it's called---it does
-not save the result of =deriv=.  This is very inefficient.  Using a
-local variable =dg= to hold the result so =deriv= is called only once:
+Note that the resulting lambda expression in =newton-transform=
+calculates the derivative of $g$ *every time* it is called, since it
+does not save the result of =(deriv g)=.  This is very inefficient.
+Using a local variable =dg= to hold the result so =deriv= is called
+only once:
 #+begin_src scheme
   (define (newton-transform g)
-    (let ((dg (deriv g)))
+    (let ([dg (deriv g)])
       (lambda (x)
         (- x (/ (g x)
                 (dg x))))))
@@ -295,7 +295,7 @@ We calculated =sqrt= using both the fixed point search and Newton's method:
     (newtons-method (lambda (y) (- (square y) x))
                     1.0))
 #+end_src
-The latter expands to:
+The latter [2] expands to:
 #+begin_src scheme
   (define (sqrt x)                        ; [3]
     (fixed-point (newton-transform (lambda (y) (- (square y) x)))
@@ -303,8 +303,8 @@ The latter expands to:
 #+end_src
 
 Both [1] and [3] have the same pattern---each method begins with a
-function and finds a fixed point of some transformation of the
-function (=average-damp= or =newton-transform=).  We can express this
+function and finds a fixed point of _some transformation of the
+function_ (=average-damp= or =newton-transform=).  We can express this
 general idea itself as a procedure:
 #+begin_src scheme
   (define (fixed-point-of-transform g transform guess)
@@ -328,21 +328,18 @@ Then the two methods become:
 * Compose
 
 Let $f$ and $g$ be two one-argument functions.  The composition $f$
-after $g$ is $f(g(x)).  Define a procedure =compose= that implements
-composition.
+after $g$ is $f(g(x))$:
 #+begin_src scheme
   (define (compose f g)
     (lambda (x) (f (g x))))
 
-  (define (square x) (* x x))
-
-  ((compose square 1+) 6)                 ; 49
+  ((compose square 1+) 6)                 ; => (square (1+ 6)) => 49
 #+end_src
 
-Apply a function $f$ $n$ times: $$ f(f(\cdots f(x) \cdots)). $$
-
+Applying a function $f$ $n$ times yields
+$$ f(f(\cdots f(x) \cdots)). $$
 We can either return $f$ when $n=1$, or return an identity function
-when $n=0$.
+when $n=0$.  The latter produces the correct result even when $n=0$.
 #+begin_src scheme
   (define (repeated f n)
     (if (= n 1)
@@ -374,26 +371,30 @@ Alternatively, there's an iterative implementation:
 * =lambda= for recursion
 
 How to write a recursive function using only =lambda=?  The main
-problem, of course, is how does a =lambda= expression call itself?
+problem, of course, is how can a lambda expression call itself when it
+doesn't have a name for itself?
 
-Read [[https://stackoverflow.com/q/7719004/11938767][this]] stack overflow question and an [[https://gist.github.com/z5h/238891][explanation]].
+[[https://www.scheme.com/tspl4/further.html#g55][Section 3.2]] of /The Scheme Programming Language/ gives the answer:
+simply pass the lambda procedure to itself:
 #+begin_src scheme
-  (((lambda (x) (x x))                    ; [1]
-    (lambda (fact-gen)                    ; [2]
-      (lambda (n)                         ; [3]
-        (if (zero? n)
-            1
-            (* n ((fact-gen fact-gen) (- n 1)))))))
-   5)                                     ; 5! = 120
+  (let ([sum (lambda (sum l)
+               (if (null? l)
+                   0
+                   (+ (car l) (sum sum (cdr l)))))])
+    (sum sum '(1 2 3 4)))                 ; 10
 #+end_src
-[3] is the factorial function.  If [3] were given the name =fact=,
-then =(fact-gen fact-gen)= is just =fact= itself.  [2] is a generator
-function whose parameter (=fact-gen=) is also a generator function (so
-[2] can use itself as parameter) and returns the factorial function.
-[1] takes a generator function ([2]) and applies the function to
-itself, thereby obtaining as return value the factorial function.
+The =let= expression is essentially another =lambda=, here we give it
+a better name:
+#+begin_src scheme
+  ((lambda (sum)
+     (sum sum '(1 2 3 4)))
+   (lambda (self l)
+     (if (null? l)
+         0
+         (+ (car l) (self self (cdr l)))))) ; 10
+#+end_src
 
-[[https://stackoverflow.com/a/66166000/11938767][Here]] is another way using two =lambda=​s:
+[[https://stackoverflow.com/a/66166000/11938767][Here]] is a factorial using two =lambda=​s, only slight difference:
 #+begin_src scheme
   ((lambda (f x)
      (f f x))
@@ -404,40 +405,59 @@ itself, thereby obtaining as return value the factorial function.
    5)                                     ; 120
 #+end_src
 
-[[https://stackoverflow.com/a/54359987/11938767][This]] answer bypasses the problem using /named =let=​/, but I don't see
-much difference from using a named function.
+[[https://stackoverflow.com/q/7719004/11938767][This]] stack overflow question uses three =lambda=​s.
+The answers below has an [[https://gist.github.com/z5h/238891][explanation]] covering Y combinator.
+#+begin_src scheme
+  (((lambda (x) (x x))                    ; [1]
+    (lambda (fact-gen)                    ; [2]
+      (lambda (n)                         ; [3]
+        (if (zero? n)
+            1
+            (* n ((fact-gen fact-gen) (- n 1)))))))
+   5)                                     ; 120
+#+end_src
+[3] is the factorial function.  If [3] were given the name =fact=,
+then =(fact-gen fact-gen)= is just =fact= itself.  [2] is a generator
+function whose parameter (=fact-gen=) is also a generator function (so
+[2] can use itself as parameter) and returns the factorial function.
+[1] takes a generator function ([2]) and applies the function to
+itself, thereby obtaining as return value the factorial function.
+
+[[https://stackoverflow.com/a/54359987/11938767][This]] answer uses /named =let=/:
 #+begin_src scheme
   ((lambda (n)
      (let sub ((i n) (z 1))
        (if (zero? i)
            z
            (sub (- i 1) (* z i)) )))
-   5 )
+   5 )                                    ; 120
 #+end_src
 
 * Exercises
-** Ex 1.3 -- the smallest of the three
+** Ex 1.3 --- the smallest of the three
 #+begin_quote
 Define a procedure that takes three numbers as arguments and returns
 the sum of the squares of the two larger numbers.
 #+end_quote
 
 When looking for the smallest value, the predicate _smaller or *equal
-to*_ (=<==) must be used.  If only =<= is used, when it comes to =(f 2
-2 3)=, the first two =and= condition will evaluate to false.  Then the
-result would be =(sum-of-squares 2 2)=, which is very wrong.
+to*_ (=<==) must be used.  If only =<= is used, in evaluating =(f 2 2
+3)=, the first two =and= condition will evaluate to false.  The result
+would be =(sum-of-squares 2 2)=, which is very wrong.
 
 #+begin_src scheme
   (define (sum-of-squares a b)
     (+ (* a a) (* b b)))
 
   (define (f a b c)
-    (cond ((and (<= a b) (<= a c)) (sum-of-squares b c))
-          ((and (<= b a) (<= b c)) (sum-of-squares a c))
-          (else                    (sum-of-squares a b))))
+    (cond [(and (<= a b) (<= a c)) (sum-of-squares b c)]
+          [(and (<= b a) (<= b c)) (sum-of-squares a c)]
+          [else                    (sum-of-squares a b)]))
+
+  (f 2 2 3)                               ; 13
 #+end_src
 
-** Ex 1.4 -- value of operator
+** Ex 1.4 --- value of operator
 #+begin_quote
 Observe that our model of evaluation allows for combinations _whose
 *operators* are compound expressions_.  Use this observation to
@@ -449,7 +469,7 @@ describe the behavior of the following procedure:
 #+end_src
 #+end_quote
 
-** Ex 1.5 -- applicative-order & normal-order
+** Ex 1.5 --- applicative-order & normal-order
 #+begin_quote
 Ben Bitdiddle has invented a test to determine whether the interpreter
 he is faced with is using applicative-order evaluation or normal-order
@@ -487,7 +507,7 @@ expression into ~(if (= 0 0) 0 (p))~.  The operand =(p)= will not be
 evaluated until needed.  Since the predicate is =#t=, =(p)= is never
 needed.  The whole expression evaluates to =0=.
 
-** Ex 1.16 -- iterative fast exponentiation
+** Ex 1.16 --- iterative fast exponentiation
 
 #+begin_quote
 Design a procedure that evolves an iterative exponentiation process
@@ -506,29 +526,29 @@ design of iterative algorithms.)
 Original recursive code to compute $b^n$:
 #+begin_src scheme
   (define (fast-expt b n)
-    (cond ((= n 0) 1)
-          ((even? n) (square (fast-expt b (/ n 2))))
-          (else (* b (fast-expt b (- n 1))))))
+    (cond [(= n 0) 1]
+          [(even? n) (square (fast-expt b (/ n 2)))]
+          [else (* b (fast-expt b (- n 1)))]))
 #+end_src
 
 Iterative code:
 #+begin_src scheme
   (define (fast-expt b n)
     (define (iter b n prod)
-      (cond ((= n 0) prod)
-            ((even? n) (iter (square b) (/ n 2) prod))
-            (else (iter b (- n 1) (* prod b)))))
+      (cond [(= n 0) prod]
+            [(even? n) (iter (square b) (/ n 2) prod)]
+            [else (iter b (- n 1) (* prod b))]))
     (iter b n 1))
   ;; the same thing:
   (define (fast-expt b n)
     (define (iter a b n)                  ; a * b^n
-      (cond ((= n 0) a)
-            ((even? n) (iter a (square b) (/ n 2)))
-            (else (iter (* a b) b (-1+ n)))))
+      (cond [(= n 0) a]
+            [(even? n) (iter a (square b) (/ n 2))]
+            [else (iter (* a b) b (- n 1))]))
     (iter 1 b n))
 #+end_src
 
-** Ex 1.44 -- order of application
+** Ex 1.44 --- order of application
 
 #+begin_quote
 The idea of smoothing a function is an important concept in signal
@@ -584,7 +604,7 @@ The =wrong= implementation actually expands to:
                     ((smooth square) 2))) ; 256.01926716889415
 #+end_src
 
-** Ex 1.45 -- n-th root
+** Ex 1.45 --- n-th root
 
 Comput $\sqrt[n]{x}$ by calculating the fixed point of the function $x
 / y^{n-1}$ average damped $\lfloor \log_2 n \rfloor$ times.
@@ -592,13 +612,12 @@ Comput $\sqrt[n]{x}$ by calculating the fixed point of the function $x
   (define (nth-root x n)
     (define (log2 n) (/ (log n) (log 2)))
     (let ([c (inexact->exact (floor (log2 n)))])
-      (display c) (newline)
       (fixed-point ((repeated average-damp c)
                     (lambda (y) (/ x (expt y (- n 1)))))
                    1.0)))
 #+end_src
 
-** Ex 1.46 -- iterative improvment
+** Ex 1.46 --- iterative improvement
 
 #+begin_quote
 Several of the numerical methods described in this chapter are
@@ -626,7 +645,7 @@ is good enough.  Rewrite the =sqrt= procedure of Section 1.1.7 and the
   (define (fixed-point f first-guess)
     ((iterative-improve
       (lambda (guess)
-        (< (abs (- guess (f guess))) 0.00001))
+        (< [abs (- guess (f guess))] 0.00001))
       f)
      first-guess))
 
