@@ -632,6 +632,278 @@ are merged to become general tree nodes.
          (equal? (decode sample-bits tree) sample-message))) ; #t
 #+end_src
 
+* Tagged complex number & Data directed programming
+
+** Direct type dispatching
+{{{image(60)}}}
+[[./ch2/complex.svg]]
+
+A complex number $z = x + i y = r e^{i A}$ can be represented in
+rectangular form as $(x, y)$, or in polar form as $(r, A)$.  In order
+to use and distinguish both representations, convert each pair into a
+/tagged datum/ by attaching a tag (either =rectangular= or =polar=) in
+front of the pair.  A tagged datum is a =cons= of the type tag and
+some content.
+#+begin_src scheme
+  (define (attach-tag type-tag contents)
+    (cons type-tag contents))
+  (define (type-tag datum)
+    (if (pair? datum)
+        (car datum)
+        (error "Bad tagged datum: TYPE-TAG" datum)))
+  (define (contents datum)
+    (if (pair? datum)
+        (cdr datum)
+        (error "Bad tagged datum: CONTENTS" datum)))
+#+end_src
+
+By checking the type tag, we can distinguish from the two
+representations:
+#+begin_src scheme
+  (define (rectangular? z)
+    (eq? (type-tag z) 'rectangular))
+  (define (polar? z)
+    (eq? (type-tag z) 'polar))
+#+end_src
+
+Several procedures for manipulating complex numbers: =real-part=,
+=imag-part=, =magnitude=, =angle=, =make-from-real-imag=,
+=make-from-mag-ang=.  They satisfy:
+#+begin_src text
+  (make-from-real-imag (real-part z) (imag-part z)) is equal to z
+  (make-from-mag-ang (magnitude z) (angle z))       is equal to z
+#+end_src
+
+Add =-rectangular= as suffix for rectangular form and =-polar= as
+suffix for polar form:
+#+begin_src scheme
+  (define (square x) (* x x))
+
+  (define (real-part-rectangular z) (car z))
+  (define (imag-part-rectangular z) (cdr z))
+  (define (magnitude-rectangular z)
+    (sqrt (+ (square (real-part-rectangular z))
+             (square (imag-part-rectangular z)))))
+  (define (angle-rectangular z)
+    (atan (imag-part-rectangular z)
+          (real-part-rectangular z)))
+  (define (make-from-real-imag-rectangular x y)
+    (attach-tag 'rectangular (cons x y)))
+  (define (make-from-mag-ang-rectangular r a)
+    (attach-tag 'rectangular
+                (cons (* r (cos a)) (* r (sin a)))))
+
+  (define (real-part-polar z)
+    (* (magnitude-polar z) (cos (angle-polar z))))
+  (define (imag-part-polar z)
+    (* (magnitude-polar z) (sin (angle-polar z))))
+  (define (magnitude-polar z) (car z))
+  (define (angle-polar z) (cdr z))
+  (define (make-from-real-imag-polar x y)
+    (attach-tag 'polar
+                (cons (sqrt (+ (square x) (square y)))
+                      (atan y x))))
+  (define (make-from-mag-ang-polar r a)
+    (attach-tag 'polar (cons r a)))
+#+end_src
+
+So the 6 generic procedures can be defined as:
+#+begin_src scheme
+  (define (real-part z)
+    (cond [(rectangular? z) (real-part-rectangular (contents z))]
+          [(polar? z) (real-part-polar (contents z))]
+          [else (error "Unknown type: REAL-PART" z)]))
+  (define (imag-part z)
+    (cond [(rectangular? z) (imag-part-rectangular (contents z))]
+          [(polar? z) (imag-part-polar (contents z))]
+          [else (error "Unknown type: IMAG-PART" z)]))
+  (define (magnitude z)
+    (cond [(rectangular? z) (magnitude-rectangular (contents z))]
+          [(polar? z) (magnitude-polar (contents z))]
+          [else (error "Unknown type: MAGNITUDE" z)]))
+  (define (angle z)
+    (cond [(rectangular? z) (angle-rectangular (contents z))]
+          [(polar? z) (angle-polar (contents z))]
+          [else (error "Unknown type: ANGLE" z)]))
+  (define (make-from-real-imag x y)
+    (make-from-real-imag-rectangular x y))
+  (define (make-from-mag-ang r a)
+    (make-from-mag-ang-polar r a))
+#+end_src
+
+#+begin_src scheme
+  (define (add-complex z1 z2)
+    (make-from-real-imag (+ (real-part z1) (real-part z2))
+                         (+ (imag-part z1) (imag-part z2))))
+
+  (define (sub-complex z1 z2)
+    (make-from-real-imag (- (real-part z1) (real-part z2))
+                         (- (imag-part z1) (imag-part z2))))
+
+  (define (mul-complex z1 z2)
+    (make-from-mag-ang (* (magnitude z1) (magnitude z2))
+                       (+ (angle z1) (angle z2))))
+
+  (define (div-complex z1 z2)
+    (make-from-mag-ang (/ (magnitude z1) (magnitude z2))
+                       (- (angle z1) (angle z2))))
+#+end_src
+
+** Data directed programming
+
+The operations on different representations can be thought of as a 2-d
+table of procedures, with on axis representing the types and the other
+the operations.
+
+{{{image(80)}}}
+[[./ch2/table.svg]]
+
+Previously, the interfaces were 6 functions that each perform an
+explicit dispatch on type (for example, =real-part= calls
+=real-part-rectangular= or =real-part-polar= according to the type of
+=z=).  Now, we will implement the interface as *a single procedure*
+that looks up the combination of the operation name & argument type in
+the table to find the correct procedure to apply.
+
+Assuming we have two procedures, =put= and =get=, for manipulating the
+operation-and-type table:
+- =(put <op> <type> <item>)= installs the =<item>= in the table,
+  indexed by =<op>= and =<type>=.
+- =(get <op> <type>)= looks up the =<op>=, =<type>= entry in the table
+  and returns the item found there.  If no item is found, =get=
+  returns false.
+
+=put= and =get= can be implemented with hash table:
+#+begin_src scheme
+  (define table (make-hash-table))
+
+  (define (put op type item)
+    (hash-set! table (list op type) item))
+  (define (get op type)
+    (hash-ref table (list op type)))
+#+end_src
+
+The two representations can now be installed with:
+#+begin_src scheme
+  (define (install-rectangular-package)
+    ;; internal procedures
+    (define (real-part z) (car z))
+    (define (imag-part z) (cdr z))
+    (define (make-from-real-imag x y) (cons x y))
+    (define (magnitude z)
+      (sqrt (+ (square (real-part z))
+               (square (imag-part z)))))
+    (define (angle z)
+      (atan (imag-part z) (real-part z)))
+    (define (make-from-mag-ang r a)
+      (cons (* r (cos a)) (* r (sin a))))
+
+    ;; interface to the rest of the system
+    (define (tag x) (attach-tag 'rectangular x))
+    (put 'real-part '(rectangular) real-part) ; [1]
+    (put 'imag-part '(rectangular) imag-part)
+    (put 'magnitude '(rectangular) magnitude)
+    (put 'angle '(rectangular) angle)
+    (put 'make-from-real-imag 'rectangular    ; [2]
+         (lambda (x y) (tag (make-from-real-imag x y))))
+    (put 'make-from-mag-ang 'rectangular
+         (lambda (r a) (tag (make-from-mag-ang r a))))
+    'done)
+
+  (define (install-polar-package)
+    ;; internal procedures
+    (define (magnitude z) (car z))
+    (define (angle z) (cdr z))
+    (define (make-from-mag-ang r a) (cons r a))
+    (define (real-part z) (* (magnitude z) (cos (angle z))))
+    (define (imag-part z) (* (magnitude z) (sin (angle z))))
+    (define (make-from-real-imag x y)
+      (cons (sqrt (+ (square x) (square y)))
+            (atan y x)))
+
+    ;; interface to the rest of the system
+    (define (tag x) (attach-tag 'polar x))
+    (put 'real-part '(polar) real-part)
+    (put 'imag-part '(polar) imag-part)
+    (put 'magnitude '(polar) magnitude)
+    (put 'angle '(polar) angle)
+    (put 'make-from-real-imag 'polar
+         (lambda (x y) (tag (make-from-real-imag x y))))
+    (put 'make-from-mag-ang 'polar
+         (lambda (r a) (tag (make-from-mag-ang r a))))
+    'done)
+#+end_src
+
+Note that for constructors [2], since the result is only of one type,
+the tag is a symbol.  However, for other procedures such as
+=real-part= [1], they can have arguments of different types, so a list
+of symbol is used as tag.
+
+The complex-arithmetic selectors access the table by means of a
+general "operation" procedure called =apply-generic=, which applies a
+generic operation to some arguments.  =apply-generic= looks in the
+table under the name of the operation and the types of the arguments
+and applies the resulting procedure if one is present:
+#+begin_src scheme
+  (define (apply-generic op . args)
+    (let ((type-tags (map type-tag args))) ; type tag of each argument
+      (let ((proc (get op type-tags)))     ; get procedure in table
+        (if proc
+            (apply proc (map contents args))
+            (error "No method for these types: APPLY-GENERIC"
+                   (list op type-tags))))))
+#+end_src
+
+Using =apply-generic=, we can define generic selectors and the
+constructors as follows:
+#+begin_src scheme
+  (define (real-part z) (apply-generic 'real-part z))
+  (define (imag-part z) (apply-generic 'imag-part z))
+  (define (magnitude z) (apply-generic 'magnitude z))
+  (define (angle z) (apply-generic 'angle z))
+
+  (define (make-from-real-imag x y)
+    ((get 'make-from-real-imag 'rectangular) x y))
+  (define (make-from-mag-ang r a)
+    ((get 'make-from-mag-ang 'polar) r a))
+#+end_src
+
+** Symbolic differentiation revisited
+
+From Ex 2.73.
+
+Recall the =deriv= procedure in symbolic differentiation:
+#+begin_src scheme
+  (define (deriv exp var)
+    (cond [(constant? exp var) 0]
+          [(same-var? exp var) 1]
+          [(sum? exp)
+           (make-sum (deriv (a1 exp) var)
+                     (deriv (a2 exp) var))]
+          [(product? exp)
+           (make-sum (make-product (m1 exp) (deriv (m2 exp) var))
+                     (make-product (m2 exp) (deriv (m1 exp) var)))]))
+#+end_src
+
+We can regard this program as performing a dispatch on the type of the
+expression to be differentiated.  In this situation the "type tag" of
+the datum is the algebraic operator symbol (such as =+=) and the
+operation being performed is =deriv=.  We can transform this program
+into data-directed style by rewriting the basic derivative procedure
+as
+#+begin_src scheme
+  (define (deriv exp var)
+    (cond [(constant? exp var) 0]
+          [(save-var? exp var) 1]
+          [else ((get 'deriv (operator exp))
+                 (operands exp) var)]))
+  (define (operator exp) (car exp))
+  (define (operands exp) (cdr exp))
+#+end_src
+
+Now the complete code:
+#+include: "./ch2/data-directed-deriv.scm" src scheme
+
 * Exercises
 
 ** Ex 2.6 -- Church numerals
@@ -902,3 +1174,4 @@ Take into consideration the empty list ='()=:
   (count-leaves '(1 2 (3 (4 5) 6) 7))     ; 7
   (count-leaves '(1 2 (3 (4 5) 6) 7 ()))  ; 7
 #+end_src
+
