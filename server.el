@@ -144,20 +144,18 @@ ATTRIBUTES is a plist, as returned by
 a communication channel."
   (when eserver-blog-image-dataurl
     (setq source (html-image-dataurl-src source)))
-  (if (string= "svg" (file-name-extension source))
-      (org-html--svg-image source attributes info)
-    (org-html-close-tag
-     "img"
-     (org-html--make-attribute-string
-      (org-combine-plists
-       (list :src source
-	     :alt (if (string-match-p
-		       (concat "^" org-preview-latex-image-directory) source)
-		      (org-html-encode-plain-text
-		       (org-find-text-property-in-string 'org-latex-src source))
-		    (file-name-nondirectory source)))
-       attributes))
-     info)))
+  (org-html-close-tag
+   "img"
+   (org-html--make-attribute-string
+    (org-combine-plists
+     (list :src source
+           :alt (if (string-match-p
+        	     (concat "^" org-preview-latex-image-directory) source)
+        	    (org-html-encode-plain-text
+        	     (org-find-text-property-in-string 'org-latex-src source))
+        	  (file-name-nondirectory source)))
+     attributes))
+   info))
 
 ;; helper funtions
 
