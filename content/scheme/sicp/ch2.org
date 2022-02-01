@@ -306,11 +306,11 @@ You can implement =reverse= using either, but with different =op=:
                 sequence))
 #+end_src
 
-* Functional Geometry
+* Functional geometry
 
 See [[https://github.com/thebesttv/functional-geometry][this]] repo.
 
-* Symbolic Differentiation
+* Symbolic differentiation
 
 #+begin_quote
 I've chosen my representation to be the same as the representation in my language.
@@ -665,9 +665,6 @@ are merged to become general tree nodes.
          (equal? (decode sample-bits tree) sample-message))) ; #t
 #+end_src
 
-* Tagged complex number & Data directed programming
-
-
 * Generic operations
 
 {{{image(60)}}}
@@ -675,10 +672,11 @@ are merged to become general tree nodes.
 
 A complex number $z = x + i y = r \, e^{i A}$ can be represented in
 either rectangular form as $(x, y)$ or in polar form as $(r, A)$.
+Both form can be implemented with a =cons= pair.
 - We get $x$ and $y$ with =real-part= and =imag-part=.
 - We get $r$ and $A$ with =magnitude= and =angle=.
-- We can also construct a complex number using $(x, y)$ or $(r, A)$
-  with =make-from-real-imag= and =make-from-mag-ang=.
+- We construct a complex number using $(x, y)$ or $(r, A)$ with
+  =make-from-real-imag= and =make-from-mag-ang=.
 
 Axiom for the six functions:
 #+begin_src text
@@ -686,7 +684,7 @@ Axiom for the six functions:
   (make-from-mag-ang (magnitude z) (angle z))       is equal to z
 #+end_src
 
-Assuming we have implemented the six functions, we can use it to do
+Assuming we have implemented the six functions, we can use them to do
 complex arithmetic.
 #+begin_src scheme
   (define (add-complex z1 z2)
@@ -711,8 +709,7 @@ The resulting complex-number system has the structure shown below.
 {{{image(80)}}}
 [[./ch2/Fig2.21a.svg]]
 
-As for the rectangular form and plar form, both representations are
-implemented with a =cons= pair.
+** Implementation
 
 We convert each pair into a /tagged datum/ by attaching a type tag
 (='rectangular= or ='polar=) in front of the pair so as not to confuse
