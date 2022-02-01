@@ -20,8 +20,8 @@ this axiom can be used:
 
   (define (cdr z) (z 1))
 #+end_src
-The ability to manipulate procedures as objects automatically provides
-the ability to represent compound data.
+*The ability to manipulate procedures as objects automatically
+provides the ability to represent compound data.*
 
 Another implementation, taken from Ex 2.4:
 #+begin_src scheme
@@ -35,7 +35,8 @@ Another implementation, taken from Ex 2.4:
     (z (λ (p q) q)))
 #+end_src
 
-As in Ex 2.5, you can also represent a pair $a$ and $b$ with $2^a 3^b$:
+As in Ex 2.5, you can also represent a pair of integers $a$, $b$ with
+$2^a 3^b$.  This representation, however, cannot take other objects.
 #+begin_src scheme
   (define (cons a b)
     (* (expt 2 a) (expt 3 b)))
@@ -49,37 +50,68 @@ As in Ex 2.5, you can also represent a pair $a$ and $b$ with $2^a 3^b$:
 
   (define (car z) (factor z 2))
   (define (cdr z) (factor z 3))
+
+  (define x (cons 10 20))
+  (car x)                                 ; 10
+  (cdr x)                                 ; 20
+#+end_src
+
+Rewrite =factor= using named =let=:
+#+begin_src scheme
+  (define (factor x a)
+    (let iter ([x x] [n 0])
+      (let ([q (/ x a)])
+        (if (integer? q)
+            (iter q (+ n 1))
+            n))))
+
+  (factor x 2)                            ; 10
+  (factor x 3)                            ; 20
 #+end_src
 
 * Tree structure
 
 #+begin_src scheme
+  (define (atom? x) (not (pair? x)))
+
   (define (count-leaves x)
-    (cond ((null? x) 0)
-          ((not (pair? x)) 1)
-          (else (+ (count-leaves (car x))
-                   (count-leaves (cdr x))))))
+    (cond [(null? x) 0]                   ; empty tree
+          [(atom? x) 1]                   ; leaf
+          [else (+ (count-leaves (car x))
+                   (count-leaves (cdr x)))]))
 
   (define (reverse x)
     (define (iter x res)
       (if (null? x)
           res
-          (iter (cdr x) (cons (car x)
-                              res))))
+          (iter (cdr x)
+                (cons (car x) res))))
     (iter x '()))
+
+  (define (reverse l)                     ; using named let
+    (let iter ([l l] [res '()])
+      (if (null? l)
+          res
+          (iter (cdr l)
+                (cons (car l) res)))))
+
+  (reverse '(1 2 3 4))                    ; (4 3 2 1)
+  (reverse '((1 2) (3 4) (5 6)))          ; ((5 6) (3 4) (1 2))
 
   (define (deep-reverse x)
     (define (iter x result)
       (if (null? x)
           result
-          (let ((first (car x))
-                (rest (cdr x)))
+          (let ([first (car x)]
+                [rest  (cdr x)])
             (iter rest
                   (cons (if (pair? first)
-                            (iter first '())
+                            (deep-reverse first) ; or (iter first '())
                             first)
                         result)))))
     (iter x '()))
+
+  (deep-reverse '((1 2) (3 4) (5 6)))     ; ((6 5) (4 3) (2 1))
 
   (define (deep-reverse x)
     (reverse
@@ -94,57 +126,58 @@ As in Ex 2.5, you can also represent a pair $a$ and $b$ with $2^a 3^b$:
         (reverse (map deep-reverse x))
         x))
 
-  (define (fringe x)
-    (cond ((null? x) '())
-          ((pair? (car x)) (append (fringe (car x))
-                                   (fringe (cdr x))))
-          (else (cons (car x) (fringe (cdr x))))))
+  (define (fringe x)                      ; convert tree to list
+    (cond [(null? x) '()]
+          [(pair? (car x)) (append (fringe (car x))
+                                   (fringe (cdr x)))]
+          [else (cons (car x) (fringe (cdr x)))]))
 
+  (fringe '((1 2) (3 (4 (5))) 6))         ; (1 2 3 4 5 6)
 
   (define (scale-tree tree factor)
-    (cond ((null? tree) '())
-          ((not (pair? tree)) (* tree factor))
-          (else (cons (scale-tree (car tree) factor)
-                      (scale-tree (cdr tree) factor)))))
+    (cond [(null? tree) '()]
+          [(atom? tree) (* tree factor)]
+          [else (cons (scale-tree (car tree) factor)
+                      (scale-tree (cdr tree) factor))]))
 
   (define (scale-tree tree factor)
     (map (lambda (sub-tree)
-           (cond ((null? sub-tree) '())
-                 ((pair? sub-tree) (scale-tree sub-tree factor))
-                 (else (* sub-tree factor))))
+           (cond [(null? sub-tree) '()]
+                 [(pair? sub-tree) (scale-tree sub-tree factor)]
+                 [else (* sub-tree factor)]))
          tree))
 
 
   (define (square-tree tree)
-    (cond ((null? tree) '())
-          ((pair? tree) (cons (square-tree (car tree))
-                              (square-tree (cdr tree))))
-          (else (square tree))))
+    (cond [(null? tree) '()]
+          [(pair? tree) (cons (square-tree (car tree))
+                              (square-tree (cdr tree)))]
+          [else (square tree)]))
 
   (define (square-tree tree)
     (map (lambda (sub-tree)
-           (cond ((null? sub-tree) '())
-                 ((pair? sub-tree) (square-tree sub-tree))
-                 (else (square sub-tree))))
+           (cond [(null? sub-tree) '()]
+                 [(pair? sub-tree) (square-tree sub-tree)]
+                 [else (square sub-tree)]))
          tree))
 
   (square-tree '(1 (2 (3 4) 5) (6 7)))
 
   (define (tree-map fun tree)
-    (cond ((null? tree) '())
-          ((pair? tree) (cons (tree-map fun (car tree))
-                              (tree-map fun (cdr tree))))
-          (else (fun tree))))
+    (cond [(null? tree) '()]
+          [(pair? tree) (cons (tree-map fun (car tree))
+                              (tree-map fun (cdr tree)))]
+          [else (fun tree)]))
 
   (define (tree-map fun tree)
     (map (lambda (sub-tree)
-           (cond ((null? sub-tree) '())
-                 ((pair? sub-tree) (tree-map fun sub-tree))
-                 (else (fun sub-tree))))
+           (cond [(null? sub-tree) '()]
+                 [(pair? sub-tree) (tree-map fun sub-tree)]
+                 [else (fun sub-tree)]))
          tree))
 #+end_src
 
-* Sequences as Conventional Interfaces
+* Sequences as conventional interfaces
 
 #+begin_src scheme
   (define (filter predicate sequence)
@@ -298,8 +331,8 @@ terms for =+= and =*=.
 To incorporate multiple terms while not changing =deriv=, we just need
 to change the representation.  =a2= will now check the number of
 arguments of the expression.  If only two, then return the second one
-as usual.  =a2= will make another sum expression if there're more than
-two arguments.  The same is true for =m2=.
+as usual.  =a2= will make another sum expression if there are more
+than two arguments.  The same is true for =m2=.
 #+begin_src scheme
   (define (a2 exp)
     (if (null? (cdddr exp))
@@ -609,7 +642,7 @@ are merged to become general tree nodes.
   (define (generate-huffman-tree pairs)
     (define (successive-merge set)
       (if (null? (cdr set))
-          (car set)                 ; only one wlement left, it's the tree
+          (car set)                 ; only one element left, it's the tree
           (let ([first (car set)]
                 [second (cadr set)]
                 [rest (cddr set)])
@@ -634,27 +667,68 @@ are merged to become general tree nodes.
 
 * Tagged complex number & Data directed programming
 
-** Direct type dispatching
-{{{image(60)}}}
-[[./ch2/complex.svg]]
 
-A complex number $z = x + i y = r e^{i A}$ can be represented in
-rectangular form as $(x, y)$, or in polar form as $(r, A)$.  In order
-to use and distinguish both representations, convert each pair into a
-/tagged datum/ by attaching a tag (either =rectangular= or =polar=) in
-front of the pair.  A tagged datum is a =cons= of the type tag and
-some content.
+* Generic operations
+
+{{{image(60)}}}
+[[./ch2/Fig2.20.svg]]
+
+A complex number $z = x + i y = r \, e^{i A}$ can be represented in
+either rectangular form as $(x, y)$ or in polar form as $(r, A)$.
+- We get $x$ and $y$ with =real-part= and =imag-part=.
+- We get $r$ and $A$ with =magnitude= and =angle=.
+- We can also construct a complex number using $(x, y)$ or $(r, A)$
+  with =make-from-real-imag= and =make-from-mag-ang=.
+
+Axiom for the six functions:
+#+begin_src text
+  (make-from-real-imag (real-part z) (imag-part z)) is equal to z
+  (make-from-mag-ang (magnitude z) (angle z))       is equal to z
+#+end_src
+
+Assuming we have implemented the six functions, we can use it to do
+complex arithmetic.
 #+begin_src scheme
-  (define (attach-tag type-tag contents)
-    (cons type-tag contents))
+  (define (add-complex z1 z2)
+    (make-from-real-imag (+ (real-part z1) (real-part z2))
+                         (+ (imag-part z1) (imag-part z2))))
+
+  (define (sub-complex z1 z2)
+    (make-from-real-imag (- (real-part z1) (real-part z2))
+                         (- (imag-part z1) (imag-part z2))))
+
+  (define (mul-complex z1 z2)
+    (make-from-mag-ang (* (magnitude z1) (magnitude z2))
+                       (+ (angle z1) (angle z2))))
+
+  (define (div-complex z1 z2)
+    (make-from-mag-ang (/ (magnitude z1) (magnitude z2))
+                       (- (angle z1) (angle z2))))
+#+end_src
+
+The resulting complex-number system has the structure shown below.
+
+{{{image(80)}}}
+[[./ch2/Fig2.21a.svg]]
+
+As for the rectangular form and plar form, both representations are
+implemented with a =cons= pair.
+
+We convert each pair into a /tagged datum/ by attaching a type tag
+(='rectangular= or ='polar=) in front of the pair so as not to confuse
+one form with another.  A tagged datum is a =cons= pair of the type
+tag and its content.
+#+begin_src scheme
+  (define (attach-tag type-tag content)
+    (cons type-tag content))
   (define (type-tag datum)
     (if (pair? datum)
         (car datum)
         (error "Bad tagged datum: TYPE-TAG" datum)))
-  (define (contents datum)
+  (define (content datum)
     (if (pair? datum)
         (cdr datum)
-        (error "Bad tagged datum: CONTENTS" datum)))
+        (error "Bad tagged datum: CONTENT" datum)))
 #+end_src
 
 By checking the type tag, we can distinguish from the two
@@ -666,16 +740,9 @@ representations:
     (eq? (type-tag z) 'polar))
 #+end_src
 
-Several procedures for manipulating complex numbers: =real-part=,
-=imag-part=, =magnitude=, =angle=, =make-from-real-imag=,
-=make-from-mag-ang=.  They satisfy:
-#+begin_src text
-  (make-from-real-imag (real-part z) (imag-part z)) is equal to z
-  (make-from-mag-ang (magnitude z) (angle z))       is equal to z
-#+end_src
-
-Add =-rectangular= as suffix for rectangular form and =-polar= as
-suffix for polar form:
+We add the suffix =-rectangular= or =-polar= to the above 6 functions
+to distinguish on which form the procedure is operating on (or is
+constructing).
 #+begin_src scheme
   (define (square x) (* x x))
 
@@ -707,7 +774,29 @@ suffix for polar form:
     (attach-tag 'polar (cons r a)))
 #+end_src
 
-So the 6 generic procedures can be defined as:
+The above functions (excepting constructors) can be organized into an
+operation-type table, where the rows represent operations and the
+columns represent different types (representations).
+
+{{{image(80)}}}
+[[./ch2/Fig2.22.svg]]
+
+To combine different types and operations, we have three choices:
+- dispatch on data types: have the function decide what to do
+  depending on the data type given.
+  # For example, in C++, we can overload a functions that draws on a
+  # canvas depending on the type of the object given.
+- dispatch on operation names: have the object decide what to do
+  depending on the name of the operation given.  This style of
+  programming is called /message passing/.
+- dispatch on both: have *only one* general procedure that decides
+  what to do depending on both the type of data and name of operation.
+  This is called /data-directed programming/.
+
+** Dispatch on data types
+
+Let each general procedure operate on the complex number =z= depending
+on the type of =z=:
 #+begin_src scheme
   (define (real-part z)
     (cond [(rectangular? z) (real-part-rectangular (contents z))]
@@ -731,35 +820,21 @@ So the 6 generic procedures can be defined as:
     (make-from-mag-ang-polar r a))
 #+end_src
 
-#+begin_src scheme
-  (define (add-complex z1 z2)
-    (make-from-real-imag (+ (real-part z1) (real-part z2))
-                         (+ (imag-part z1) (imag-part z2))))
+This approach, however, is not /additive/---code has to change each
+time a new type is added.
+#+begin_quote
+The person implementing the generic selector procedures must modify
+those procedures each time a new representation is installed, and the
+people interfacing the individual representations must modify their
+code to avoid name conflicts.
+#+end_quote
 
-  (define (sub-complex z1 z2)
-    (make-from-real-imag (- (real-part z1) (real-part z2))
-                         (- (imag-part z1) (imag-part z2))))
+** Dispatch on operation names
 
-  (define (mul-complex z1 z2)
-    (make-from-mag-ang (* (magnitude z1) (magnitude z2))
-                       (+ (angle z1) (angle z2))))
+** Dispatch on both
 
-  (define (div-complex z1 z2)
-    (make-from-mag-ang (/ (magnitude z1) (magnitude z2))
-                       (- (angle z1) (angle z2))))
-#+end_src
-
-** Data directed programming
-
-The operations on different representations can be thought of as a 2-d
-table of procedures, with on axis representing the types and the other
-the operations.
-
-{{{image(80)}}}
-[[./ch2/table.svg]]
-
-Previously, the interfaces were 6 functions that each perform an
-explicit dispatch on type (for example, =real-part= calls
+In dispatching on data type, the interfaces were 6 functions that each
+perform an explicit dispatch on type (for example, =real-part= calls
 =real-part-rectangular= or =real-part-polar= according to the type of
 =z=).  Now, we will implement the interface as *a single procedure*
 that looks up the combination of the operation name & argument type in
@@ -868,7 +943,7 @@ constructors as follows:
     ((get 'make-from-mag-ang 'polar) r a))
 #+end_src
 
-** Symbolic differentiation revisited
+* Symbolic differentiation revisited
 
 From Ex 2.73.
 
@@ -906,7 +981,7 @@ Now the complete code:
 
 * Exercises
 
-** Ex 2.6 -- Church numerals
+** Ex 2.6 --- Church numerals
 #+begin_quote
 In case representing pairs as procedures wasn't mind-boggling enough,
 consider that, in a language that can manipulate procedures, we can
@@ -990,7 +1065,7 @@ understand =@_@=
     ((a add-1) b))
 #+end_src
 
-** Ex 2.20 -- dotted-tail notation
+** Ex 2.20 --- dotted-tail notation
 #+begin_quote
 The procedures =+=, =*=, and =list= take arbitrary numbers of
 arguments.  One way to define such procedures is to use define with
@@ -1061,7 +1136,7 @@ same even-odd parity as the first argument.  For example,
             (reverse (iter rest '())))))
 #+end_src
 
-** Ex 2.27 -- deep reverse
+** Ex 2.27 --- deep reverse
 
 #+begin_quote
 Modify your =reverse= procedure of Exercise 2.18 to produce a
@@ -1082,7 +1157,7 @@ deep-reversed as well.  For example,
         (reverse (map deep-reverse tree))))
 #+end_src
 
-** Ex 2.28 -- fringe
+** Ex 2.28 --- fringe
 
 #+begin_quote
 Write a procedure =fringe= that takes as argument a tree (represented as
@@ -1111,7 +1186,7 @@ tree arranged in left-to-right order.  For example,
     (iter tree '()))
 #+end_src
 
-** Ex 2.32 -- subset
+** Ex 2.32 --- subset
 #+begin_quote
 We can represent a set as a list of distinct elements, and we can
 represent the set of all subsets of the set as a list of lists. For
@@ -1140,7 +1215,7 @@ and give a clear explanation of why it works:
                        rest)))))
 #+end_src
 
-** Ex 2.35 -- counting leaves
+** Ex 2.35 --- counting leaves
 
 #+begin_quote
 Redefine count-leaves from Section 2.2.2 as an accumulation.
@@ -1174,4 +1249,3 @@ Take into consideration the empty list ='()=:
   (count-leaves '(1 2 (3 (4 5) 6) 7))     ; 7
   (count-leaves '(1 2 (3 (4 5) 6) 7 ()))  ; 7
 #+end_src
-
