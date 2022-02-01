@@ -2,13 +2,30 @@
 
 这里是一系列待看的文章、待填的坑（可能就一直留着不填了），主要源自阮一峰的《科技爱好者周刊》。
 
-* Colpiler
+- [[https://github.com/n7olkachev/imgdiff][imgdiff]] Faster than the fastest in the world pixel-by-pixel image difference tool.
+
+* Book List
+
+- [[https://medium.com/@iamjwr/software-engineer-roadmap-via-books-a6aabdc2589c][Software Engineer roadmap via books]]
+- [[https://csgordon.github.io/books.html][Electronic References]] a collection of links to CS textbooks in a
+  variety of areas that are freely available online
+- [[https://introcs.cs.princeton.edu/java/home/][Computer Science - An Interdisciplinary Approach]] textbooks for a
+  first course in computer science for the next generation of
+  scientists and engineers
+- [[https://browser.engineering/index.html][Web Browser Engineering]] building a basic but complete web browser,
+  from networking to JavaScript, in a thousand lines of Python.
+
+* Compiler
 
 - [[https://c9x.me/compile/bib/][Resources for Amateur Compiler Writers]]
 
 * PL
 
 - [[https://github.com/sdiehl/wiwinwlh][What I Wish I Knew When Learning Haskell]]
+
+** Lisp
+
+- [[https://www.ic.unicamp.br/~meidanis/courses/mc336/problemas-lisp/L-99_Ninety-Nine_Lisp_Problems.html][L-99: Ninety-Nine Lisp Problems]]
 
 * Fonts
 
@@ -25,6 +42,7 @@
 * Linux
 
 - [[https://sollove.com/2013/03/03/my-first-5-minutes-on-a-server-or-essential-security-for-linux-servers/][My First 5 Minutes On A Server; Or, Essential Security for Linux Servers]]
+- [[https://madaidans-insecurities.github.io/guides/linux-hardening.html][Linux Hardening Guide]]
 
 * Curl
 
@@ -34,3 +52,11 @@
 
 - [[https://evmn.github.io/post/2021-12-31-PoC-or-GTFO.html][合集]]
 - [[https://pocorgtfo.hacke.rs/][Archives of POC||GTFO]]
+
+* Regular Expression
+
+- [[https://qntm.org/plants][Turning vaguely reassuring finite-state machines into regular expressions]]
+
+* ML
+
+- [[http://smlbook.org/][Machine Learning - A First Course for Engineers and Scientists]]

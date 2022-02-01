@@ -126,6 +126,7 @@
 
   ——科技爱好者周刊（第 147 期）
   #+end_quote
+- [[https://telegra.ph/Consume-Less-Create-More-Its-More-Fun-12-04][Consume Less. Create More. It’s More Fun.]]
 
 
 ** 关于编码 --- UTF-8 遍地开花
