@@ -348,6 +348,247 @@ than two arguments.  The same is true for =m2=.
   (deriv '(* x x x) 'x)                   ; (+ (* x (+ x x)) (* x x))
 #+end_src
 
+* TODO Pattern matching and rule-based substitution
+
+From [[https://ocw.mit.edu/courses/electrical-engineering-and-computer-science/6-001-structure-and-interpretation-of-computer-programs-spring-2005/video-lectures/4a-pattern-matching-and-rule-based-substitution][MIT 6.001 SICP Video Lectures 4A]].
+
+Think about the differentiation process in terms of pattern matching &
+substitution. A differentiation rule such as
+\[ \frac{\mathrm{d} (u \times v)}{\mathrm{d} x} = u \frac{\mathrm{d} v}{\mathrm{d} x} + v \frac{\mathrm{d} u}{\mathrm{d} x}\]
+has a left hand side (LHS) called /pattern/ and a right hand side
+(RHS) called /skeleton/.
+
+If a particular source expression matches that pattern, for example
+$\frac{\mathrm{d} (x \times y)}{\mathrm{d} x}$, then by applying the
+rule to the expression, we /instantiate/ the skeleton to the resulting
+target expression: $x \frac{\mathrm{d} y}{\mathrm{d} x} + y
+\frac{\mathrm{d} x}{\mathrm{d} x}$.
+
+In order to implement this pattern matching language in Lisp, we
+define some patterns:
+- =foo= matches exactly the symbol =foo=
+- =(f a b)= matches a list of three patterns: =f=, =a=, =b=
+- =(? x)= matches anything, and calls it =x=
+- =(?c x)= matches only constants, and calls it =x=
+- =(?v x)= matches a variable, and calls it =x=.
+and a few skeletons:
+- =foo= instantiates to =foo= itself
+- =(f a b)= instantiates to a list of three elements, each the
+  instantiation of =f=, =a=, =b=
+- =(: x)= instantiates to whatever =x= matches.
+
+=(? x)=, =(?c x)= and =(?v x)= are /pattern variables/.
+
+Each rule has the form of a list with two elements---a pattern and a
+skeleton.  The derivative of =exp= with respect to =var= is in the
+form of =(dd exp var)=.  The derivation rules can thus be defined as:
+#+begin_src scheme
+  (define deriv-rules
+    '([(dd (?c c) (? v)) 0]
+      [(dd (?v v) (? v)) 1]
+      [(dd (?v u) (? v)) 0]
+
+      [(dd (+ (? x1) (? x2)) (? v))
+       (+ (dd (: x1) (: v))
+          (dd (: x2) (: v)))]
+
+      [(dd (* (? x1) (? x2)) (? v))
+       (+ [* (: x1) (dd (: x2) (: v))]
+          [* (dd (: x1) (: v)) (: x2)])]))
+#+end_src
+
+{{{image(100)}}}
+#+caption: Notes on pattern matching rules.
+[[./ch2/rule.png]]
+
+** Implementation
+
+The whole idea is to have a simplifier that knows a set of rules, so
+that given an expression, it will produce a most simplified version
+based on the rules.
+
+{{{image(100)}}}
+#+caption: Structure of the simplifier.
+#+name: simplifier
+[[./ch2/simplifier.png]]
+
+As in Fig. [[simplifier]], the simplifier takes an expression and a set of
+rules.  It is made up of a /matcher/ and an /instantiator/.  For every
+sub-expression, the matcher traverses all the patterns, and for each
+pattern, it creates a dictionary of the mapping of pattern variables
+and the expressions they match.  The simplifier then pass each
+dictionary to the instantiator, so the latter can instantiate the
+skeleton according to the dictionary, thus producing a simplified
+expression.
+
+Think of the expression as a tree whose each node is a sub-expression.
+The whole process is then a depth first search of all the nodes.  It
+applies each rule to the sub-expression until it cannot be simplified
+any further, then it goes on to the next sub-expression.  The whole
+process stops when the root expression does not change.
+
+*** Matcher
+
+{{{image(100)}}}
+#+caption: Structure of the matcher.
+[[./ch2/matcher.png]]
+
+The matcher takes an expression, a pttern and a dictionary, then
+returns another dictionary.  It needs to traverse the pattern tree and
+the expression at the same time to ensure the two matches.  Along the
+way it constructs the dictionary.
+
+{{{image(100)}}}
+[[./ch2/examine.png]]
+
+If the expression tree does not match the pattern, then there's a
+conflict, the dict becomes ='failed=:
+{{{image(60)}}}
+[[./ch2/conflict.png]]
+
+#+begin_src scheme
+  (define (match pat exp dict)
+    (cond [(eq? dict 'failed) 'failed]
+          [(atom? pat)
+           (if (and (atom? exp) (eq? pat exp))
+               dict   ; pat & exp are the same atom, mach success, dict
+                                          ; does not change. e.g. foo -> foo, * -> *, + -> +
+               'failed)]
+          [(arbitrary-constant? pat)      ; (?c v)
+           (if (constant? exp)
+               (extend-dict pat exp dict) ; first check for conflicts, then extend
+               'failed)]
+          [(arbitrary-variable? pat)      ; (?v v)
+           (if (variable? exp)
+               (extend-dict pat exp dict)
+               'failed)]
+          [(arbitrary-expression? pat)    ; (? v)
+           (extend-dict pat exp dict)]
+          ;; pattern is not atom, but expression is, then match fails
+          [(atom? exp) 'failed]
+          [else (match (cdr pat)
+                       (cdr exp)
+                       (match (car pat)
+                              (car exp)
+                              dict))]))
+#+end_src
+
+*** Instantiater
+
+{{{image(100)}}}
+#+caption: Structure of the instantiater.
+[[./ch2/instantiater.png]]
+
+The instantiator takes a dictionary and a skeleton, and instantiate
+the skeleton to the resulting expression.
+
+#+begin_src scheme
+  (define (instantiate skeleton dict)
+    (define (loop s)
+      (cond [(atom? s) s]
+            [(skeleton-evaluation? s)     ; (: v)
+             ;; (eval-exp '(: e1 e2 ...)) => (e1 e2 ...)
+             (evaluate (eval-exp s) dict)]
+            [else (cons (loop (car s))
+                        (loop (cdr s)))]))
+    (loop skeleton))
+
+  (define (evaluate form dict)
+    (if (atom? form)
+        (lookup form dict)
+        (apply
+         (eval (lookup (car form) dict) ; operator
+               user-initial-environment)
+         (mapcar (lambda (v)            ; operands
+                   (lookup v dict))
+                 (cdr form)))))
+#+end_src
+
+*** Simplifier
+
+A =simplifier= takes as argument a set of rules, and returns a
+procedure that simplifies expressions.
+#+begin_src scheme
+  (define (simplifier the-rules)
+    ;; returns a procedure that simplifies expressions
+    ;; ;; [1] uses two procedures to simplify
+    ;; (define (simplify-exp exp)
+    ;;   (try-rules (if (compound? exp)
+    ;;                  (simplify-parts exp)
+    ;;                  exp)))
+    ;; (define (simplify-parts exp)
+    ;;   (if (null? exp)
+    ;;       '()
+    ;;       (cons (simplify-exp (car exp))
+    ;;             (simplify-exp (cdr exp)))))
+    ;; [2] using only one procedure
+    (define (simplify-exp exp)
+      (try-rules (if (compound? exp)
+                     (map simplify-exp exp)
+                     exp)))
+
+    (define (try-rules exp)
+      (define (scan rules)
+        (if (null? rules)
+            exp
+            (let ([dict
+                   (match (pattern (car rules))
+                          exp
+                          (empty-dictionary))])
+              (if (eq? dict 'failed)
+                  (scan (cdr rules))
+                  (simplify-exp
+                   (instantiate
+                    (skeleton (car rules))
+                    dict))))))
+      (scan the-rules))
+    simplify-exp)
+#+end_src
+
+Use simplifier to create a differenation function:
+#+begin_src scheme
+  (define dsimp
+    (simplifier deriv-rules))
+
+  (dsimp '(dd (+ x y) x))                 ; => (+ 1 0)
+#+end_src
+
+*** Pattern & Skeleton
+
+#+begin_src scheme
+  ;;; the variable name of a pattern
+  ;;; (variable-name '(?c exp)) => exp
+  (define (variable-name pattern)
+    (cadr pattern))
+#+end_src
+
+*** Dictionary
+
+A dictionary is implemented as an alist of mappings.
+
+#+begin_src scheme
+  ;;; construct an empty dictionary (alist)
+  (define (empty-dictionary) '())
+
+  ;;; extent the dictionary by adding to it the knowledge that pattern
+  ;;; matches data.
+  ;;; It first looks for the pattern in dict, if not found, then simply
+  ;;; add to the dict.  If found, then check for conflict.
+  (define (extend-dictionary pattern dat dict)
+    (let* ([name (variable-name pattern)]
+           [v (assq name dict)])
+      (cond [(null? v)                    ; pattern not found
+             (cons (list name dat) dict)]
+            ;; pattern found, check for conflict
+            [(eq? (cadr v) dat) dict]     ; no conflict
+            [else 'failed])))             ; different than before
+
+  ;;; look up meaning of variables in the dict
+  (define (lookup var dict)
+    (let ([v (assq var dict)])
+      (if (null? v) var (cadr v))))
+#+end_src
+
 * Flatmap
 
 To produce a list of ordered pairs $(i, j)$ s.t. $1 \le i \le j \le
@@ -780,7 +1021,7 @@ columns represent different types (representations).
 
 To combine different types and operations, we have three choices:
 - dispatch on data types: have the function decide what to do
-  depending on the data type given.
+  depending on the data type given.  This is called explicit dispatch.
   # For example, in C++, we can overload a functions that draws on a
   # canvas depending on the type of the object given.
 - dispatch on operation names: have the object decide what to do
@@ -789,6 +1030,24 @@ To combine different types and operations, we have three choices:
 - dispatch on both: have *only one* general procedure that decides
   what to do depending on both the type of data and name of operation.
   This is called /data-directed programming/.
+
+#+begin_quote
+The key idea of data-directed programming is to handle generic
+operations in programs by dealing explicitly with operation-and-type
+tables.  The style of programming we used in Section 2.4.2 (dispatch
+on data types) organized the required dispatching on type by having
+each operation take care of its own dispatching.  In effect, this
+decomposes the operation-and-type table into rows, with each generic
+operation procedure representing a row of the table.
+
+An alternative implementation strategy is to decompose the table into
+columns and, instead of using "intelligent operations" that dispatch
+on data types, to work with "intelligent data objects" that dispatch
+on operation names.  We can do this by arranging things so that a data
+object, such as a rectangular number, is represented as a procedure
+that takes as input the required operation name and performs the
+operation indicated.
+#+end_quote
 
 ** Dispatch on data types
 
@@ -827,6 +1086,29 @@ code to avoid name conflicts.
 #+end_quote
 
 ** Dispatch on operation names
+
+Message passing represents an object with a procedure that takes as
+input the required operation name and perform the operation indicated.
+#+begin_src scheme
+  (define (make-from-real-imag x y)
+    (lambda (op)
+      (cond [(eq? op 'real-part) x]
+            [(eq? op 'imag-part) y]
+            [(eq? op 'magnitude) (sqrt (+ (* x x) (* y y)))]
+            [(eq? op 'angle) (atan y x)]
+            [else (error "Unknown op: MAKE-FROM-REAL-IMAG" op)])))
+
+  (define (make-from-mag-ang r a)
+    (lambda (op)
+      (cond [(eq? op 'real-part) (* r (cos a))]
+            [(eq? op 'imag-part) (* r (sin a))]
+            [(eq? op 'magnitude) r]
+            [(eq? op 'angle) a]
+            [else (error "Unknown op: MAKE-FROM-MAG-ANG" op)])))
+#+end_src
+
+This technique is also used in the =make-stack= and =make-queue=
+procedures in [[http:/blog/content/scheme/tspl4/ch2.org][Chapter 2]] of TSPL4.
 
 ** Dispatch on both
 
@@ -939,6 +1221,26 @@ constructors as follows:
   (define (make-from-mag-ang r a)
     ((get 'make-from-mag-ang 'polar) r a))
 #+end_src
+
+** Ex 2.76 --- a conclusion
+
+#+begin_quote
+As a large system with generic operations evolves, new types of data
+objects or new operations may be needed.  For each of the three
+strategies---generic operations with explicit dispatch, data-directed
+style, and message-passing-style---describe the changes that must be
+made to a system in order to add new types or new operations.  Which
+organization would be most appropriate for a system in which new types
+must often be added? Which would be most appropriate for a system in
+which new operations must often be added?
+#+end_quote
+
+- Explicit dispatch allows to add new *operations* without changing
+  already written code.
+- Message-passing allows to add new *types* without changing already
+  written code.
+- Data-directed approach allows to add new types and new operations
+  just by adding new entries in the operation-and-type table.
 
 * Symbolic differentiation revisited
 
