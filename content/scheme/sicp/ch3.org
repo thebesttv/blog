@@ -1,0 +1,65 @@
+#+title: Chapter 3 --- Modularity, Objects, and State
+
+#+begin_quote
+Indeed, the view that a system is composed of separate objects is most
+useful when the state variables of the system can be grouped into
+_closely coupled subsystems_ that are only _loosely coupled to other
+subsystems_.
+#+end_quote
+
+* Encapsulation
+
+#+begin_src scheme
+  (define withdraw
+    (let ([balance 100])
+      (lambda (amount)
+        (if (>= balance amount)
+            (begin (set! balance (- balance amount))
+                   balance)
+            "Insufficent funds."))))
+
+  (withdraw 25)                           ; 75
+  (withdraw 25)                           ; 50
+  (withdraw 100)                          ; "Insufficent funds."
+  (withdraw 15)                           ; 35
+#+end_src
+
+#+begin_quote
+In programming-language jargon, the variable =balance= is said to be
+/encapsulated/ within the =withdraw= procedure.  Encapsulation
+reflects the general system-design principle known as the /hiding
+principle/: One can make a system more modular and robust by
+protecting parts of the system from each other; that is, by providing
+information access only to those parts of the system that have a "need
+to know."
+#+end_quote
+
+* Monte Carlo method
+
+Cesaro's method for estimating $\pi$: $6/\pi^2$ is the probability
+that two integers chosen at random will have no factors in common,
+that is, for any random integer $x, y \in \mathbb{R}$,
+\[ \text{Prob}( \gcd (x, y) = 1 ) = \frac{6}{\pi^2}. \]
+
+#+begin_src scheme
+  (define (estimate-pi n)
+    (sqrt (/ 6 (monte-carlo n cesaro))))
+
+  (define (cesaro)
+    (= (gcd (rand) (rand)) 1))
+
+  (define (monte-carlo trials experiment)
+    (define (loop remaining passed)
+      (if (zero? remaining)
+          (/ passed trials)
+          (loop (- remaining 1)
+                (+ passed (if (experiment) 1 0)))))
+    (loop trials 0))
+
+  (define rand
+    (let ([m (expt 2 32)])
+      (lambda ()
+        (random m))))
+
+  (estimate-pi 100000)                    ; 3.1428002736524316
+#+end_src
