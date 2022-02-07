@@ -63,3 +63,98 @@ that is, for any random integer $x, y \in \mathbb{R}$,
 
   (estimate-pi 100000)                    ; 3.1428002736524316
 #+end_src
+
+* Inadequacy of the substitution model
+
+#+begin_quote
+The trouble here is that substitution is based ultimately on the
+notion that _the symbols in our language are essentially *names for
+values*_.  But as soon as we introduce =set!= and the idea that the
+value of a variable can change, _a variable can no longer be simply a
+name_.  Now a variable somehow refers to a *place* where a value can
+be stored, and the value stored at this place can change.  In Section
+3.2 we will see how /environments/ play this role of "place" in our
+computational model.
+#+end_quote
+
+* Bank account example
+
+From Ex 3.3, 3.4, 3.7.
+
+=make-account= takes as arguments balance and password, then returns a
+password protected account.  Any account =acc= is a procedure that
+takes a password and a command, then returns a procedure that does the
+command if the password is correct.  More than 3 failed attempts will
+alert the cops.
+#+begin_src scheme
+  (define (make-account balance password)
+    (let ([threshold 3]                   ; at most 3 attemts
+          [wrong-attempts 0])
+      (define (withdraw amount)
+        (if (>= balance amount)
+            (begin (set! balance (- balance amount))
+                   balance)
+            "Insufficent funds."))
+      (define (deposit amount)
+        (set! balance (+ balance amount))
+        balance)
+      (define (call-the-cops)
+        "Wii Wuu, Wii Wu")
+      (define (incorrect-pwd . args)
+        (set! wrong-attempts (1+ wrong-attempts))
+        (if (> wrong-attempts threshold)
+            (call-the-cops)
+            "Incorrect password!"))
+      (define (dispatch pwd cmd)
+        (if (not (eq? pwd password))
+            incorrect-pwd
+            (begin
+              (set! wrong-attempts 0)
+              (cond [(eq? cmd 'withdraw) withdraw]
+                    [(eq? cmd 'deposit)  deposit]
+                    [else (error "Wrong command.")]))))
+      dispatch))
+
+  (define acc (make-account 100 'thebesttv))
+  ((acc 'thebesttv 'withdraw) 20)         ; 80
+  ((acc 'what? 'deposit) 20)              ; "Incorrect password!"
+  ((acc 'what? 'deposit) 20)              ; "Incorrect password!"
+  ((acc 'what? 'deposit) 20)              ; "Incorrect password!"
+  ((acc 'what? 'deposit) 20)              ; "Wii Wuu, Wii Wu"
+#+end_src
+
+#+begin_quote
+Consider the bank account objects created by =make-account=, with the
+password modification described in Exercise 3.3.  Suppose that our
+banking system requires the ability to make joint accounts.  Define a
+procedure =make-joint= that accomplishes this.  =make-joint= should
+take three arguments.  The first is a password-protected account.  The
+second argument must match the password with which the account was
+defined in order for the =make-joint= operation to proceed.  The third
+argument is a new password.  =make-joint= is to create an additional
+access to the original account using the new password.  For example,
+if =peter-acc= is a bank account with password =open-sesame=, then
+#+begin_src scheme
+  (define paul-acc
+    (make-joint peter-acc 'open-sesame 'rosebud))
+#+end_src
+will allow one to make transactions on =peter-acc= using the
+name =paul-acc= and the password =rosebud=.
+#+end_quote
+
+#+begin_src scheme
+  (define (make-joint account old-pwd new-pwd)
+    (lambda (pwd cmd)
+      (if (not (eq? pwd new-pwd))
+          (lambda () "Incorrect password!")
+          (account old-pwd cmd))))
+
+  (define acc1 (make-account 100 'thebesttv))
+
+  ((acc1 'thebesttv 'withdraw) 20)        ; 80
+
+  (define acc2 (make-joint acc1 'thebesttv 'lalala))
+
+  ((acc2 'lalala 'withdraw) 20)           ; 60
+  ((acc1 'thebesttv 'withdraw) 20)        ; 40
+#+end_src
