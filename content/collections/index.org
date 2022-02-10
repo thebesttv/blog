@@ -135,6 +135,14 @@
   in that building, that malfunctions only when a bedroom light is on
   and the apartment door is open.
   #+end_quote
+- [[https://www.zhihu.com/question/515466392/answer/2340804444][谷爱凌在谈到国籍问题时回应：「中国和美国我都想感谢，体育让我们团结在一起」，如何看待她对此的态度？ - Michael Jackson的回答]]
+  #+begin_quote
+  作为中国普通人民的一员，我羡慕谷爱凌的高度，甚至说是高山仰止，也清醒客观地认识到跨国精英阶层的强大，向他们学习。
+
+  但我更加关怀全红婵，因为她和我们一样，都是没有资本支撑，和美国名校、极限运动没什么交集，全靠双手去内卷拼搏未来的人。
+
+  我很关心我们普通人通过努力，是否能有一个很美好的未来。
+  #+end_quote
 
 
 ** 关于编码 --- UTF-8 遍地开花
