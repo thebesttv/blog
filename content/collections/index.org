@@ -127,7 +127,7 @@
   ——科技爱好者周刊（第 147 期）
   #+end_quote
 - [[https://telegra.ph/Consume-Less-Create-More-Its-More-Fun-12-04][Consume Less. Create More. It’s More Fun.]]
-- [[https://www.nytimes.com/2022/02/07/technology/computer-chips-errors.html][Tiny Chips, Big Headaches]] 硬件也开始变得不可靠了吗😮‍💨
+- [[https://www.nytimes.com/2022/02/07/technology/computer-chips-errors.html][Tiny Chips, Big Headaches]] 不可靠的硬件增加了😮‍💨
   #+begin_quote
   He likens the chip to an apartment building that would span the
   surface of the entire United States.  [...] finding new errors was a
