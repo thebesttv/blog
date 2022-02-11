@@ -64,19 +64,6 @@ that is, for any random integer $x, y \in \mathbb{R}$,
   (estimate-pi 100000)                    ; 3.1428002736524316
 #+end_src
 
-* Inadequacy of the substitution model
-
-#+begin_quote
-The trouble here is that substitution is based ultimately on the
-notion that _the symbols in our language are essentially *names for
-values*_.  But as soon as we introduce =set!= and the idea that the
-value of a variable can change, _a variable can no longer be simply a
-name_.  Now a variable somehow refers to a *place* where a value can
-be stored, and the value stored at this place can change.  In Section
-3.2 we will see how /environments/ play this role of "place" in our
-computational model.
-#+end_quote
-
 * Bank account example
 
 From Ex 3.3, 3.4, 3.7.
@@ -157,4 +144,471 @@ name =paul-acc= and the password =rosebud=.
 
   ((acc2 'lalala 'withdraw) 20)           ; 60
   ((acc1 'thebesttv 'withdraw) 20)        ; 40
+#+end_src
+
+* The environment model of evaluation
+
+** Inadequacy of the substitution model
+
+#+begin_quote
+The trouble here is that substitution is based ultimately on the
+notion that _the symbols in our language are essentially *names for
+values*_.  But as soon as we introduce =set!= and the idea that the
+value of a variable can change, _a variable can no longer be simply a
+name_.  Now a variable somehow refers to a *place* where a value can
+be stored, and the value stored at this place can change.  In Section
+3.2 we will see how /environments/ play this role of "place" in our
+computational model.
+#+end_quote
+
+#+begin_quote
+In the presence of assignment, a variable can no longer be considered
+to be merely a name for a value.  Rather, a variable must somehow
+designate a "*place*" in which values can be stored.  In our new model
+of evaluation, these places will be maintained in structures called
+/environments/.
+#+end_quote
+
+** Environments & Frames
+
+#+begin_quote
+*An environment is a sequence of /frames/*.  Each frame is a possibly
+empty table of /bindings/, which *associate variable names with their
+corresponding values*.  (A single frame may contain at most one
+binding for any variable [a variable has at most one binding].)  Each
+frame also has *a pointer to its /enclosing environment/*, unless, for
+the purposes of discussion, the frame is considered to be /global/.
+The _/value of a variable/ with respect to an environment_ is the
+value given by _the binding of the variable in the first frame_ {in
+the environment that contains a binding for that variable}.  If no
+frame in the sequence specifies a binding for the variable, then the
+variable is said to be /unbound/ in the environment.
+
+{{{image(50)}}}
+#+caption: A simple environment structure.
+#+name: environment
+[[./ch3/Fig3.1.svg]]
+
+Figure [[environment]] shows a simple environment structure consisting of
+three frames, labeled I, II, and III.  In the diagram, A, B, C, and D
+are pointers to environments.  C and D point to the same environment.
+The variables z and x are bound in frame II, while y and x are bound
+in frame I.  The value of x in environment D is 3.  The value of x
+with respect to environment B is also 3.  This is determined as
+follows: We examine the first frame in the sequence (frame III) and do
+not find a binding for x, so we proceed to the enclosing environment D
+and find the binding in frame I.  On the other hand, the value of x in
+environment A is 7, because the first frame in the sequence (frame II)
+contains a binding of x to 7.  With respect to environment A, the
+binding of x to 7 in frame II is said to /shadow/ the binding of x to
+3 in frame I.
+#+end_quote
+
+The environment determines the *context* in which an expression is
+evaluated.
+
+#+begin_quote
+Indeed, one could say that expressions in a programming language do
+not, in themselves, have any meaning.  Rather, an expression acquires
+a meaning only *with respect to some environment* in which it is
+evaluated.  [...]  Thus, in our model of evaluation we will always
+speak of evaluating an expression *with respect to some environment*.
+#+end_quote
+
+** Procedures & Rules for evaluation
+
+#+begin_quote
+In the environment model of evaluation, a procedure is always _a pair
+consisting of some code and *a pointer to an environment*_.
+Procedures are created in one way only: by evaluating a λ-expression.
+This produces a procedure whose code is obtained from _the text of the
+λ-expression_ and whose environment is _the environment in which the
+ to produce the procedure_.
+#+end_quote
+
+The environment model of procedure application can be summarized by
+two rules:
+- A procedure is /created/ by evaluating a λ-expression relative to a
+  given environment.  The resulting procedure object is a *pair*
+  consisting of _the text of the λ-expression_ and _a pointer to the
+  environment in which the procedure was created_ (i.e. where the
+  λ-expression was evaluated).
+- A procedure object is /applied/ to a set of arguments by
+  constructing a new frame, binding the formal parameters of the
+  procedure to the arguments of the call, and then evaluating the body
+  of the procedure in the context of the new environment constructed.
+  The new frame has as _its enclosing environment_ the environment
+  part of the procedure object being applied.
+
+* Cons revisited
+
+#+begin_quote
+Once you let the camel's nose into the tent, the rest of him follows.
+#+end_quote
+
+From Ex 2.4 we have a message-passing style of =cons= written using
+lambda expressions:
+#+begin_src scheme
+  (define (cons x y)
+    (λ (m) (m x y)))
+
+  (define (car z)
+    (z (λ (a d) a)))
+
+  (define (cdr z)
+    (z (λ (a d) d)))
+
+  (define p (cons 1 2))
+  (car p)                                 ; 1
+  (cdr p)                                 ; 2
+#+end_src
+
+With the introduction to =set!=, by modifying the original =cons=
+implementation, we also have =set-car!= and =set-cdr!=:
+#+begin_src scheme
+  (define (cons x y)
+    (λ (m)
+      (m x
+         y
+         [λ (n) (set! x n)]
+         [λ (n) (set! y n)])))
+
+  (define (car p)
+    (p (λ (a d sa sd)
+         a)))
+
+  (define (cdr p)
+    (p (λ (a d sa sd)
+         d)))
+
+  (define (set-car! p n)
+    (p (λ (a d sa sd)
+         (sa n))))
+
+  (define (set-cdr! p n)
+    (p (λ (a d sa sd)
+         (sd n))))
+
+  (define p (cons 1 2))
+  (car p)                                 ; 1
+  (set-car! p 3)
+  (car p)                                 ; 3
+#+end_src
+
+As a conclusion, once you have =lambda=, you automatically get =cons=,
+=car= and =cdr=.  And if you also have =set!=, you get =set-car!= and
+=set-cdr!= as well.
+
+This is something like once you have a comparison operation "less
+than" ($\lt$) for some type, then you get all other comparisons like
+"equal to" ($=$), "greater than" ($\gt$), "less than or equal to"
+($\le$) and so on.
+
+* Queue
+
+A queue is a list that has a front pointer & a rear pointer.
+
+In terms of data abstraction, we can regard a queue as defined by
+the following set of operations:
+- a constructor: =(make-queue)= returns an empty queue (a queue
+  containing no items).
+- two selectors:
+  - =(empty-queue? <queue>)= tests if the queue is empty.
+  - =(front-queue <queue>)= returns the object at the front of the
+    queue, signaling an error if the queue is empty; it does not
+    modify the queue.
+- two mutators:
+  - =(insert-queue! <queue> <item>)= inserts the item at the rear of
+    the queue and returns the modified queue as its value.
+  - =(delete-queue! <queue>)= removes the item at the front of the
+    queue and returns the modified queue as its value, signaling an
+    error if the queue is empty before the deletion.
+
+The rear pointer of a queue is only valid when the queue is not empty,
+that is, when the front pointer of the queue is not null.
+=empty-queue?= only checkes the front pointer.  =insert-queue!=
+changes the rear pointer to the newly inserted pair.  =delete-queue!=
+simply does not consider the rear pointer.
+
+#+begin_src scheme
+  (define (front-ptr queue) (car queue))
+  (define (rear-ptr  queue) (cdr queue))
+  (define (set-front-ptr! queue item)
+    (set-car! queue item))
+  (define (set-rear-ptr!  queue item)
+    (set-cdr! queue item))
+
+  (define (make-queue) (cons '() '()))
+
+  (define (empty-queue? queue)
+    (null? (front-ptr queue)))
+
+  (define (front-queue queue)
+    (if (empty-queue? queue)
+        (error "FRONT called with an empty queue" queue)
+        (car (front-ptr queue))))
+
+  (define (insert-queue! queue item)
+    (let ([pair (cons item '())])
+      (if (empty-queue? queue)
+          (set-front-ptr! queue pair)
+          (set-cdr! (rear-ptr queue) pair))
+      (set-rear-ptr! queue pair)
+      queue))
+
+  (define (delete-queue! queue)
+    (if (empty-queue? queue)
+        (error "DELETE! called with an empty queue" queue)
+        (begin
+          (set-front-ptr! queue
+                          (cdr (front-ptr queue)))
+          queue)))
+
+  (define q (make-queue))
+  q                                       ; (())
+  (insert-queue! q 'a)                    ; ((a) a)
+  (insert-queue! q 'b)                    ; ((a b) b)
+  (delete-queue! q)                       ; ((b) b)
+  (delete-queue! q)                       ; (() b)
+#+end_src
+
+* Deque
+
+From Ex 3.23.
+
+#+begin_quote
+A deque ("double-ended queue") is a sequence in which items can be
+inserted and deleted at either the front or the rear.  Operations on
+deques are the constructor =make-deque=, the predicate =empty-deque?=,
+selectors =front-deque= and =rear-deque=, mutators
+=front-insert-deque!=, =rear-insert-deque!=, =front-delete-deque!=,
+and =rear-delete-deque!=.  Show how to represent deques using pairs,
+and give implementations of the operations.  All operations should be
+accomplished in $\Theta(1)$ steps.
+#+end_quote
+
+Deque will be a doubly-linked list of nodes.  Each node is made up of
+three elements: a value, a front pointer, and a rear pointer.  The
+deque is a cons pair of the front node and the rear node.  Different
+from the queue implementation in the last section, =front-ptr= and
+=rear-ptr= now returns only one node, not a list.
+
+#+include: "./ch3/deque.scm" src scheme
+
+* Exercises
+
+** Ex 3.14 --- Mystery
+
+#+begin_quote
+The following procedure is quite useful, although obscure:
+#+begin_src scheme
+  (define (mystery x)
+    (define (loop x y)
+      (if (null? x)
+          y
+          (let ([temp (cdr x)])
+            (set-cdr! x y)
+            (loop temp x))))
+    (loop x '()))
+#+end_src
+=loop= uses the "temporary" variable =temp= to hold the old value of
+the =cdr= of =x=, since the =set-cdr!= on the next line destroys the
+=cdr=.  Explain what =mystery= does in general.  Suppose =v= is
+defined by =(define v (list 'a 'b 'c 'd))=.  Suppose that we now
+evaluate =(define w (mystery v))=.  What would be printed as the
+values of =v= and =w=?
+#+end_quote
+
+=mystery= reverses the given list and returns the result.  The
+original variable =x= pointing to the head of the list, now points to
+the last pair of the list.  =x= has the same =car= before and after
+the list.  =(cdr x)= was originally the rest of the list, but now is
+='()=.
+
+#+begin_src scheme
+  (define (mystery x)
+    (define (loop x y)
+      (if (null? x)
+          y
+          (let ([temp (cdr x)])
+            (set-cdr! x y)
+            (loop temp x))))
+    (loop x '()))
+
+  (define v '(a b c d))
+  (define w (mystery v))
+
+  w                                       ; (d c b a)
+  v                                       ; (a)
+#+end_src
+
+** Ex 3.16 --- Counting pairs (wrong)
+
+#+begin_quote
+Ben Bitdiddle decides to write a procedure to count the number of
+pairs in any list structure.  "It's easy," he reasons.  "The number of
+pairs in any structure is the number in the =car= plus the number in
+the =cdr= plus one more to count the current pair."  So Ben writes the
+following procedure:
+#+begin_src scheme
+  (define (count-pairs x)
+    (if (not (pair? x))
+        0
+        (+ (count-pairs (car x))
+           (count-pairs (cdr x))
+           1)))
+#+end_src
+Show that this procedure is not correct.  In particular, draw
+box-and-pointer diagrams representing list structures made up of
+exactly three pairs for which Ben's procedure would return 3; return
+4; return 7; never return at all.
+#+end_quote
+
+{{{image(100)}}}
+[[./ch3/ex3.16.png]]
+
+#+begin_src scheme
+  (define (count-pairs x)
+    (if (not (pair? x))
+        0
+        (+ (count-pairs (car x))
+           (count-pairs (cdr x))
+           1)))
+
+  (count-pairs
+   (cons 'a (cons 'b (cons 'c 'd))))      ; 3
+
+  (let* ([x (cons 'a 'b)]
+         [y (cons 'c x)]
+         [z (cons y x)])
+    (count-pairs z))                      ; 4
+
+  (let* ([x (cons 'a 'b)]
+         [y (cons x x)]
+         [z (cons y y)])
+    (count-pairs z))                      ; 7
+#+end_src
+
+** Ex 3.17 --- Counting pairs (correct)
+
+#+begin_quote
+Devise a correct version of the count-pairs procedure of Exercise 3.16
+that returns the number of dis- tinct pairs in any structure.  (Hint:
+Traverse the structure, maintaining an auxiliary data structure that
+is used to keep track of which pairs have already been counted.)
+#+end_quote
+
+#+begin_src scheme
+  (define (count-pairs l)
+    (let ([rec '()])
+      (define (ref x)
+        (define (iter rec x)
+          (cond [(null? rec) #f]
+                [(eq? x (car rec)) #t]
+                [else (iter (cdr rec) x)]))
+        (iter rec x))
+      (define (push x)
+        (set! rec (cons x rec)))
+      (define (trav l)
+        (cond [(not (pair? l)) 0]
+              [(ref l) 0]
+              [else (push l)
+                    (+ (trav (car l))
+                       (trav (cdr l))
+                       1)]))
+      (trav l)))
+
+  (define (count-pairs l)
+    (let ([rec '()])
+      (let trav ([l l])
+        (cond [(not (pair? l)) 0]
+              [(memq l rec) 0]
+              [else (set! rec (cons l rec))
+                    (+ (trav (car l))
+                       (trav (cdr l))
+                       1)]))))
+
+  (count-pairs
+   (cons 'a (cons 'b (cons 'c 'd))))      ; 3
+
+  (let* ([x (cons 'a 'b)]
+         [y (cons 'c x)]
+         [z (cons y x)])
+    (count-pairs z))                      ; 3
+
+  (let* ([x (cons 'a 'b)]
+         [y (cons x x)]
+         [z (cons y y)])
+    (count-pairs z))                      ; 3
+#+end_src
+
+** Ex 3.18, 19 --- Floyd's tortoise and hare (aka. 龟兔赛跑)
+
+#+begin_quote
+Exercise 3.18: Write a procedure that examines a list and determines
+whether it contains a cycle, that is, whether a program that tried to
+find the end of the list by taking successive cdrs would go into an
+infinite loop.  Exercise 3.13 constructed such lists.
+#+end_quote
+
+#+begin_src scheme
+  (define (loop? l)
+    (let ([rec '()])
+      (let iter ([l l])
+        (cond [(null? l) #f]
+              [(memq l rec) #t]
+              [else (set! rec (cons l rec))
+                    (iter (cdr l))]))))
+
+  (loop? '(1 2 3))                        ; #f
+
+  (let ([x '(1 2 3)])
+    (set-cdr! (last-pair x) x)
+    (loop? x))                            ; #t
+#+end_src
+
+#+begin_quote
+Exercise 3.19: Redo Exercise 3.18 using an algorithm that takes only a
+constant amount of space. (This requires a very clever idea.)
+#+end_quote
+
+#+begin_src scheme
+  (define (atom? x)
+    (not (pair? x)))
+
+  (define (loop? l)
+    (if (atom? l)
+        #f
+        (let iter ([p1 l]
+                   [p2 (cdr l)])
+          (if (or (atom? p1) (atom? p2) (atom? (cdr p2)))
+              #f
+              (if (or (eq? p1 p2)
+                      (eq? p1 (cdr p2)))
+                  #t
+                  (iter (cdr p1) (cddr p2)))))))
+
+  (loop? '(1 2 3))                        ; #f
+
+  (let ([x '(1 2 3)])
+    (set-cdr! (last-pair x) x)
+    (loop? x))                            ; #t
+
+  (let ([x '(1 2 3 4)])
+    (set-cdr! (last-pair x) x)
+    (loop? x))                            ; #t
+#+end_src
+
+From [[http://community.schemewiki.org/?sicp-ex-3.19][Scheme Wiki]] using =save-cdr=:
+#+begin_src scheme
+  (define (loop? lst)
+    (define (safe-cdr l)
+      (if (pair? l) (cdr l) '()))
+    (define (iter a b)
+      (cond [(or (atom? a) (atom? b)) #f]
+            [(or (eq? a b) (eq? a (cdr b))) #t]
+            [else (iter (safe-cdr a)
+                        (safe-cdr (safe-cdr b)))]))
+    (iter (safe-cdr lst)
+          (safe-cdr (safe-cdr lst))))
 #+end_src
