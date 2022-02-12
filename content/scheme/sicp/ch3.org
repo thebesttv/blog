@@ -395,6 +395,251 @@ from the queue implementation in the last section, =front-ptr= and
 
 #+include: "./ch3/deque.scm" src scheme
 
+* Table
+
+A table is a mapping of keys to values.
+
+#+begin_quote
+We first consider a one-dimensional table, in which each value is
+stored under a single key.  We implement the table as a list of
+/records/, each of which is implemented as _a pair consisting of a key
+and the associated value_.  The records are glued together to form a
+list by _pairs whose =car= point to successive records_.  These gluing
+pairs are called the /backbone/ of the table.  In order to have a
+place that we can change when we add a new record to the table, we
+build the table as a /headed/ list.  A headed list has a special
+backbone pair at the beginning, which holds a dummy "record"---in this
+case the arbitrarily chosen symbol *table*.  Figure [[table]] shows the
+box-and-pointer diagram for the table
+#+end_quote
+
+{{{image(70)}}}
+#+caption: A table represented as a headed list.
+#+name: table
+[[./ch3/Fig3.22.png]]
+
+Note that =assoc= never sees the dummy record.  =equal?= is used for
+comparison here, so the key can be a symbol, a number, or a pair.
+
+#+begin_src scheme
+  (define (lookup key table)
+    (let ([record (assoc key (cdr table))])
+      (if record
+          (cdr record)
+          #f)))
+
+  (define (assoc key records)
+    (cond [(null? records) #f]
+          [(equal? key (caar records)) (car records)]
+          [else (assoc key (cdr records))]))
+
+  (define table (list '*table*
+                      (cons 'a 1)
+                      (cons 'b 2)
+                      (cons 'c 3)))
+
+  (assoc 'b (cdr table))                  ; (b . 2)
+  (lookup 'b table)                       ; 2
+
+  (define (insert! key value table)
+    (let ([record (assoc key (cdr table))])
+      (if record
+          (set-cdr! record value)
+          (set-cdr! table
+                    (cons (cons key value)
+                          (cdr table))))))
+
+  (define (make-table)
+    (list '*table*))
+
+  (define table (make-table))
+  table                                   ; (*table*)
+  (insert! 'a 1 table)
+  table                                   ; (*table* (a . 1))
+  (insert! 'b 2 table)
+  table                                   ; (*table* (b . 2) (a . 1))
+#+end_src
+
+** 2-d table
+{{{image(80)}}}
+[[./ch3/Fig3.23a.svg]]
+
+#+begin_src scheme
+  (define (lookup key1 key2 table)
+    (let ([subtable (assoc key1 (cdr table))])
+      (if subtable
+          (let ([record (assoc key2 (cdr subtable))])
+            (if record
+                (cdr record)
+                #f))
+          #f)))
+
+  (define (insert! key1 key2 table value)
+    (let ([subtable (assoc key1 (cdr table))])
+      (if subtable
+          (let ([record (assoc key2 (cdr subtable))])
+            (if record
+                (set-cdr! record value)
+                (set-cdr! subtable
+                          (cons (cons key2 value)
+                                (cdr subtable)))))
+          (set-cdr! table
+                    (cons (list key1
+                                (cons key2 value))
+                          (cdr table))))))
+#+end_src
+
+** Data-directed table
+
+#+begin_src scheme
+  (define (make-table)
+    (let ([table (list '*table*)])
+      (define (lookup key1 key2)
+        (let ([subtable (assoc key1 (cdr table))])
+          (if subtable
+              (let ([record (assoc key2 (cdr subtable))])
+                (if record
+                    (cdr record)
+                    #f))
+              #f)))
+      (define (insert! key1 key2 value)
+        (let ([subtable (assoc key1 (cdr table))])
+          (if subtable
+              (let ([record (assoc key2 (cdr subtable))])
+                (if record
+                    (set-cdr! record value)
+                    (set-cdr! subtable
+                              (cons (cons key2 value)
+                                    (cdr subtable)))))
+              (set-cdr! table
+                        (cons (list key1
+                                    (cons key2 value))
+                              (cdr table))))))
+      (define (dispatch m)
+        (cond [(eq? m 'lookup-proc) lookup]
+              [(eq? m 'insert-proc!) insert!]
+              [else (error "Unknown operation: TABLE" m)]))
+      dispatch))
+
+  (define table (make-table))
+  (define get (table 'lookup-proc))
+  (define put (table 'insert-proc!))
+
+  (put 'the 'a 123)
+  (get 'the 'a)                           ; 123
+  (put 'best 'b 456)
+  (get 'best 'b)                          ; 456
+#+end_src
+
+** N-dimensional table
+
+From Ex 3.25, assuming the empty list ='()= is never used as a key.
+
+#+include: "./ch3/nd-table.scm" src scheme
+
+** TODO Efficient table
+
+From Ex 3.26.
+
+** Memorization using table
+
+#+begin_src scheme
+  (define (make-table)
+    (let ([table (list '*table*)])
+      (define (assoc key records)
+        (cond [(null? records) #f]
+              [(equal? key (caar records)) (car records)]
+              [else (assoc key (cdr records))]))
+      (define (lookup key)
+        (let ([record (assoc key (cdr table))])
+          (if record
+              (cdr record)
+              #f)))
+      (define (insert! key value)
+        (let ([record (assoc key (cdr table))])
+          (if record
+              (set-cdr! record value)
+              (set-cdr! table
+                        (cons (cons key value)
+                              (cdr table))))))
+        (define (dispatch m)
+          (cond [(eq? m 'lookup-proc) lookup]
+                [(eq? m 'insert-proc!) insert!]
+                [else (error "Unknown operation: TABLE" m)]))
+        dispatch))
+
+  (define (memoize f)
+    (let* ([table (make-table)]
+           [get (table 'lookup-proc)]
+           [put (table 'insert-proc!)])
+      (lambda (n)
+        (let ([rec (get n)])
+          (or rec
+              (let ([result (f n)])
+                (put n result)
+                result))))))
+
+  (define memo-fib
+    (memoize
+     (lambda (n)
+       (cond [(<= n 1) n]
+             [else (+ (memo-fib (- n 1))
+                      (memo-fib (- n 2)))]))))
+
+  (memo-fib 10)                           ; 55
+#+end_src
+
+* Event driven simulation --- electric system
+
+Assuming we can create a wire using =make-wire=, and there are
+primitive electrical components like =and-gate=, =or-gate= and
+=inverter=, then we can construct a full adder using half adder.
+#+begin_src scheme
+  (define (half-adder a b s c)
+    (let ([d (make-wire)]
+          [e (make-wire)])
+      (and-gate a b c)
+      (or-gate a b d)
+      (inverter c e)
+      (and-gate d e s)
+      'ok))
+
+  (define (full-adder a b c-in sum c-out)
+    (let ([s (make-wire)]
+          [c1 (make-wire)]
+          [c2 (make-wire)])
+      (half-adder b c-in s c1)
+      (half-adder a s sum c2)
+      (or-gate c1 c2 c-out)
+      'ok))
+#+end_src
+
+Wires are computational objects that hold signals.  They are connected
+by different function blocks such as an and gate or an inverter.  Each
+function block registers an action procedure on its inputs that affect
+the output on signal change.  For example, an =and-action-procedure=
+connects the two inputs of an and gate to the output.  So in some way
+we can say, that the whole electric system is a set of wires
+interconnected by action procedures.
+
+The agenda is introduced to simulate the flow of time.  Each delayed
+call to an action procedure is inserted to the agenda.
+
+#+begin_details The complete code & example output
+#+include: "./ch3/electric.scm" src scheme
+
+The output is:
+#+begin_src text
+  sum 0 New-value = 0
+  carry 0 New-value = 0
+  sum 8 New-value = 1
+  carry 11 New-value = 1
+  sum 16 New-value = 0
+  carry 19 New-value = 0
+  sum 24 New-value = 1
+#+end_src
+#+end_details
+
 * Exercises
 
 ** Ex 3.14 --- Mystery
