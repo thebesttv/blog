@@ -200,6 +200,11 @@
   他的数都是成对出现的, 那直接对整个list异或就行啦~ 如果其他数的出现次
   数不是偶数, 也可以用hash.
 
+** 脆弱软件
+
+- [[https://arstechnica.com/cars/2022/02/radio-station-snafu-in-seattle-bricks-some-mazda-infotainment-systems/][Radio station snafu in Seattle bricks some Mazda infotainment systems]]
+  马自达的车载娱乐系统因为没有后缀的图像数据变砖了😅
+
 * 棒棒视频
 
 - [[https://www.bilibili.com/video/BV16U4y1u7U6][市值上亿的老板，家中只有4m^2​小天地？！ --- 可以去你家嘛]] 原来君茹在差
