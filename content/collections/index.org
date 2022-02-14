@@ -180,6 +180,10 @@
   future.
 - [[http://www.yinwang.org/blog-cn/2019/09/11/talk-is-not-cheap][Talk is not cheap --- 王垠]] 听君一席话，胜读十年书
 - [[https://norvig.com/21-days.html][Teach Yourself Programming in Ten Years --- Peter Norvig]]
+- [[http://funcall.blogspot.com/2022/02/imperative-vs-declarative.html][Imperative vs. Declarative]] Name your variables *well*.
+  #+begin_quote
+  [...] the first statement, while imperatively a valid command, is declaratively a lie.
+  #+end_quote
 
 *** Lisp
 
