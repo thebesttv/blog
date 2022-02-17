@@ -197,6 +197,7 @@
   library books.  I want students who study computer science to be
   inspired to create their own game.
   #+end_quote
+- [[https://beautifulracket.com/appendix/why-racket-why-lisp.html][Why Racket? Why Lisp?]] What's in it for me to learn Lisp?
 
 ** 关于算法
 
