@@ -26,6 +26,9 @@
 ** Lisp
 
 - [[https://www.ic.unicamp.br/~meidanis/courses/mc336/problemas-lisp/L-99_Ninety-Nine_Lisp_Problems.html][L-99: Ninety-Nine Lisp Problems]]
+- [[https://beautifulracket.com/appendix/why-lop-why-racket.html][Why language-oriented programming? Why Racket?]]
+  A sequel to [[https://beautifulracket.com/appendix/why-racket-why-lisp.html][Why Racket? Why Lisp?]], talks about LOP, its advantage,
+  application, and why Racket is born for LOP.
 
 * Fonts
 
