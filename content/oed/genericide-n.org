@@ -1,0 +1,72 @@
+#+title: genericide n.
+
+#+begin_quote
+Turning a product into a household name is the stuff of corporate
+dreams.  Isn't it?
+
+Not necessarily.
+
+Think Hoover[fn:hoover], Jacuzzi[fn:jacuzzi], Frisbee[fn:frisbee].
+
+When was the last time you "vacuum-cleanered" the front room, took a
+dip in a "whirlpool bath", or played in the park with your "flying
+disc"?
+
+It may seem like a fairly innocuous linguistic slip to confuse brand
+and product---indeed, you might think it a compliment to the company
+behind such a successful name---but it could be the sign of a brand in
+its death throes.
+
+---​[[https://www.bbc.com/news/business-27026704]['Genericide': Brands destroyed by their own success]]
+#+end_quote
+
+[[https://www.oed.com/view/Entry/56804756][genericide, n.]]
+#+begin_export html
+/dʒəˈnɛrəˌsaɪd/
+#+end_export
+
+* Etymology
+
+/gener-/ (in generic adj.) + /-icide/
+
+The formation is unusual, as suffixation in /-icide/ would normally be
+expected to refer to the *destruction*, rather than the *acquisition*,
+of what is denoted by the first element.  In this instance it is
+probably the _brand name_ that is conceived as being destroyed or
+impaired by the process of becoming generic, although the motivation
+may simply be the generally negative connotations of formations in
+/-icide/.
+
+* Meaning
+
+The process by which a brand name *loses its distinctive identity* as
+a result of being used to refer to any product or service of its kind.
+- Genericide is the cruellest irony.  A firm might come up with a
+  brilliant marketing strategy.., but if its trademark..starts to mean
+  the entire product category, it can kill it.
+- /App Store/ was initially the term that Apple used for their mobile
+  applications online shop.  However, shortly after the introduction,
+  the term was adopted by many different businesses and became a
+  victim of genericide.  Back in 2011, Apple sued Amazon for publicly
+  using "App Store" as a term but shortly after revoked the sue and
+  abandoned the fight for trademark rights, allowing everyone to use
+  the term on their needs.
+- At its worst extreme, genericization can lead to genericide, or a
+  complete dilution of the brand itself, meaning that consumers no
+  longer associate the product category with the actual brand and its
+  specific and distinguishable characteristics.  When that happens,
+  the brand can be replaced by a truly generic product while the term
+  utilized might still be the trademark brand name.
+
+* Footnotes
+
+[fn:hoover] [[https://en.wikipedia.org/wiki/The_Hoover_Company][The Hoover Company]] "dominated the electric vacuum cleaner
+industry, to the point where the Hoover brand name became synonymous
+with vacuum cleaners and vacuuming in the United Kingdom and Ireland."
+
+[fn:jacuzzi] "Jacuzzi" has also become popularly used as a genericized
+trademark to describe hot tubs.  See the [[https://en.wikipedia.org/wiki/Jacuzzi][Wiki]] entry.
+
+[fn:frisbee] The term frisbee is often used generically to describe
+all flying discs, but Frisbee is a registered trademark of the Wham-O
+toy company.  See the [[https://en.wikipedia.org/wiki/Frisbee][Wiki]] entry.
