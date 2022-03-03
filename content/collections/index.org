@@ -227,6 +227,7 @@
 - [[https://youtube.com/playlist?list=PLhwVAYxlh5dvB1MkZrcRZy6x_a2yORNAu][CS-224 Computer Organization]] William Sawyer 老爷子上课好有激情
 - [[https://youtu.be/IgF3OX8nT0w][The Most Powerful Computers You've Never Heard Of]]
   Analog computers may be making a comeback.
+- [[https://youtu.be/GVsUOuSjvcg][We're Building Computers Wrong]] Analog for deep learning.
 - [[https://youtu.be/kz165f1g8-E][The Genius of 3D Printed Rockets]] 3d打印火箭🤯
 - [[https://youtu.be/OgXzUwJBmno][Self-Reconfigurable Robots and Digital Hormones]] 模块化机器人间的交流
 
