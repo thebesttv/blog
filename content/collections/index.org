@@ -175,7 +175,7 @@
     This is not thebesttv.
   #+end_src
 
-** Code, Talk, & Thoughts
+** 关于代码
 
 - [[https://gigamonkeys.com/code-reading/][Code is not literature --- Peter Seibel]] Don't read code like it's a
   novel, but examine it.  Dissect it as if it's a specimen and you are
