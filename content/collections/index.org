@@ -149,6 +149,7 @@
   #+end_quote
 - [[https://www.zhihu.com/question/513683468/answer/2330252821][吃鱼卡到刺，父母让我喝醋大口吞咽饭，我跟他们说没用因此被骂，是我的错吗？ - 心存星光的回答 - 知乎]]
 - [[https://www.quora.com/What-do-you-know-that-most-people-don%E2%80%99t/answer/Amit-Pant-53][What do you know that most people don’t? - Amit Pant's answer - Quora]]
+- [[https://www.zhihu.com/question/40712955/answer/87890964][如何向外行解释产品经理频繁更改需求为什么会令程序员烦恼? - 萤火一号的回答 - 知乎]]
 
 ** 关于编码 --- UTF-8 遍地开花
 - [[http://www.hanselman.com/blog/why-the-askobama-tweet-was-garbled-on-screen-know-your-utf8-unicode-ascii-and-ansi-decoding-mr-president][Why the #AskObama Tweet was Garbled on Screen: Know your UTF-8,
