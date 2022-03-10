@@ -58,6 +58,33 @@ pps. 用了这么久 org-mode 了，确实得好好学学，尤其是 babel  = =
 code for a custom box with an arrow extending out from the side. Great
 for tooltips, flyouts and the like.
 
+* 用 attribute selector
+
+org-mode 默认的link没有 =external= class，而且在生成比较深的
+heading（大概第四级）时，会加上 =<a>= 的tag，如
+#+begin_src html
+  <li>
+    <a id="org1e0f78c"></a>
+    heading name
+    <br>
+    ...
+  </li>
+#+end_src
+之前的 css style 如果不考虑 =external= 的话会让heading前也有箭头。
+
+可以加上 [[https://www.w3schools.com/css/css_attribute_selectors.asp][attribute selector]]，只选择有 =href= 的 =<a>=:
+#+begin_src css
+  a[href]:after {
+      background: transparent url(./icon-link.svg) 0 0 no-repeat;
+      background-size: var(--r-main-font-size);
+      content: "";
+      display: inline-block;
+      height: var(--r-main-font-size);
+      margin-left: 3px;
+      width: var(--r-main-font-size);
+  }
+#+end_src
+
 * Utils                                                             :noexport:
 #+name: wrap-html
 #+begin_src emacs-lisp :var text="" :results raw
