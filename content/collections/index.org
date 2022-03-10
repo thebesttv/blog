@@ -150,6 +150,12 @@
 - [[https://www.zhihu.com/question/513683468/answer/2330252821][吃鱼卡到刺，父母让我喝醋大口吞咽饭，我跟他们说没用因此被骂，是我的错吗？ - 心存星光的回答 - 知乎]]
 - [[https://www.quora.com/What-do-you-know-that-most-people-don%E2%80%99t/answer/Amit-Pant-53][What do you know that most people don’t? - Amit Pant's answer - Quora]]
 - [[https://www.zhihu.com/question/40712955/answer/87890964][如何向外行解释产品经理频繁更改需求为什么会令程序员烦恼? - 萤火一号的回答 - 知乎]]
+- [[https://www.zhihu.com/question/520058625/answer/2380144431][为什么安225一没，都出来惋惜了? - 痛风三世的回答 - 知乎]]
+  #+begin_quote
+  现在是2022年，如果1967年的人们来到今天，我们该怎么跟他们解释这个世界呢？
+
+  “我们刚刚失去了世界上最大的飞机，人类上一次登上月球已经是五十年前的事情了，对对，我们现在的电脑算力是你无法想象的程度，哦，我们用它来制作梗图和运算给用户推送什么样的短视频。还有，带好口罩，绝大多数国家现在面对全球大疫情的办法还是用人命去降低病毒的致死率。”
+  #+end_quote
 
 ** 关于编码 --- UTF-8 遍地开花
 - [[http://www.hanselman.com/blog/why-the-askobama-tweet-was-garbled-on-screen-know-your-utf8-unicode-ascii-and-ansi-decoding-mr-president][Why the #AskObama Tweet was Garbled on Screen: Know your UTF-8,
