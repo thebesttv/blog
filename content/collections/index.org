@@ -156,6 +156,9 @@
 
   “我们刚刚失去了世界上最大的飞机，人类上一次登上月球已经是五十年前的事情了，对对，我们现在的电脑算力是你无法想象的程度，哦，我们用它来制作梗图和运算给用户推送什么样的短视频。还有，带好口罩，绝大多数国家现在面对全球大疫情的办法还是用人命去降低病毒的致死率。”
   #+end_quote
+- [[https://www.zhihu.com/question/519533257/answer/2382970548][如何看待基辅撤侨中某女留学生的巨婴行为? - 安好心的回答 - 知乎]]
+- [[https://www.theguardian.com/lifeandstyle/2021/dec/17/bob-innes-rent-a-hitman-assassin-services-website][Meet the man who accidentally started an assassin hiring website]]
+  An assassin hiring website that saves lives.
 
 ** 关于编码 --- UTF-8 遍地开花
 - [[http://www.hanselman.com/blog/why-the-askobama-tweet-was-garbled-on-screen-know-your-utf8-unicode-ascii-and-ansi-decoding-mr-president][Why the #AskObama Tweet was Garbled on Screen: Know your UTF-8,
