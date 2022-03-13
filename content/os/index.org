@@ -1,0 +1,28 @@
+#+title: OS
+
+- [[http://jyywiki.cn/OS/2022/][操作系统：设计与实现 (2022 春季学期)]]
+
+* OSTEP
+
+- [[https://pages.cs.wisc.edu/~remzi/OSTEP/][Operating Systems: Three Easy Pieces]]
+- [[https://github.com/remzi-arpacidusseau/ostep-projects][ostep-projects]] Projects for an undergraduate OS course
+- [[https://github.com/remzi-arpacidusseau/ostep-code][ostep-code]] Code from various chapters in OSTEP
+- [[https://github.com/remzi-arpacidusseau/ostep-homework][ostep-homework]] Homeworks
+
+* Linux
+
+- [[https://natanyellin.com/posts/life-and-death-of-a-linux-process/][Life and Death of a Linux Process]]
+  A first-order approximation of the life and death of a process on Linux.
+
+* Concurrency
+
+- [[https://github.com/papers-we-love/papers-we-love/blob/master/distributed_systems/solution-of-a-problem-in-concurrent-programming-control.pdf][Solution of a Problem in Concurrent Programming Control - Dijkstra]]
+  （并看不懂
+
+** Semaphore
+
+- [[https://greenteapress.com/wp/semaphores/][The Little Book of Semaphores]]
+
+** Memory Model
+
+- [[https://www.cs.utexas.edu/~bornholt/post/memory-models.html][Memory Consistency Models: A Tutorial]] 很棒的介绍
