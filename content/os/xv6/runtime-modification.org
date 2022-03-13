@@ -175,8 +175,13 @@ Linux下的代码段是只读的, 想要修改需要修改 page 的权限[fn:1].
   }
 #+end_src
 
+* TODO Further Reading
+
+- [[https://shanetully.com/2013/12/writing-a-self-mutating-x86_64-c-program/][Writing a Self-Mutating x86_64 C Program]]
+  x86 下的 self-mutating 代码 (太懒了, 还莫得看)
+
 * Footnotes
 
 [fn:1] https://stackoverflow.com/a/47789983/11938767
 [fn:2] https://stackoverflow.com/a/51226395/11938767
-[fn:3] https://stackoverflow.com/a/2220565/11938767 
+[fn:3] https://stackoverflow.com/a/2220565/11938767
