@@ -1,0 +1,182 @@
+#+title: 运行时修改代码
+
+Linux下的代码段是只读的, 想要修改需要修改 page 的权限[fn:1].
+
+不过欢乐的发现xv6的代码段可以随便改, 于是就写了个小程序, 可以将 =f(x)=
+里的 =x + 1= 变为 =x + 15=.
+
+* =gcc= 的默认指令集
+
+先写一个很简单的 =f=
+#+begin_src c
+  // ex1.c
+  int foo(int x) {
+    return x + 1;
+  }
+#+end_src
+
+编译再 objdump 一下
+#+begin_src bash
+  $ riscv64-linux-gnu-gcc -c ex1.c && riscv64-linux-gnu-objdump -d ex1.o 
+
+  ex1.o:     file format elf64-littleriscv
+
+
+  Disassembly of section .text:
+
+  0000000000000000 <foo>:
+     0:   1101                    addi    sp,sp,-32
+     2:   ec22                    sd      s0,24(sp)
+     4:   1000                    addi    s0,sp,32
+     6:   87aa                    mv      a5,a0
+     8:   fef42623                sw      a5,-20(s0)
+     c:   fec42783                lw      a5,-20(s0)
+    10:   2785                    addiw   a5,a5,1
+    12:   2781                    sext.w  a5,a5
+    14:   853e                    mv      a0,a5
+    16:   6462                    ld      s0,24(sp)
+    18:   6105                    addi    sp,sp,32
+    1a:   8082                    ret
+#+end_src
+
+可以发现里面很多指令都只有两个字节, 这是因为 =gcc= 默认的指令集是
+=-march=rv64imafdc=, 用 =-verbose= 可以看到[fn:2] (虽然不知道为啥有两
+个 =-march=, 摊手)
+
+#+begin_src text
+  $ riscv64-linux-gnu-gcc -c ex1.c --verbose
+  ...
+  COLLECT_GCC_OPTIONS='-c' '-v' '-march=rv64gc' '-mabi=lp64d' '-march=rv64imafdc'
+#+end_src
+
+可以用 =-march=rv64imafd= 来取消压缩, 酱生成的代码就都是四字节的啦
+
+#+begin_src bash
+  $ riscv64-linux-gnu-gcc -c ex1.c -march=rv64imafd && riscv64-linux-gnu-objdump -d ex1.o 
+
+  ex1.o:     file format elf64-littleriscv
+
+
+  Disassembly of section .text:
+
+  0000000000000000 <foo>:
+     0:   fe010113                addi    sp,sp,-32
+     4:   00813c23                sd      s0,24(sp)
+     8:   02010413                addi    s0,sp,32
+     c:   00050793                mv      a5,a0
+    10:   fef42623                sw      a5,-20(s0)
+    14:   fec42783                lw      a5,-20(s0)
+    18:   0017879b                addiw   a5,a5,1
+    1c:   0007879b                sext.w  a5,a5
+    20:   00078513                mv      a0,a5
+    24:   01813403                ld      s0,24(sp)
+    28:   02010113                addi    sp,sp,32
+    2c:   00008067                ret
+#+end_src
+
+把这个加到 xv6 的 makefile 里, 改代码方便点
+#+begin_src makefile
+  CFLAGS = -Wall -Werror -O -fno-omit-frame-pointer -ggdb
+  CFLAGS += -MD
+  CFLAGS += -mcmodel=medany
+  CFLAGS += -ffreestanding -fno-common -nostdlib -mno-relax
+  CFLAGS += -I.
+  CFLAGS += $(shell $(CC) -fno-stack-protector -E -x c /dev/null >/dev/null 2>&1 && echo -fno-stack-protector)
+  CFLAGS += -march=rv64imafd	# 新加的
+#+end_src
+
+* 代码
+
+可以看到, =f= 中的 =x + 1= 被编译成了 =addiw a5,a5,1=, 机器码
+=0017879b=.  I-type 指令的高12位是立即数, 也就是说, 想变成 =x + 15= 只
+要把开头的 =001...= 变成 =00f...= 即可.
+
+然后定位一下 =f= 在 xv6 内存的位置, 就可以改啦~ (文件 =user/tmut.c= 编
+译后会有一个反汇编的文件 =user/tmut.asm=, 可以用这个来定位)
+
+注意要关闭所有优化[fn:3], 不然 =f= 太简单了, 在编译时就会被算好.
+
+#+begin_src c
+  // do not apply any optimization
+  #pragma GCC optimize ("O0")
+
+  /*
+   ,* program that changes its code in memory while running
+   ,*/
+
+  #include "kernel/types.h"
+  #include "user/user.h"
+
+  // function to be modified, x + 1 will become x + 0xf
+  int f(int x) {
+    return x + 1;
+  }
+
+  // convert a number to hex character
+  char toHex(uint8 n) {
+    if (n <= 9)
+      return '0' + n;
+    else
+      return 'a' + n - 10;
+  }
+
+  // print one byte with leading zero
+  void printByte(uint8 x) {
+    printf("%c%c", toHex(x >> 4), toHex(0xF & x));
+  }
+
+  // print 4 bytes
+  void print4B(uint32 x) {
+    for (int i = 24; i >= 0; i -= 8)
+      printByte(0xFF & (x>>i));
+  }
+
+  // print all content in address range [a, b)
+  void printAddrRange(void *a, void *b) {
+    uint64 l = (uint64) a, r = (uint64) b;
+
+    for (uint64 i = l; i < r; i += 4) {
+      uint32 *p = (uint32 *)i;
+
+      // address
+      print4B(i);
+      printf(": ");
+      // content
+      print4B(*p);
+      printf("\n");
+    }
+  }
+
+  // print content of `f' and call f(10) to test
+  void display(const char *str) {
+    printf("%s\n", str);
+    printAddrRange(f, toHex);
+    int x = 10;
+    printf("\nf(%d):\t%d\n", x, f(x));
+  }
+
+  int main(int argc, char *argv[]) {
+    // `toHex' comes after `f', print both their addresses
+    printf("f:\t%p\n", f);
+    printf("toHex:\t%p\n", toHex);
+
+    // `f' before modification
+    display("original:");
+
+    // modify `f'
+    printf("\nmodify f()\n\n");
+    // addiw a5,a5,1 -> addiw a5,a5,0xF
+    ,*((uint32 *) ((uint64)f + 0x18)) = 0x00F7879b;
+
+    // `f' after modification
+    display("after modification:");
+
+    exit(0);
+  }
+#+end_src
+
+* Footnotes
+
+[fn:1] https://stackoverflow.com/a/47789983/11938767
+[fn:2] https://stackoverflow.com/a/51226395/11938767
+[fn:3] https://stackoverflow.com/a/2220565/11938767 
