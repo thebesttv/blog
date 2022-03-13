@@ -13,6 +13,9 @@
 # center table
 #+HTML_HEAD: <style> table { margin-left: auto; margin-right: auto; } </style>
 
+# use dark background for code, taken from https://emacs.stackexchange.com/q/3374/33265
+#+HTML_HEAD: <style>pre.src { background-color: #303030; color: #e5e5e5; }</style>
+
 # image center and resize macro
 #+macro: image        #+ATTR_HTML: :width $1% :style margin-left: auto; margin-right: auto;
 
