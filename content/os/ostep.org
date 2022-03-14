@@ -1,0 +1,261 @@
+#+title: Summaries on each chapter of OSTEP
+
+# disable numbering of heading
+#+OPTIONS: num:nil
+
+-----
+
+- [[https://pages.cs.wisc.edu/~remzi/OSTEP/][OSTEP website]]
+
+* 6. Mechanism: Limited Direct Execution
+
+- TODO [[https://stackoverflow.com/q/12911841/11938767][kernel stack and user space stack]]
+
+The basic idea of limited direct execution is simply to set up the
+hardware in advance (during boot in kernel mode, set up trap table &
+timer) so as to limit what the process can to without OS assistance.
+It requires two key support from the hardware: privilege levels and
+timer interrupts.  The former isolating normal process from performing
+malicious operations, the latter ensuring the OS can be in control
+even when a process enters an infinite loop.
+
+On boot, the OS needs to initialize the trap table and start the
+interrupt timer.  The trap table stores both a syscall handler and a
+timer handler so that every time the program makes a syscall or the
+timer interrupt arrives, the hardware knows what to do.
+
+*Kernel stack* is used to save and restore process registers (general
+& PC) when trapping into kernel mode and returning-from-trap to user
+mode.
+
+During a timer interrupt & context switch, there are two types of
+register saves (or restores).  For example, process A is interrupted
+by hardware timer, and OS switches to process B.
+
+The first save happens when the timer interrupt occurs: the hardware
+saves A's *user regs* to A's kernel stack (this happens every time
+trap executes, with our without context switch, because hardware will
+later jump to a trap handler (kernel mode function)), then goes to
+kernel mode and jumps to trap handler.  OS now decides to run a
+context switch (to B) and here comes the second reg save (specific to
+context switch): the OS software (kernel mode trap handler) saves
+current regs (*kernel regs* when trapping from A, this includes A's
+kernel stack pointer, as later B's kernel stack pointer will replace
+it) to A's memory.  The first save is performed by hardware on user
+regs, while the second by software on kernel regs.
+
+Now the OS is ready to switch to B.  There will be two restores
+happening in reverse order of the saves.  First, the OS restores B's
+*kernel regs* from B's memory (this involves restoring B's kernel
+stack pointer, so kernel stack is switched from A's to B's).  Now it's
+as if the OS just trapped from B.  Then the OS returns-from-trap to
+B's user mode code.  The hardware will perform the second restore,
+restoring B's *user regs* from B's kernel stack.
+
+Note that the second save (A's kernel reg store) and the first restore
+(B's kernel regs restore) happen in the same context switch function.
+An example is the xv6 context switch code, in =kernel/swtch.S=.
+
+#+begin_src asm
+  # Context switch
+  #
+  #   void swtch(struct context *old, struct context *new);
+  #
+  # Save current registers in old. Load from new.
+
+  .globl swtch
+  swtch:
+          sd ra, 0(a0)
+          sd sp, 8(a0)
+          sd s0, 16(a0)
+          sd s1, 24(a0)
+          sd s2, 32(a0)
+          sd s3, 40(a0)
+          sd s4, 48(a0)
+          sd s5, 56(a0)
+          sd s6, 64(a0)
+          sd s7, 72(a0)
+          sd s8, 80(a0)
+          sd s9, 88(a0)
+          sd s10, 96(a0)
+          sd s11, 104(a0)
+
+          ld ra, 0(a1)
+          ld sp, 8(a1)
+          ld s0, 16(a1)
+          ld s1, 24(a1)
+          ld s2, 32(a1)
+          ld s3, 40(a1)
+          ld s4, 48(a1)
+          ld s5, 56(a1)
+          ld s6, 64(a1)
+          ld s7, 72(a1)
+          ld s8, 80(a1)
+          ld s9, 88(a1)
+          ld s10, 96(a1)
+          ld s11, 104(a1)
+
+          ret
+#+end_src
+
+* 7. Scheduling: Introduction
+
+- TODO [[https://en.wikipedia.org/wiki/Scheduling_(computing)#Process_scheduler][Process scheduler -- Wiki]] about long-/medium-/short-term scheduling
+
+Introduces very simple scheduling policies.
+
+Scheduling metrics:
+- performance
+  - turnaround time: time between arrival to completion,
+    T_{completion} - T_{arrival}
+- fairness
+  - response time: time between arrival and first time execution,
+    T_{first run} - T_{arrival}
+
+A non-preemptive scheduler would run each job to completion before
+considering whether to run a new job, while a preemptive scheduler
+would often stop one process (either because another more urgent job
+arrived, or a timer interrupt occurs) in order to run another.
+
+#+begin_details Fairness vs Performance
+Performance and fairness are often at odds in scheduling; a scheduler,
+for example, may optimize performance but at the cost of preventing a
+few jobs from running, thus decreasing fairness.
+
+More generally, any policy (such as RR) that is fair, i.e., that
+evenly divides the CPU among active processes on a small time scale,
+will perform poorly on metrics such as turnaround time.  Indeed, this
+is an inherent trade-off: if you are willing to be unfair, you can run
+shorter jobs to completion, but at the cost of response time; if you
+instead value fairness, response time is lowered, but at the cost of
+turnaround time.  This type of trade-off is common in systems; you
+can’t have your cake and eat it too.
+#+end_details
+
+** First In, First Out (FIFO) / First Come, First Served (FCFS)
+
+Non-preemptive.  Subject to [[https://dl.acm.org/doi/10.1145/850657.850659][the convoy effect]], where a number of short
+jobs get queued behind a very long job.
+
+** Shortest Job First (SJF)
+
+Non-preemptive.  If a long-running process arrives just a hair before
+many short-running processes, the latter ones have to wait.
+
+** Shortest Time-to-Completion First (STCF) / Preemptive SJF
+
+Preemptive.  Reschedules every time a new process arrives (or one
+completes).  The one with the least remaining time runs.
+
+** Round Robin (RR)
+
+Good for response time, but bad for turnaround time.  Cycle through
+the jobs, running each one for a specific time slice.  Reducing time
+slice reduces response time, but the overhead of a context switch will
+slowly dominate the whole time slice.
+
+#+begin_details
+Thus, deciding on the length of the time slice presents a trade-off to
+a system designer, making it long enough to *amortize* the cost of
+switching without making it so long that the system is no longer
+responsive.
+
+Note that the cost of context switching does not arise solely from the
+OS actions of saving and restoring a few registers.  When programs
+run, they build up a great deal of state in CPU caches, TLBs, branch
+predictors, and other on-chip hardware.  Switching to another job
+causes this state to be flushed and new state relevant to the
+currently-running job to be brought in, which may exact a noticeable
+performance cost.
+#+end_details
+
+* 8. Scheduling: The Multi-Level Feedback Queue
+
+MLFQ has /multiple levels/ of /queues/, and uses /feedback/ to
+determine the priority of a given job.  It tries to minimize /response
+time/ for interactive jobs while also minimizing /turnaround time/
+without /a priori/ knowledge of job length.  It learns about processes
+as they run, and thus use the history of the job to predict its future
+behavior.
+
+#+begin_details MLFQ approximates SJF
+because it doesn’t /know/ whether a job will be a short job or a
+long-running job, it first /assumes/ it might be a short job, thus
+giving the job high priority.  If it actually is a short job, it will
+run quickly and complete; if it is not a short job, it will slowly
+move down the queues, and thus soon prove itself to be a long-running
+more batch-like process.  In this manner, MLFQ approximates SJF.
+#+end_details
+
+The MLFQ has a number of distinct queues, each assigned a different
+priority level.  Rules:
+1. If Priority(A) > Priority(B), A runs (B doesn't).
+2. If Priority(A) = Priority(B), A & B run in round-robin fashion
+   using the time slice (quantum length) of the given queue.
+3. When a job enters the system, it is placed at the highest priority
+   (the topmost queue).
+4. *Time Allotment*: Once a job uses up its time allotment at a given
+   level (regardless of how many times it has given up the CPU), its
+   priority is reduced (i.e., it moves down one queue).
+5. *Priority Boost*: After some time period S, move all the jobs in
+   the system to the topmost queue.
+
+* 9. Scheduling: Proportional Share
+
+The proportional-share scheduler, or fair-share scheduler, tries to
+guarantee that each job obtains *a certain percentage* of CPU time.
+
+** Lottery Scheduling
+
+One such example is *lottery scheduling*, using a very basic idea:
+*tickets*, which represent the share of the resource that a consumer
+(process) should receive.  Lottery scheduling provide some mechanisms
+to manipulate tickets:
+- *ticket currency*: in a system with a total of 100 tickets, process
+  A has 50 tickets and two threads (A_1, A_2), B has 50 tickets and
+  only one thread (B_1).  A gives A_1 and A_2 both 1 ticket (under a
+  different currency), B gives B_1 100 tickets (also a different
+  currency).  In effect, out of the total 100 tickets, A_1 has 25, A_2
+  has 25, B_1 has 50.
+- *ticket transfer*: when a client requires a server to run a task,
+  the client can hand off its tickets to the server, essentially
+  speeding up server.
+- *ticket inflation*: in a *trusted* group of processes, if one of
+  them needs more CPU (or less CPU), it can temporarily increase (or
+  decrease) its tickets.
+
+However, the problem of how to properly assign tickets to processes
+remains open.
+
+** Stride scheduling
+
+Stride scheduling is a *deterministic* (as opposed to the random
+lottery scheduling) fair-share scheduler.  It uses *stride* instead
+(stride is simply the inverse of ticket), and maintains a variable
+=pass= for each process.  Where lottery scheduling achieves the
+proportions probabilistically over time; stride scheduling gets them
+exactly right at the end of each scheduling cycle.  However, with the
+introduction of a global state per process (=pass=), when a new
+process arrives, setting an appropriate value of its new =pass= is a
+new problem.
+
+** The Linux Completely Fair Scheduler (CFS)
+
+Since there can be many processes, CFS uses a red-black tree to
+maintain the current ready process list.
+
+* TODO 10. Multiprocessor Scheduling (Advanced)
+
+* 13. The Abstraction: Address Spaces
+
+The *address space* is the abstraction OS provides to the running
+program; it is the running program's view of memory in the system.  It
+contains all of the memory state of process, including code, stack,
+heap (and other data such as statically allocated global variable).
+
+Goals of a virtual memory (VM):
+- transparency: the illusion provided by the OS shouldn't be visible
+  to applications
+- efficiency: this requires hardware support such as TLBs
+- protection & isolation: protect processes from one another, as well
+  as the OS itself form the processes
