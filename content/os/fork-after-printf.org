@@ -1,0 +1,116 @@
+#+title: printf后立即fork
+
+本来是在做 xv6 lab 的 Exercise 3 的[fn:1], 写了 =tprimes.c=, 在 xv6 里看上去
+不错, 想来 Linux 看看大点的输入, 然后就发现了奇怪的问题.
+
+#+begin_src bash
+  $ gcc tprimes.c -o tprimes -w
+  $ ./tprimes 10
+  2
+  3
+  5
+  7
+  $ ./tprimes 10 > out && cat out
+  2
+  3
+  5
+  7
+  2
+  3
+  5
+  7
+  2
+  3
+  5
+  2
+  3
+  2
+#+end_src
+
+在终端输出好好的, 但重定向到文件里就出问题了.
+
+查了一下, 发现这是和 =printf= 的 buffer 有关的[fn:2].  大意就是,
+=printf= 输出到console的时候是每个newline清一次buffer, 但输出到硬盘文
+件的时候遇到newline不一定buffer. 所以在 =./tprimes 10 > out= 里, 如果
+=fork= 的时候 =printf= 的输出buffer还没有清空, 那 parent process 和
+child process 的输出buffer里面都会有数据, 那就会输出两次了.
+
+关于 =printf= & line-buffer:
+#+begin_quote
+There are two types of devices: *line-mode* and *block-mode*.  This
+rule applies only to the line-mode devices (the terminal, for
+example).  It doesn't make much sense to flush the buffer on newlines
+when writing to disk.  But it makes a lot of sense to do it when the
+program is writing to the terminal.  In front of the terminal there is
+the user waiting impatiently for output.  Don't let them wait too
+much.  [fn:3]
+#+end_quote
+
+#+begin_quote
+Standard output is *line buffered* if it can be detected to refer to
+an *interactive device*, otherwise it's *fully buffered*.  So there
+are situations where =printf= won't flush, even if it gets a newline
+to send out, such as:
+
+#+begin_src bash
+myprog >myfile.txt
+#+end_src
+
+This makes sense for efficiency since, if you're interacting with a
+user, they probably want to see every line.  If you're sending the
+output to a file, it's most likely that there's not a user at the
+other end (though not impossible, they could be tailing the
+file).  [fn:4]
+#+end_quote
+
+简单复现一下:
+
+#+begin_src c
+  // fork-after-printf.c
+  #include <stdio.h>
+  #include <unistd.h>
+
+  int main() {
+    printf("thebesttv\n");
+
+    int pid = fork();
+  }
+#+end_src
+
+#+begin_src bash
+  $ gcc fork-after-printf.c -o fork-after-printf
+  $ ./fork-after-printf
+  thebesttv
+  $ ./fork-after-printf > out && cat out
+  thebesttv
+  thebesttv
+#+end_src
+
+如果想要去掉重复的, 加上 =fflush= 就好啦:
+#+begin_src c
+    // printf-fflush.c
+    #include <stdio.h>
+    #include <unistd.h>
+
+    int main() {
+      printf("thebesttv\n");
+      fflush(stdout);
+
+      int pid = fork();
+    }
+#+end_src
+
+#+begin_src bash
+  $ gcc printf-fflush.c -o printf-fflush
+  $ ./printf-fflush
+  thebesttv
+  $ ./printf-fflush > out && cat out
+  thebesttv
+#+end_src
+
+* Footnotes
+
+[fn:1] https://courses.cs.washington.edu/courses/cse481a/20sp/labs/util.html#primes
+[fn:2] https://stackoverflow.com/a/67077133/11938767
+[fn:3] https://stackoverflow.com/a/45386520/11938767
+[fn:4] https://stackoverflow.com/a/4201325/11938767
