@@ -56,6 +56,7 @@ Note that the second save (A's kernel reg store) and the first restore
 (B's kernel regs restore) happen in the same context switch function.
 An example is the xv6 context switch code, in =kernel/swtch.S=.
 
+#+begin_details xv6 context switch
 #+begin_src asm
   # Context switch
   #
@@ -97,6 +98,7 @@ An example is the xv6 context switch code, in =kernel/swtch.S=.
 
           ret
 #+end_src
+#+end_details
 
 * 7. Scheduling: Introduction
 
@@ -259,3 +261,61 @@ Goals of a virtual memory (VM):
 - efficiency: this requires hardware support such as TLBs
 - protection & isolation: protect processes from one another, as well
   as the OS itself form the processes
+
+* 14. Interlude: Memory API
+
+- =brk=
+- =mmap=
+
+* 15. Mechanism: Address Translation
+
+Address translation extends the idea of limited direct execution to
+virtual memory---the OS just sets up the hardware appropriately and
+lets the process run directly on the CPU; only when the process
+misbehaves does the OS have to become involved.
+
+A simple way of memory virtualization is base-and-bounds, or dynamic
+relocation, where the OS maintains a pair of base & bounds value for
+each process limiting their locations in physical memory, *base* being
+the start of the address space and *bounds* being the size (or end) of
+it.  The hardware maintains a pair of base & bounds registers *per
+CPU* constraining the address space of the current running process.
+On each memory operation (e.g. instruction fetch and load/store
+instruction), the hardware adds the base register to the virtual
+address and checks if the resulting effective (physical) address is
+within bounds before performing memory IO.  If the address exceeds the
+process's address space, the hardware raises an "out-of-bounds"
+exception.
+
+This technique of dynamic relocation, although simple, can cause
+*internal fragmentation*, where a process does not use most of its
+space between heap and stack and no other process can utilize this
+part of memory, thus much of the memory space is wasted.
+
+* 16. Segmentation
+
+The problem of internal fragmentation raises the need for a more
+flexible mechanism called *segmentation* that supports a large address
+space with (potentially) much free space between the stack & heap.
+
+The different growing directions of stack & heap requires the MMU to
+add one bit to each segment so as to keep track of in thich direction
+it grows.
+
+Adding hardware *protection bits* the control whether a process can
+read, write, or execute a particular segment enables *code sharing*,
+where one read-only (and executable) segment can be shared by multiple
+processes running the same program.
+
+However, as processes are created, the available physical memory space
+can still be divided into small chunks, a problem called *external
+fragmentation*.  Here's an excellent clarification of external vs
+internal fragmentation[fn:1].
+
+Allocating variable-sized segments in memory leads to many problems.
+The only solution is to never allocate memory in variable-sized
+chunks.  Segmentation still isn't flexible enough.
+
+* Footnotes
+
+[fn:1] https://stackoverflow.com/a/24980816/11938767
