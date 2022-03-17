@@ -309,13 +309,89 @@ processes running the same program.
 
 However, as processes are created, the available physical memory space
 can still be divided into small chunks, a problem called *external
-fragmentation*.  Here's an excellent clarification of external vs
-internal fragmentation[fn:1].
+fragmentation*.  [[https://stackoverflow.com/a/24980816/11938767][Here]]'s an excellent clarification of external vs
+internal fragmentation.
 
 Allocating variable-sized segments in memory leads to many problems.
 The only solution is to never allocate memory in variable-sized
 chunks.  Segmentation still isn't flexible enough.
 
-* Footnotes
+* 17. Free-Space Management
 
-[fn:1] https://stackoverflow.com/a/24980816/11938767
+Managing variable-sized memory units can be a challenging task.  Many
+solutions are proposed that deal with external fragmentation.
+
+** Mechanisms
+
+There are three common mechanisms used in most allocators:
+- splitting & coalescing (merging): splitting a free unit into two
+  smaller chunks and merging two neighboring free units into a big
+  one.
+- tracking the size of allocated regions: =free(void *ptr)= does not
+  take a size argument; thus it is assumed that given a pointer, the
+  malloc library can quickly determine the size of the region of
+  memory being freed and thus incorporate the space back into the free
+  list.  Normally, a header structure (=header_t=) is placed just
+  before the address returned by =malloc=.  So the total allocated
+  space is user requested size plus size of the header structure.
+  #+begin_src c
+    typedef struct {
+      int size;
+      int magic;
+    } header_t;
+  #+end_src
+- embedding a free list: Managing the free list requires building a
+  free list inside the free space itself.  Another header structure
+  (=node_t=) is needed for each free space.  It is also immediately
+  before the free space, denoting its size and the next free node in
+  the list.
+  #+begin_src c
+    typedef struct __node_t {
+      int              size;
+      struct __node_t *next;
+    } node_t;
+  #+end_src
+  =malloc= returns the address of the allocated space *after*
+  =header_t=, while the =next= field of =node_t= points to the
+  =node_t= of the next free portion.  The address of =node_t= starts a
+  documented free portion, not the address after it.
+- growing the heap
+
+** Basic Strategies
+
+When a request for allocating a particular size of memory arrives,
+there are a few basic strategies:
+- best fit: traverse the free list, return the smallest region
+  satisfying the request.  This can result in many very small
+  fragmentations.  Also, traversing the free list is a very expensive
+  operation.
+- worst fit: return the largest region satisfying the request.  This
+  approach tries to minimize the very small fragmentations produced by
+  /best fit/.  However, this performs badly, leading to excess
+  fragmentation while still having high overheads.
+- first fit: simply return the first blog that is big enough.
+- next fit: instead of searching starting from the head of the list
+  like /first fit/, /next fit/ remembers the entry last allocated, and
+  starts searching after that.  The idea is to spread the searches
+  throughout the list more uniformly.
+
+** Other Approaches
+
+*** Segregated Lists
+
+Segregated lists tries to *make the common case fast* by observing
+whether a particular application has one (or a few) *popular-sized*
+request that it makes, and maintaining a separate list just to manage
+objects of that size.
+
+*** Buddy Allocation
+
+Binary buddy allocator tries to ease the merging of two free spaces.
+The size of total heap is $2^N$.  The size of a free space within the
+heap is always $2^n$ ($n<N$), forming a tree-like structure.  During
+an malloc request, the allocator starts with $2^N$, and recurses down
+the tree to the smallest chuck of size $2^m$.  When that portion is
+freed, the allocator checks whether its sibling (aka. its buddy) is
+also free, if it is, then merges the two units.  Note that this
+approach suffers from internal fragmentation, as you are only allowed
+to give out power-of-two-sized blocks.
