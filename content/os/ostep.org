@@ -388,10 +388,40 @@ objects of that size.
 
 Binary buddy allocator tries to ease the merging of two free spaces.
 The size of total heap is $2^N$.  The size of a free space within the
-heap is always $2^n$ ($n<N$), forming a tree-like structure.  During
+heap is always $2^n$ ($n < N$), forming a tree-like structure.  During
 an malloc request, the allocator starts with $2^N$, and recurses down
 the tree to the smallest chuck of size $2^m$.  When that portion is
 freed, the allocator checks whether its sibling (aka. its buddy) is
 also free, if it is, then merges the two units.  Note that this
 approach suffers from internal fragmentation, as you are only allowed
 to give out power-of-two-sized blocks.
+
+* 18. Paging: Introduction
+
+Instead of splitting up a process's address space into some number of
+variable-sized logical segments (e.g., code, heap, stack), we divide
+it into *fixed-sized units*, each of which we call a *page*.  The
+physical memory is viewed as an array of fixed-sized slots called
+*page frames*; each of the frames can contain a single virtual-memory
+page.  Correspondingly, we view physical memory as an array of
+fixed-sized slots called *page frames*; each of these frames can
+contain a single virtual-memory page.
+
+The OS keeps a page table for *each* running process, since each one
+has a separate address space.  In a page table, each *pate table entry
+(PTE)* stores a mapping between a *virtual page number (VPN)* to a
+*physical frame number (PFN)*.  On a memory access, the virtual
+address is split into a VPN and an offset.  The OS first consults the
+*page table entry* (indexed by the VPN) for the PFN of the requested
+address, then concatenates PFN with the offset, producing the actual
+physical address.
+
+The raw form of paging has two problems:
+- too large: page table can be very large: on a 32-bit physical memory
+  (4GB) with a 4KB page table, a single page table can have as many as
+  $2^{32} / 2^{12} = 2^{20}$ PTEs.  If each PTE takes up 4B, then that
+  would be a total of 4MB per process just to store its page table.
+  If there are 100 processes, then 400MB will be needed!
+- too slow: each memory access needs to consult the page table, which
+  is another memory access overhead, making the process slower by at
+  least a factor of two
