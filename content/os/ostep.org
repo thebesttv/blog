@@ -425,3 +425,53 @@ The raw form of paging has two problems:
 - too slow: each memory access needs to consult the page table, which
   is another memory access overhead, making the process slower by at
   least a factor of two
+
+* 19. Paging: Faster Translations (TLBs)
+
+A translation-lookaside buffer (TLB) is part of the chip's
+memory-management unit (MMU), and is simply a *hardware cache* of
+popular virtual-to-physical address translations; thus, a better name
+would be an address-translation cache.
+
+On each memory access, the hardware first checks if the TLB holds the
+entry for the VPN of the virtual address.  Just like a regular cache
+has hits & misses, there can be a TLB hit or a TLB miss.  On a TLB
+hit, the TLB simply calculates the physical address and accesses the
+memory.  On a TLB miss, however, the TLB will have to consult the
+original (full) page table in memory for the PTE, store it in TLB, and
+retry the access operation.
+
+** Who Handles the TLB Miss?
+
+*** Hardware
+
+In the old days of CISC computers, hardware handles TLB misses
+entirely.  To do this, the hardware needs to know everything about the
+page table: where they are stored in memory and the exact data
+structure.
+
+*** Software
+
+On RISC machines, the hardware simply raises an exception on a TLB
+miss and let the OS handles it.  When the OS is done updating the TLB,
+the hardware retries the access.
+
+This raises a few issues:
+- different from the return-from-trap instruction in other exception
+  handlers that resumes execution *after* the instruction that raised
+  the exception, the return-from-trap in a TLB miss needs to resume
+  execution *still at* the memory access instruction that caused the
+  miss, not after it, so the memory access is retried.
+- when handling a TLB miss, the OS needs to be careful not to raise an
+  infinite chain of TLB misses to occur.
+
+** On Context Switch
+
+Since each process has a different page table, the TLB entries for the
+last process are meaningless to the about-to-be-run process.  Some
+hardware systems provide an address space identifier (ASID) field in
+each TLB entry to distinguish between the address spaces of different
+processes.  An ASID is just like a process identifier (PID) except it
+has fewer bits.  With ASIDs, the TLB can hold translations from
+different processes at the same time without confusion.
+
