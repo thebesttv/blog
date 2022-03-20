@@ -170,6 +170,12 @@
   There are only two hard problems in distributed systems:  2. Exactly-once delivery 1. Guaranteed order of messages 2. Exactly-once delivery
   ---Mathias Verraes
   #+end_quote
+- [[https://www.zhihu.com/question/53975947/answer/240259923][说一说你听过的最冷门的诗？ - 智慧的屏障的回答 - 知乎]]
+  #+begin_verse
+  咏史（李梦唐）
+  高阁垂裳调鼎时，可怜天下有微词。
+  覆舟水是苍生泪，不到横流君不知。
+  #+end_verse
 
 ** 关于编码 --- UTF-8 遍地开花
 - [[http://www.hanselman.com/blog/why-the-askobama-tweet-was-garbled-on-screen-know-your-utf8-unicode-ascii-and-ansi-decoding-mr-president][Why the #AskObama Tweet was Garbled on Screen: Know your UTF-8,
