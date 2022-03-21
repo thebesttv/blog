@@ -475,3 +475,41 @@ processes.  An ASID is just like a process identifier (PID) except it
 has fewer bits.  With ASIDs, the TLB can hold translations from
 different processes at the same time without confusion.
 
+* 20. Paging: Smaller Tables
+
+Simple array-based page tables (aka. linear page tables) are too big.
+Several solutions are proposed in order to make page tables smaller.
+Using bigger page sizes can cause internal fragmentation; as for the
+hybrid approach of having one page table *per segment* (e.g. code,
+heap, stack) for each process, it now introduces variable-sized page
+tables, which can be hard to manage and will again cause external
+fragmentation to arise.
+
+** Multi-level Page Tables
+
+This approach does not use segmentation, instead it turns the page
+table into a tree-like structure.  The page table is divided into
+page-sized units, each one being.  An extra *page directory* is used
+to track where each page-sized unit is in memory (or whether the unit
+is not allocated because all the PTEs therein are not valid).
+
+The page directory, in a simple two-level table, consists of a number
+of *page directory entries* (PDE).  A PDE (minimally) has a *valid
+bit* and a *page frame number* (PFN), similar to a PTE.  If the PDE is
+valid, it means that *at least one* of the pages of the page table
+that the entry points to (via the PFN) is valid, i.e., in at least one
+PTE on that page pointed to by this PDE, the valid bit in that PTE is
+set to one.  If the PDE is not valid (i.e., equal to zero), the rest
+of the PDE is not defined.
+
+The multi-level page table adds a *level of indirection* through the
+use of page directory, allowing page table units to reside on
+arbitrary location in memory, as opposed to the linear page table that
+requires all PTEs reside continuously in physical memory.
+
+The goal of constructing a multi-level page table is to make each
+piece of the page table (including the page table directory) fit
+within a single page.  However, in a two-level page table, if there
+are too many page directory entries, the page table directory may not
+fit within a single page.  This requires the page table to have more
+than two levels.
