@@ -536,3 +536,88 @@ new page.  Since the penalty of a page miss can be very high, the
 Also, a *swap daemon* or *page daemon* is normally used to keep some
 free portion of memory always in place and to swap out some pages when
 available memory gets low.
+
+* 22. Beyond Physical Memory: Policies
+
+** Memory as Cache for Pages
+
+#+begin_quote
+Given that main memory holds some subset of all the pages in the
+system, it can rightly be viewed as *a cache for virtual memory pages
+in the system*.  Thus, our goal in picking a replacement policy for
+this cache is to *minimize the number of cache misses*, i.e., to
+minimize the number of times that we have to fetch a page from disk.
+Alternately, one can view our goal as *maximizing the number of cache
+hits*, i.e., the number of times a page that is accessed is found in
+memory.
+#+end_quote
+
+The cost of disk access is so high in modern systems that even a tiny
+miss rate will quickly dominate the overall AMAT (average memory
+access time) of running programs.
+
+** The Optimal Replacement Policy
+
+The optimal (though not the most practical) replacement policy is to
+always page out the one that will be accessed *furthest in the
+future*.  This essentially says that all other pages that are accessed
+before that one are more important.
+
+In any study you perform, knowing what the optimal is lets you perform
+a better comparison, showing how much improvement is still possible,
+and also when you can stop making your policy better, because it is
+close enough to the ideal.
+
+#+begin_details Aside: Types Of Cache Misses
+In the computer architecture world, architects sometimes find it
+useful to characterize misses by type, into one of three categories:
+compulsory, capacity, and conflict misses, sometimes called the Three
+C’s. A *compulsory miss* (or *cold-start miss*) occurs because the
+cache is empty to begin with and this is the first reference to the
+item; in contrast, a *capacity miss* occurs because the cache _ran out
+of space_ and had to evict an item to bring a new item into the cache.
+The third type of miss (a *conflict miss*) arises in hardware because
+of _limits on where an item can be placed in a hardware cache_, due to
+something known as set-associativity; it does not arise in the OS page
+cache because such caches are always *fully-associative*, i.e., there
+are no restrictions on where in memory a page can be placed.
+#+end_details
+
+** Simple Policies
+
+- *FIFO* simply keeps a queue of page tables, and evict the earliest
+  one.
+- *Random* evicts page tables at random.
+
+
+These simple policies are easy to implement, but they don't do well.
+More specifically, they do not have a *stack property*, where a better
+hit rate is achieved with a larger cache size.
+
+** Using History: LRU
+
+On each eviction, kick out the least-recently used page.  This method,
+although performs well in general, has some weird corner cases.
+Assuming there are 51 pages being visited in a loop (0, 1, ..., 50, 0,
+1, ...) and a memory of 50 pages, then the hit rate will be zero (when
+visiting page 50, page 0 is evicted; then page 1 is evicted when page
+0 is visited).
+
+Always finding the exact oldest page can be very hard, since on a 4GB
+memory with 4KB page size, 1M entries needs to be tracked for the
+oldest one.  Some approximation is in order.
+
+When approximating LRU, a *use bit* (or *reference bit*) is maintained
+for each page (maybe in the per-process page table, or another array
+somewhere in memory/hardware).  The hardware sets that bit to 1 on
+each access to that page.  It's the OS's job to clear the bit on some
+occasions.
+
+The *clock algorithm* is a good example.  Imagine the pages are
+arranged in a circular list and a clock head points to a certain page.
+When a replacement has to occur, the clock head checks the use bit of
+the pointed-to page: if it's a 0, then good, it's not recently used,
+swap that; otherwise it's 1 and the page is recently used, then *clear
+that bit*, point to the next page and repeat.  A 0 is found either
+because a certain page has a zero use bit, or that the use bit of all
+pages are cleared and the head circles back to the first page.
