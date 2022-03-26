@@ -621,3 +621,30 @@ swap that; otherwise it's 1 and the page is recently used, then *clear
 that bit*, point to the next page and repeat.  A 0 is found either
 because a certain page has a zero use bit, or that the use bit of all
 pages are cleared and the head circles back to the first page.
+
+* 23. Complete Virtual Memory Systems
+
+Covers the VM system of two systems: VAX/VMS & Linux.
+
+- [[https://meltdownattack.com/][Meltdown and Spectre]]
+
+* 26. Concurrency: An Introduction
+
+A *multi-threaded* program has more than one point of execution.  Each
+thread of a common process share the address space, but has its own
+- PC
+- registers, so a context-switch is still needed when switching
+  between running threads of the same process (but as address space is
+  shared, there's no need to switch page table)
+- TCB (thread control block) that stores the state of the thread
+- stack that tracks the function call hierarchy
+
+Multiple threads executing the same code can result in a *race
+condition*.  That piece of code is called a *critical section* and
+needs *mutual exclusion* (can be executed only by one thread at any
+time).
+
+With a few useful instructions from the hardware, we can build a
+general set of *synchronization primitives* that enable _the atomicity
+of instructions_ and _sleeping/waking interactions between two
+threads_.
