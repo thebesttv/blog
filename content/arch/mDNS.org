@@ -1,0 +1,20 @@
+#+title: Arch的mDNS设置
+
+仿佛 =systemd-resolved= 也有 mDNS resolve, 不过并不会设置, 就用
+[[https://wiki.archlinux.org/title/avahi][=avahi=]] 了.
+
+#+begin_src bash
+  sudo pacman -S avahi nss-mdns
+#+end_src
+
+在 =/etc/nsswitch.conf= 中的 =hosts= 一行, 在 =resolve= 和 =dns= 之前
+添加 =mdns_minimal [NOTFOUND=return]=, 最后效果为
+#+begin_src text
+  hosts: mymachines mdns_minimal [NOTFOUND=return] resolve [!UNAVAIL=return] files myhostname dns
+#+end_src
+
+然后再 enable 和 restart =avahi-daemon.service= 就行啦
+#+begin_src bash
+  sudo systemctl enable avahi-daemon.service
+  sudo systemctl restart avahi-daemon.service
+#+end_src
