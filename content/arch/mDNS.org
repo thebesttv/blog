@@ -8,9 +8,9 @@
 #+end_src
 
 在 =/etc/nsswitch.conf= 中的 =hosts= 一行, 在 =resolve= 和 =dns= 之前
-添加 =mdns_minimal [NOTFOUND=return]=, 最后效果为
+添加 =mdns4_minimal [NOTFOUND=return]=[fn:1], 最后效果为
 #+begin_src text
-  hosts: mymachines mdns_minimal [NOTFOUND=return] resolve [!UNAVAIL=return] files myhostname dns
+  hosts: mymachines mdns4_minimal [NOTFOUND=return] resolve [!UNAVAIL=return] files myhostname dns
 #+end_src
 
 然后再 enable 和 restart =avahi-daemon.service= 就行啦
@@ -18,3 +18,8 @@
   sudo systemctl enable avahi-daemon.service
   sudo systemctl restart avahi-daemon.service
 #+end_src
+
+* Footnotes
+
+[fn:1] 用 =mdns_minimal= 的话 resolution 太慢了, 所以按 Wiki 里 Note
+的方法改用 =mdns4_minimal=.
