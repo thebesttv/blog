@@ -1,0 +1,116 @@
+#+title: Gabor 滤波器
+
+- [[https://en.wikipedia.org/wiki/Gabor_filter][Wiki: Gabor filter]]
+- [[https://medium.com/@anuj_shah/through-the-eyes-of-gabor-filter-17d1fdb3ac97][Through The Eyes of Gabor Filter]] 介绍了Gabor滤波器的各种参数
+
+Real part:
+\[ g(x, y; \lambda, \theta, \phi, \sigma, \gamma) =
+\exp \left( - \frac{x'^2 + \gamma^2 y'^2}{2 \sigma^2}\right)
+\cos \left( 2\pi \frac{x'}{\lambda} + \phi \right)\]
+其实就是一个关于 $(x, y)$ 的有五个参数的函数.
+
+五个参数, 具体含义见上面第二篇文章
+- $\lambda$ (lambda) :: 三角部分的波长
+- $\theta$ (theta) :: 旋转角度
+- $\phi$ (phi) :: _p_​hase _s_​h​_i_​ft, 在 =cv2= 中叫 =psi=
+- $\sigma$ (sigma) :: 高斯部分的标准差
+- $\gamma$ (gamma) :: 高斯部分的 aspect ratio
+
+除了这五个参数, 还要指定的是 kernel size, 也就是核的大小, 一般为奇数.
+
+* Mathematica 中的 Gabor
+
+** Wave Vector
+
+- [[https://www.quora.com/What-is-the-meaning-of-wave-vector-k][What is the meaning of wave vector k?]]
+
+Mathematica 中与 Gabor 相关的用的都是 wave vector, 花了好久才搞懂 wave
+vector 和公式里各种参数的关系.  Wave vector $\vec{k}$ 每个方向的分量 $k_i$
+与该方向上的波长 $\lambda_i$ 有关, $k_i = \frac{2\pi}{\lambda_i}$.
+\[ |\vec{k}| = \frac{2\pi}{\lambda} \]
+
+** GaborMatrix
+
+=GaborMatrix[r, k]= 返回大小为 $(2r+1)\times(2r+1)$ 的kernel, 其中
+$\phi=0$, $\sigma=r/2$.  也可以用 =GaborMatrix[r, k, phi]=,
+=GaborMatrix[{r, sigma}, ...]= 指定 $\phi$ 或 $\sigma$.  弄好了可以用
+=MatrixPlot= 或转换成图片查看效果(需要用 =ImageAdjust= 调整一下).  甚
+至可以用 =ListPlot3D= 看一下 3D 的效果.
+
+#+begin_details 图片和代码(看不到notebook的时候用)
+{{{image(80)}}}
+[[./gabor-filter/matrix-plot.png]]
+
+{{{image(80)}}}
+[[./gabor-filter/as-image.png]]
+
+{{{image(80)}}}
+[[./gabor-filter/list-plot-3d.png]]
+
+#+begin_src text
+  Grid[{{
+     MatrixPlot@GaborMatrix[10, {0.5, 0.5}],
+     (*phase shift = pi/2*)
+     MatrixPlot@GaborMatrix[10, {0.5, 0.5}, Pi/2]
+     }}]
+
+  ImageAdjust@Image[GaborMatrix[10, {0.5, 0.5}],
+    ImageSize -> Small]
+
+  ListPlot3D@GaborMatrix[10, {0.5, 0.5}]
+#+end_src
+#+end_details
+
+Notebook [[https://www.wolframcloud.com/obj/2c9df2a1-5696-4828-9fb5-ef8ed696fdc2][链接]], 也可以看下面的 embed 版
+#+begin_export html
+<center><iframe src="https://www.wolframcloud.com/obj/2c9df2a1-5696-4828-9fb5-ef8ed696fdc2?_embed=iframe" width="600" height="800"></iframe></center>
+#+end_export
+
+** GaborFilter
+
+=GaborFilter= 对给定图像用 =GaborMatrix= 生成的kernel卷积.
+它的参数和 =GaborMatrix= 的基本相同, 只是第一个参数是给定图像.
+生成的图像可能需要 =ImageAdjust= 一下.
+- =GaborFilter[data, r, k]=
+- =GaborFilter[data, r, k, phi]= 显示指定 $\phi$
+- =GaborFilter[data, {r, sigma}, ...]= 显示指定 $\sigma$
+
+{{{image(80)}}}
+[[./gabor-filter/gabor-filter.png]]
+
+Doc 里 Application 的第三个超级棒, 一定要看一看.
+
+** 参数总结
+
+- =r= 控制 kernel size, 大小为 $(2r+1)\times(2r+1)$
+- =sigma= 控制标准差 $\sigma$, 默认为 $r/2$
+- =k= 是 wave vector, 控制 $\lambda = |\vec{k}|$ 和 $\theta =
+  \arctan(k_2 / k_1)$
+- =phi= 控制 phase shift $\phi$
+
+* Python 中的 Gabor
+
+这里用 =cv2= 的两个函数
+- [[https://docs.opencv.org/4.x/d4/d86/group__imgproc__filter.html#gae84c92d248183bd92fa713ce51cc3599][=getGaborKernel=]]
+- [[https://docs.opencv.org/4.x/d4/d86/group__imgproc__filter.html#ga27c049795ce870216ddfb366086b5a04][=filter2D()=]]
+
+#+begin_src
+  public static Mat GetGaborKernel(
+          Size ksize,
+          double sigma,
+          double theta,
+          double lambd,
+          double gamma,
+          double psi,
+          int ktype
+  )
+#+end_src
+
+这里 =ksize= 是一个二元组, 就是 kernel 的大小, 一般用奇数.
+
+=getGaborKernel= 返回的是大小为 =(ksize, ksize)= 的 numpy 矩阵, 也就是
+核.  然后用 =filter2D= 卷积, 第二个参数为-1表示使用源图像的类型.
+#+begin_src python
+  kernel = cv2.getGaborKernel((ksize, ksize), sigma, theta, lambd, gamma, psi)
+  fimg = cv2.filter2D(img, -1, kernel)
+#+end_src
