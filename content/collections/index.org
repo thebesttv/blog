@@ -182,6 +182,7 @@
   #+begin_quote
   管理现场有专门的人，现场的问题看似是工人的问题，本质上是负责管理的人的问题。我直接去制止工人，看似解决了问题，但不能对负责管理的人形成震慑，这种问题注定还会不断的复发。但如果我直接去找负责管理的人，我的权力是不够的。到时候非但不能对他形成震慑，反而可能陷自己于危险的境地。所以我认为要真正的解决问题，一定要找到大的影响力平台，在高层面前当众提出问题，这样才能对负责管理的人形成足够的震慑，才有可能从根源上解决问题。
   #+end_quote
+- [[https://www.zhihu.com/question/23181860/answer/2401290410][南京珠江路地铁站为什么叫糖果站？ - 厨房人类的回答 - 知乎]] 🍬🍬
 
 ** 关于编码 --- UTF-8 遍地开花
 - [[http://www.hanselman.com/blog/why-the-askobama-tweet-was-garbled-on-screen-know-your-utf8-unicode-ascii-and-ansi-decoding-mr-president][Why the #AskObama Tweet was Garbled on Screen: Know your UTF-8,
