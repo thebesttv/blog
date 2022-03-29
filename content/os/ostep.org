@@ -648,3 +648,61 @@ With a few useful instructions from the hardware, we can build a
 general set of *synchronization primitives* that enable _the atomicity
 of instructions_ and _sleeping/waking interactions between two
 threads_.
+
+* 27. Interlude: Thread API
+
+When mutual exclusion is required, use a lock.  When signaling between
+threads, use conditional variables.
+
+* TODO 28. Locks
+
+Although we would sometimes like to execute a series of instructions
+atomically, interrupts and multi-processors make it hard.  Putting
+*locks* around a critical section ensures that such section is
+executed *as if* it were a single atomic instruction.
+
+A lock is either *available* (*unlocked*, or *free*) and thus no
+thread holds the lock, or *acquired* (*locked*, or *held*), and thus
+*exactly one thread* holds the lock ans presumable is in a critical
+section.  This thread is called the owner of the lock.
+
+Basic criteria for locks:
+- mutual exclusion: can the lock prevent multiple threads from
+  entering a critical section?
+- fairness: does each thread contending for the lock get a fair shot
+  at acquiring it once it is free?  Will any thread starve?
+- performance: what's the time overhead added by using the lock under
+  different situations?
+  1. no contention: only a single thread is running and grabs &
+     releases the lock
+  2. uni-core: multiple threads are contending for the lock on a
+     single CPU
+  3. multi-core: multiple threads on multiple CPUs are contending for
+     the lock
+
+
+On a single CPU, the simplest way to implement a lock is to turn off
+hardware interrupt on grabbing the lock and to turn on interrupt again
+on releasing it.  But
+1. changing timer interrupt is a privileged instruction, and the OS
+   cannot regain control once interrupt is turned off, meaning the
+   program can go into an endless loop, rendering whole system
+   unusable.
+2. this approach simply does not work on multiple CPUs.
+3. turning off interrupt for extended periods of time can lead to some
+   interrupts (such as IO interrupt) becoming lost.
+4. turning on / off interrupt is inefficient
+
+
+Hardware support:
+- test-and-set: allows you to test the old value of a memory location
+  while also setting it to the new value
+
+
+The simple spin lock requires a preemptive scheduler, especially on a
+single CPU, as without preemption, the thread trying to grap the lock
+will be stuck in a loop, never relinquishing the CPU.  In terms of the
+criteria, a simple spin lock is:
+1. correct: with test-and-set or other hardware support, it is correct
+2. not fair: it provides no fairness guarantee; a thread may starve
+3. has high overhead on a single CPU; maybe not bad on multiple CPUs
