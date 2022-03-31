@@ -1,4 +1,4 @@
-#+title: Summaries on each chapter of OSTEP
+#+title: A not-so-short summary on each chapter of OSTEP
 
 # disable numbering of heading
 #+OPTIONS: num:nil
@@ -658,32 +658,32 @@ threads, use conditional variables.
 
 Although we would sometimes like to execute a series of instructions
 atomically, interrupts and multi-processors make it hard.  Putting
-*locks* around a critical section ensures that such section is
-executed *as if* it were a single atomic instruction.
+*locks* around a critical section ensures that it is executed *as if*
+it were a single atomic instruction.
 
 A lock is either *available* (*unlocked*, or *free*) and thus no
-thread holds the lock, or *acquired* (*locked*, or *held*), and thus
-*exactly one thread* holds the lock ans presumable is in a critical
-section.  This thread is called the owner of the lock.
+thread holds the lock, or *acquired* (*locked*, or *held*) and thus
+*exactly one thread* holds the lock and presumable is in a critical
+section.  The holding thread is called the owner of the lock.
 
 Basic criteria for locks:
-- mutual exclusion: can the lock prevent multiple threads from
+- *mutual exclusion*: can the lock prevent multiple threads from
   entering a critical section?
-- fairness: does each thread contending for the lock get a fair shot
+- *fairness*: does each thread contending for the lock get a fair shot
   at acquiring it once it is free?  Will any thread starve?
-- performance: what's the time overhead added by using the lock under
-  different situations?
-  1. no contention: only a single thread is running and grabs &
+- *performance*: what's the time overhead added by using the lock
+  (under different situations)?
+  1. no contention: only a single thread is running and it grabs &
      releases the lock
   2. uni-core: multiple threads are contending for the lock on a
      single CPU
-  3. multi-core: multiple threads on multiple CPUs are contending for
+  3. multi-core: multiple threads on multiple cores are contending for
      the lock
 
 
 On a single CPU, the simplest way to implement a lock is to turn off
 hardware interrupt on grabbing the lock and to turn on interrupt again
-on releasing it.  But
+on releasing it.  However,
 1. changing timer interrupt is a privileged instruction, and the OS
    cannot regain control once interrupt is turned off, meaning the
    program can go into an endless loop, rendering whole system
@@ -691,18 +691,162 @@ on releasing it.  But
 2. this approach simply does not work on multiple CPUs.
 3. turning off interrupt for extended periods of time can lead to some
    interrupts (such as IO interrupt) becoming lost.
-4. turning on / off interrupt is inefficient
+4. turning on / off interrupt is inefficient.
 
 
-Hardware support:
-- test-and-set: allows you to test the old value of a memory location
-  while also setting it to the new value
+To implement a lock that satifies the three criteria, both hardware
+and OS support is needed.
 
+** Hardware support
+
+*** test-and-set
+
+Test-and-set returns the old value of a memory location (so you can
+use it in a test) while also setting it to the new value
+
+#+begin_src c
+  int TestAndSet(int *old_ptr, int new) {
+    int old = *old_ptr;           // store old value
+    ,*old_ptr = new;               // set to new value
+    return old;                   // return old value
+  }
+
+  void Lock(lock_t *lock) {
+    while (TestAndSet(&lock->flag, 1) == 1)
+      ;                           // spin
+  }
+#+end_src
+***  compare-and-swap / compare-and-exchange
+
+Compare-and-wap (CAS) first tests the old value of a memory location.
+If it is some expected value, CAS then sets it to the new value;
+otherwise, it does nothing.  Either way, the old value is returned for
+inspection.
+
+#+begin_src c
+  int CompareAndSwap(int *ptr, int expected, int new) {
+    int ori = *ptr;               // Store original value.
+    if (ori == expected)          // If the same as expected,
+      ,*ptr = new;                 //   set to new value.
+    return ori;                   // Either way, return original value.
+  }
+
+  void Lock(lock_t *lock) {
+    while (CompareAndSwap(&lock->flag, 0, 1) == 1)
+      ;                           // spin
+  }
+#+end_src
+
+*** load-linked & store-conditional
+
+Load-linked (or load-reserved) & store conditional (LL/SC or LR/SC):
+Instead of using just one instruction, LL/SC uses two.  LL acts just
+like a typical load.  But the difference comes with SC, which only
+succeeds (and updates the value stored at the address just load-linked
+from) *if no intervening store to the address has taken place*.  In
+the case of success, SC returns 1 and updates the location with the
+new value; otherwise, it returns 0 and the memory location is left
+untouched.
+
+#+begin_src c
+  int LoadLinked(int *ptr) {
+    return *ptr;
+  }
+  int StoreConditional(int *ptr, int value) {
+    if (no update to *ptr since LoadLinked to this address) {
+      ,*ptr = value;
+      return 1;                   // success
+    } else {
+      return 0;                   // fail
+    }
+  }
+
+  void Lock(lock_t *lock) {
+    // Not { flag free & grab flag success }
+    while( !(LoadLinked(&lock->flag) == 0 &&
+             StoreConditional(&lock->flag, 1) == 1) )
+      ;                           // spin
+  }
+#+end_src
+
+#+begin_details RISC-V & LR/SC
+See section 8.2 "Load-Reserved/Store-Conditional Instructions" of The
+RISC-V Instruction Set Manual, Volume I: Unprivileged ISA Document
+(Version 20191213) for rationals behind RISC-V's choice to use LR/SC
+over CAS.
+#+end_details
+
+*** fetch-and-add
+
+Fetch-and-add increases a value while returning the old value.  This
+can be used to build a ticket lock, which uses two variables (=ticket=
+and =turn=) to implement a lock.  Every time a thread wants to grab
+the lock, the ticket lock hands out *a ticket (=myTurn=) representing
+the calling thread's turn* for the lock.  The thread then spin waits
+for its turn.  When a thread releases the lock, it sets the lock for
+the next turn.  The ticket lock is *fair*---it _ensures progress for
+all waiting threads_.
+
+#+begin_src c
+  int FetchAndAdd(int *ptr) {
+    int old = *ptr;
+    ,*ptr = *ptr + 1;
+    return old;
+  }
+
+  // Ticket Lock
+  typedef struct __lock_t {
+    int ticket;
+    int turn;
+  } lock_t;
+
+  void LockInit(lock_t *lock) {
+    lock->ticket = 0;
+    lock->turn   = 0;
+  }
+
+  void Lock(lock_t lock) {
+    int myTurn = FetchAndAdd(&lock->ticket); // get one ticket
+    while (lock->turn != myTurn)             // spin waiting for my turn
+      ;
+  }
+
+  void Unlock(lock_t *lock) {
+    lock->turn = lock->turn + 1;
+  }
+#+end_src
+
+** OS support
 
 The simple spin lock requires a preemptive scheduler, especially on a
-single CPU, as without preemption, the thread trying to grap the lock
+single CPU, as without preemption, the thread trying to grab the lock
 will be stuck in a loop, never relinquishing the CPU.  In terms of the
 criteria, a simple spin lock is:
-1. correct: with test-and-set or other hardware support, it is correct
+1. correct: with test-and-set or other hardware support, it is correct.
 2. not fair: it provides no fairness guarantee; a thread may starve
 3. has high overhead on a single CPU; maybe not bad on multiple CPUs
+
+To address the problems, more sophisticated locking technique is
+needed.
+
+*** Just yield
+
+The OS primitive =yield()= moves a thread from running state to ready
+state.  When a thread cannot grab the lock, it calls =yield()=, giving
+up the CPU and letting others run.  By yielding, the calling thread
+essentially *deschedules* itself.
+
+Yielding, however, is not the silver bullet.
+- It still does not have great performance.  If the owner of the lock
+  needs many time slices to finish the critical section, then the
+  yielding threads will need to yield many times.  The cost of a
+  context switch is still expensive.
+- It still does not guarantee fairness.
+
+*** Using a queue
+
+When a thread is trying to grab an acquired lock, record its tid in a
+waiting queue and put it to sleep.  When the lock is released, check
+the queue and wakes up the first sleeping thread.
+
+Due consideration is needed to prevent data races.
