@@ -302,27 +302,32 @@ memory space is wasted.
 
 * 16. Segmentation
 
-The problem of internal fragmentation raises the need for a more
-flexible mechanism called *segmentation* that supports a large address
-space with (potentially) much free space between the stack & heap.
+The problem of internal fragmentation raises the need for a more /flexible/
+mechanism called *segmentation* that supports a large address space with
+(potentially) much free space between stack & heap.
 
-The different growing directions of stack & heap requires the MMU to
-add one bit to each segment so as to keep track of in which direction
-it grows.
+Segmentation is generalized base & bounds---instead of having just one base &
+bounds pair in MMU, we now have a pair *for each logical segment* (code, stack,
+or heap) of the address space.  Segmentation allows each segment to be placed
+in different parts of physical memory.
 
-Adding hardware *protection bits* the control whether a process can
-read, write, or execute a particular segment enables *code sharing*,
-where one read-only (and executable) segment can be shared by multiple
-processes running the same program.
+The different growing *directions* of stack & heap requires the MMU to add one
+bit to each segment so as to keep track of in which direction it grows.
 
-However, as processes are created, the available physical memory space
-can still be divided into small chunks, a problem called *external
-fragmentation*.  [[https://stackoverflow.com/a/24980816/11938767][Here]]'s an excellent clarification of external vs
-internal fragmentation.
+Adding hardware *protection bits* to control whether a process can read, write,
+or execute a particular segment enables *code sharing*, where one read-only
+(and executable) segment can be shared by multiple processes running the same
+program.
 
-Allocating variable-sized segments in memory leads to many problems.
-The only solution is to never allocate memory in variable-sized
-chunks.  Segmentation still isn't flexible enough.
+However, as processes are created, the available physical memory space can
+still be divided into small chunks, a problem called *external fragmentation*.
+Many /free-space management algorithms/ are proposed to minimize external
+fragmentation.  [[https://stackoverflow.com/a/24980816/11938767][Here]]'s an excellent clarification of external vs internal
+fragmentation.
+
+Allocating variable-sized segments in memory leads to many problems.  The only
+solution is to _never allocate memory in variable-sized chunks_.  Segmentation
+still isn't flexible enough.
 
 * 17. Free-Space Management
 
