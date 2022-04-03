@@ -250,17 +250,18 @@ maintain the current ready process list.
 
 * 13. The Abstraction: Address Spaces
 
-The *address space* is the abstraction OS provides to the running
-program; it is the running program's view of memory in the system.  It
-contains all of the memory state of process, including code, stack,
-heap (and other data such as statically allocated global variable).
+The *address space* is the abstraction OS provides to the running program; it
+is the running program's view of memory in the system.  It contains all of the
+memory state of process, including code, stack, heap (and other data such as
+statically allocated global variable).
 
 Goals of a virtual memory (VM):
-- transparency: the illusion provided by the OS shouldn't be visible
-  to applications
-- efficiency: this requires hardware support such as TLBs
-- protection & isolation: protect processes from one another, as well
-  as the OS itself form the processes
+- transparency: the illusion provided by the OS shouldn't be visible to
+  applications
+- efficiency: both in time & in space.  Time efficiency requires hardware
+  support such as TLB
+- protection & isolation: protect processes from one another, as well as the OS
+  itself form processes
 
 * 14. Interlude: Memory API
 
@@ -269,28 +270,35 @@ Goals of a virtual memory (VM):
 
 * 15. Mechanism: Address Translation
 
-Address translation extends the idea of limited direct execution to
-virtual memory---the OS just sets up the hardware appropriately and
-lets the process run directly on the CPU; only when the process
-misbehaves does the OS have to become involved.
+#+begin_quote
+Through virtualization, the OS (with the hardware's help) turns the ugly
+machine reality into a useful, powerful, and easy to use abstraction.
+#+end_quote
 
-A simple way of memory virtualization is base-and-bounds, or dynamic
-relocation, where the OS maintains a pair of base & bounds value for
-each process limiting their locations in physical memory, *base* being
-the start of the address space and *bounds* being the size (or end) of
-it.  The hardware maintains a pair of base & bounds registers *per
-CPU* constraining the address space of the current running process.
-On each memory operation (e.g. instruction fetch and load/store
-instruction), the hardware adds the base register to the virtual
-address and checks if the resulting effective (physical) address is
-within bounds before performing memory IO.  If the address exceeds the
-process's address space, the hardware raises an "out-of-bounds"
-exception.
+Hardware-based address translation extends the idea of limited direct execution
+to virtual memory---the OS just sets up the hardware appropriately and lets the
+process run directly on CPU (efficiency); only when the process misbehaves does
+the OS have to become involved (control).  This way both efficiency and control
+is achieved.
 
-This technique of dynamic relocation, although simple, can cause
-*internal fragmentation*, where a process does not use most of its
-space between heap and stack and no other process can utilize this
-part of memory, thus much of the memory space is wasted.
+A simple way of memory virtualization is *base-and-bounds*, where the OS
+maintains a pair of base & bounds values for each process, limiting their
+locations in physical memory.  *Base* indicates the start of the address space
+and *bounds* the size (or end) of it.  The hardware maintains a pair of base &
+bounds registers for *each CPU* constraining the address space of _the current
+running process_.  On each memory operation (e.g., instruction fetch and
+load/store instruction), the hardware adds the base register to the virtual
+address and checks if the resulting /effective (physical) address/ is within
+bounds before performing memory IO.  If the address exceeds the process's
+address space, the hardware raises an "out-of-bounds" exception.  Because this
+relocation of the address happens at runtime, and because the OS can move the
+address space even after the process has started running, this technique is
+often called *dynamic relocation*.
+
+This technique of dynamic relocation, although simple, can cause *internal
+fragmentation*, where a process does not use most of its space between heap and
+stack and no other process can utilize this part of memory, thus much of the
+memory space is wasted.
 
 * 16. Segmentation
 
@@ -299,7 +307,7 @@ flexible mechanism called *segmentation* that supports a large address
 space with (potentially) much free space between the stack & heap.
 
 The different growing directions of stack & heap requires the MMU to
-add one bit to each segment so as to keep track of in thich direction
+add one bit to each segment so as to keep track of in which direction
 it grows.
 
 Adding hardware *protection bits* the control whether a process can
@@ -480,7 +488,7 @@ different processes at the same time without confusion.
 Simple array-based page tables (aka. linear page tables) are too big.
 Several solutions are proposed in order to make page tables smaller.
 Using bigger page sizes can cause internal fragmentation; as for the
-hybrid approach of having one page table *per segment* (e.g. code,
+hybrid approach of having one page table *per segment* (e.g., code,
 heap, stack) for each process, it now introduces variable-sized page
 tables, which can be hard to manage and will again cause external
 fragmentation to arise.
@@ -654,7 +662,7 @@ threads_.
 When mutual exclusion is required, use a lock.  When signaling between
 threads, use conditional variables.
 
-* TODO 28. Locks
+* 28. Locks
 
 Although we would sometimes like to execute a series of instructions
 atomically, interrupts and multi-processors make it hard.  Putting
