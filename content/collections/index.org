@@ -246,6 +246,13 @@
 - [[https://stackoverflow.com/a/6852396/11938767][How to generate a random integer number from within a range]]
   OSTEP 里看到的, 之前一直用的除法, 没想到还要酱写.
 
+*** 关于随机
+
+Cloudflare 的[[https://blog.cloudflare.com/][博客]]有不少关于熵和随机的帖子
+- [[https://blog.cloudflare.com/ensuring-randomness-with-linuxs-random-number-generator/][Ensuring Randomness with Linux's Random Number Generator]] 介绍了密码学的随机与
+  Linux 的熵池
+- [[https://blog.cloudflare.com/randomness-101-lavarand-in-production/][Randomness 101: LavaRand in Production]] 利用熔岩灯生成随机数
+
 ** 脆弱软件
 
 - [[https://arstechnica.com/cars/2022/02/radio-station-snafu-in-seattle-bricks-some-mazda-infotainment-systems/][Radio station snafu in Seattle bricks some Mazda infotainment systems]]
