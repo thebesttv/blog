@@ -2,11 +2,26 @@
 
 * Variable Length Array
 
-- [[https://en.wikipedia.org/wiki/Variable-length_array][Wiki - Variable-length array]]
-- [[https://stackoverflow.com/q/1887097/11938767][Why aren't variable-length arrays part of the C++ standard?]]
-- [[https://nullprogram.com/blog/2019/10/27/][Legitimate Use of Variable Length Arrays]]
-- [[https://stackoverflow.com/q/16672322/11938767][malloced array VS. variable-length-array]]
-- [[https://stackoverflow.com/q/31199566/11938767][What's the difference between a VLA and dynamic memory allocation via malloc?]]
+1. [[https://en.wikipedia.org/wiki/Variable-length_array][Wiki - Variable-length array]]
+2. [[https://gcc.gnu.org/onlinedocs/gcc/Variable-Length.html][GCC Doc - Arrays of Variable Length]]
+3. [[https://stackoverflow.com/q/1887097/11938767][Why aren't variable-length arrays part of the C++ standard?]]
+4. [[https://nullprogram.com/blog/2019/10/27/][Legitimate Use of Variable Length Arrays]]
+5. [[https://stackoverflow.com/q/16672322/11938767][malloced array VS. variable-length-array]]
+6. [[https://stackoverflow.com/q/31199566/11938767][What's the difference between a VLA and dynamic memory allocation via malloc?]]
+7. [[https://stackoverflow.com/q/1712592/11938767][Variably modified array at file scope]]
+8. [[https://stackoverflow.com/q/13645936/11938767][variably modified array at file scope in C]]
+
+VLA大概只能作为automatic variable, 不能用作全局变量(file scope), 只能有 block
+scope.  试图用作全局变量的话会有错误 "error: variably modified ‘n’ at file
+scope", 见链接7,8
+#+begin_src c
+  int x = 10;
+  int n[x];    // error: variably modified ‘n’ at file scope
+
+  int main() {
+    return 0;
+  }
+#+end_src
 
 有了VLA, 好像不仅可以用变量作为数组大小, 甚至可以用函数返回值作为函数大小
 #+begin_src c
@@ -24,7 +39,7 @@
   }
 #+end_src
 
-不过VLA好像有不少安全问题, 见上面链接.
+不过VLA好像有不少安全问题, 见链接3,4.
 
 * =static= / =const= Keyword in Array Parameter
 
