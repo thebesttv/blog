@@ -434,91 +434,93 @@ This raw form of paging has two problems:
 
 * 19. Paging: Faster Translations (TLBs)
 
-A translation-lookaside buffer (TLB) is part of the chip's
-memory-management unit (MMU), and is simply a *hardware cache* of
-popular virtual-to-physical address translations; thus, a better name
-would be an address-translation cache.
+A translation-lookaside buffer (TLB) is part of the chip's memory-management
+unit (MMU), and is simply a *hardware cache* of popular virtual-to-physical
+address translations.
 
-On each memory access, the hardware first checks if the TLB holds the
-entry for the VPN of the virtual address.  Just like a regular cache
-has hits & misses, there can be a TLB hit or a TLB miss.  On a TLB
-hit, the TLB simply calculates the physical address and accesses the
-memory.  On a TLB miss, however, the TLB will have to consult the
-original (full) page table in memory for the PTE, store it in TLB, and
-retry the access operation.
+On each memory access, the hardware first checks if the TLB holds the entry for
+the VPN of the virtual address.  Just like a regular cache has hits & misses,
+there are TLB hits or TLB misses.  On a TLB hit, the MMU simply calculates the
+physical address and accesses the memory.  On a TLB miss, however, the TLB will
+have to consult the original (full) page table in memory for the PTE, store it
+in TLB, and retry the access operation.
 
 ** Who Handles the TLB Miss?
 
 *** Hardware
 
-In the old days of CISC computers, hardware handles TLB misses
-entirely.  To do this, the hardware needs to know everything about the
-page table: where they are stored in memory and the exact data
-structure.
+In the old days of CISC computers, hardware handles TLB misses entirely.  To do
+this, the hardware needs to know everything about the page table: where they
+are stored in memory and the exact data structure.
 
 *** Software
 
-On RISC machines, the hardware simply raises an exception on a TLB
-miss and let the OS handles it.  When the OS is done updating the TLB,
-the hardware retries the access.
+On RISC machines, the hardware simply raises an exception on a TLB miss and
+lets the OS handle it.  When the OS is done updating the TLB, the hardware
+retries the access.
 
 This raises a few issues:
-- different from the return-from-trap instruction in other exception
-  handlers that resumes execution *after* the instruction that raised
-  the exception, the return-from-trap in a TLB miss needs to resume
-  execution *still at* the memory access instruction that caused the
-  miss, not after it, so the memory access is retried.
-- when handling a TLB miss, the OS needs to be careful not to raise an
-  infinite chain of TLB misses to occur.
+- different from the return-from-trap instruction in other exception handlers
+  that resumes execution *after* the instruction that raised the exception, the
+  return-from-trap in a TLB miss needs to resume execution *still at* the
+  memory access instruction that caused the miss, not after it, so the memory
+  access is retried.  Thus, depending on how a trap or exception was caused,
+  the hardware must save a different PC when trapping into the OS so it could
+  return to the correct instruction.
+- when handling a TLB miss, the OS needs to be careful not to cause an infinite
+  chain of TLB misses to occur.
 
 ** On Context Switch
 
-Since each process has a different page table, the TLB entries for the
-last process are meaningless to the about-to-be-run process.  Some
-hardware systems provide an address space identifier (ASID) field in
-each TLB entry to distinguish between the address spaces of different
-processes.  An ASID is just like a process identifier (PID) except it
-has fewer bits.  With ASIDs, the TLB can hold translations from
-different processes at the same time without confusion.
+Since each process has a different page table, the TLB entries for the last
+process are meaningless to the about-to-be-run process.  Some hardware systems
+provide an address space identifier (ASID) field in each TLB entry to
+distinguish between the address spaces of different processes.  An ASID is just
+like a process identifier (PID) except it has fewer bits.  With ASID, the TLB
+can hold translations from different processes at the same time without
+confusion.  Also, page sharing can be achieved where one readonly (and maybe
+executable) physical page frame is shared by multiple processes with different
+VPNs (i.e., different virtual pages of different processes are mapped to the
+same readonly physical frame).
 
 * 20. Paging: Smaller Tables
 
-Simple array-based page tables (aka. linear page tables) are too big.
-Several solutions are proposed in order to make page tables smaller.
-Using bigger page sizes can cause internal fragmentation; as for the
-hybrid approach of having one page table *per segment* (e.g., code,
-heap, stack) for each process, it now introduces variable-sized page
-tables, which can be hard to manage and will again cause external
-fragmentation to arise.
+Simple linear (array-based) page tables are too big.  Several solutions are
+proposed in order to make page tables smaller.  Using bigger page sizes can
+cause internal fragmentation; as for the hybrid approach of having one page
+table *per segment* (e.g., code, heap, stack) for each process, it introduces
+_variable-sized page tables_, which can be hard to manage and will again cause
+external fragmentation to arise.
 
 ** Multi-level Page Tables
 
-This approach does not use segmentation, instead it turns the page
-table into a tree-like structure.  The page table is divided into
-page-sized units, each one being.  An extra *page directory* is used
-to track where each page-sized unit is in memory (or whether the unit
-is not allocated because all the PTEs therein are not valid).
+This approach does not use segmentation, instead it turns the page table into a
+tree-like, multi-layered structure.  The page table is divided into page-sized
+units.  An extra *page directory* is used to track where each page-sized unit
+is in memory (or mark the unit as not allocated because all the PTEs therein
+are not valid).  Just like a linear page table tracks pages in the address
+space of a process, the page directory tracks the page-sized units of the
+original linear page table.
 
-The page directory, in a simple two-level table, consists of a number
-of *page directory entries* (PDE).  A PDE (minimally) has a *valid
-bit* and a *page frame number* (PFN), similar to a PTE.  If the PDE is
-valid, it means that *at least one* of the pages of the page table
-that the entry points to (via the PFN) is valid, i.e., in at least one
-PTE on that page pointed to by this PDE, the valid bit in that PTE is
-set to one.  If the PDE is not valid (i.e., equal to zero), the rest
-of the PDE is not defined.
+The page directory, in a simple two-level table, consists of a number of *page
+directory entries* (PDE).  A PDE, similar to a PTE, has a *valid bit* and a
+*page frame number* (PFN).  If a PDE is valid, it means that the page-sized
+unit, pointed to by PFN, has at least one valid memory page.  The reason it's
+called a /page/ frame number and not a /physical/ frame number, is because it
+can point to a *virtual address*, allowing the page-sized unit to be managed
+like any other memory page.  Thus the quote:
+#+begin_quote
+The multi-level page table adds a *level of indirection* through the use of
+page directory, allowing page table units to reside on arbitrary location in
+memory, as opposed to the linear page table that requires all PTEs reside
+continuously in physical memory.
+#+end_quote
 
-The multi-level page table adds a *level of indirection* through the
-use of page directory, allowing page table units to reside on
-arbitrary location in memory, as opposed to the linear page table that
-requires all PTEs reside continuously in physical memory.
-
-The goal of constructing a multi-level page table is to make each
-piece of the page table (including the page table directory) fit
-within a single page.  However, in a two-level page table, if there
-are too many page directory entries, the page table directory may not
-fit within a single page.  This requires the page table to have more
-than two levels.
+The goal of constructing a multi-level page table is to make each piece of the
+page table (including the page table directory) _fit within a single page_.
+However, if there are too many PDEs, the page table directory may not fit
+within a single page.  This requires the page table to have more than two
+levels.
 
 * 21. Beyond Physical Memory: Mechanisms
 
