@@ -1,0 +1,54 @@
+#+title: Weird Array Stuff
+
+* Variable Length Array
+
+- [[https://en.wikipedia.org/wiki/Variable-length_array][Wiki - Variable-length array]]
+- [[https://stackoverflow.com/q/1887097/11938767][Why aren't variable-length arrays part of the C++ standard?]]
+- [[https://nullprogram.com/blog/2019/10/27/][Legitimate Use of Variable Length Arrays]]
+- [[https://stackoverflow.com/q/16672322/11938767][malloced array VS. variable-length-array]]
+- [[https://stackoverflow.com/q/31199566/11938767][What's the difference between a VLA and dynamic memory allocation via malloc?]]
+
+有了VLA, 好像不仅可以用变量作为数组大小, 甚至可以用函数返回值作为函数大小
+#+begin_src c
+  #include <stdio.h>
+
+  int f() {
+    int x;
+    scanf("%d", &x);
+    return x;
+  }
+
+  int main() {
+    int v[f()];
+    printf("%lu\n", sizeof(v));
+  }
+#+end_src
+
+不过VLA好像有不少安全问题, 见上面链接.
+
+* =static= / =const= Keyword in Array Parameter
+
+- [[https://stackoverflow.com/a/3430353/11938767][What is the purpose of static keyword in array parameter of function like "char s[static 10]"?]]
+
+在[[https://twitter.com/ryang014/status/1510960027594539011][推特]]上看到了奇奇怪怪的 C 代码:
+#+begin_src c
+  #include <stdio.h>
+
+  void print(char* str,
+             char s[static printf("%s", str)])
+  { }
+
+  int main() {
+    print("hello", "");
+    print(" ", "");
+    print("world", "");
+  }
+#+end_src
+
+看样子是符合C99标准的, 可以正常编译, 输出 =hello world=.
+
+还可以这样
+#+begin_src c
+  void f(char s[static 5]) { }
+  void f(char s[static rand() % 5 + 1]) { }
+#+end_src
