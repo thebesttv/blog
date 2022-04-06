@@ -29,7 +29,7 @@
 #+NAME: articles
 #+BEGIN_SRC elisp :exports results :results output drawer
   (directory-tree-to-org-link-list
-   (directory-tree eserver-blog) 0)
+   (directory-tree (expand-file-name "content" eserver-blog)) 0)
 #+END_SRC
 
 #+RESULTS: articles
