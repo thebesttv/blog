@@ -97,7 +97,8 @@ For example, the URL ends with ?dataurl=t&raw, then `parameters' will be
                 ;; (httpd-log `(inserted file contents under ,path))
                 (let ((default-directory
                         (expand-file-name (file-name-directory path)
-                                          eserver-blog)))
+                                          eserver-blog))
+                      (org-html-link-org-files-as-html nil))
                   (org-export-to-buffer 'html buffer)))
               (with-current-buffer buffer
                 (replace-string
