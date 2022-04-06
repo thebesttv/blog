@@ -4,7 +4,15 @@
 # #+HTML_HEAD: <link rel="stylesheet" type="text/css" href="https://unpkg.com/latex.css/style.css"/>
 # use local file instead
 #+HTML_HEAD: <link rel="stylesheet" type="text/css" href="/blog/latex-style.css"/>
+
+# change body width
 #+HTML_HEAD: <style> body { max-width: 100ch; } </style>
+
+# for Code Block export
+#   change tooltip text to black
+#+HTML_HEAD: <style> pre.src:hover:before { color: black; } </style>
+#   add tooltip for lowercase 'c'
+#+HTML_HEAD: <style> pre.src-c:before { content: 'C'; } </style>
 
 # remove theme's default table caption, use org-mode's instead
 #+HTML_HEAD: <style> caption::before { all: initial; } </style>
