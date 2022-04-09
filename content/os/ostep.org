@@ -524,26 +524,25 @@ levels.
 
 * 21. Beyond Physical Memory: Mechanisms
 
-To support a large virtual address space (maybe even bigger than the
-physical RAM), the OS needs to be able to *page in* a page from disk
-to memory, and *page out* a page from memory to disk.
+VM goes beyond just physical memorys---disks are used as well.
 
-A portion of space on the disk (called *swap space*) is reserved for
-swapping pages out of and into memory.  A *present bit* is needed for
-each PTE to indicate whether the page is actually in memory (present).
-On each memory reference, after finding the PTE for the VPN of the
-virtual address, the present bit is checked.  If the page is not
-present, a *page fault* is triggered.  Upon a page fault, the OS is
-invoked (via a *page-fault handler*) to move the page back into
-memory.
+To support a large virtual address space (maybe even bigger than the physical
+RAM), the OS needs to be able to swap memory pages to and from disk.
 
-When swapping in a page, if the memory is already full (or close to
-full), then the OS will first page out some pages to make room for the
-new page.  Since the penalty of a page miss can be very high, the
-*page-replacement policy* needs to be cautious which page to swap out.
-Also, a *swap daemon* or *page daemon* is normally used to keep some
-free portion of memory always in place and to swap out some pages when
-available memory gets low.
+A portion of space on the disk (called *swap space*) is reserved for swapping
+pages out of and into memory.  A *present bit* is needed for each PTE to
+indicate whether the page is present in memory.  On each memory reference,
+after finding the PTE for the VPN of the virtual address, the present bit is
+checked.  If the page is not present, a *page fault* is triggered.  Upon a page
+fault, the OS is invoked (via a *page-fault handler*) to move the page back
+into memory.
+
+When swapping in a page, if the memory is already full (or close to full), then
+the OS will first page out some pages to make room for the new page.  Since the
+penalty of a page miss can be very high, the *page-replacement policy* needs to
+be cautious which pages to swap out.  A *swap daemon* (or *page daemon*) is
+normally used to keep some free portion of memory always in place and to swap
+out some pages when available memory gets low.
 
 * 22. Beyond Physical Memory: Policies
 
