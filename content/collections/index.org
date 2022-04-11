@@ -185,6 +185,7 @@
 - [[https://www.zhihu.com/question/23181860/answer/2401290410][南京珠江路地铁站为什么叫糖果站？ - 厨房人类的回答 - 知乎]] 🍬🍬
 - [[https://www.cbc.ca/radio/quirks/oct-23-vikings-in-newfoundland-new-rocks-from-the-moon-making-wood-better-and-more-1.6219865/scientists-have-found-a-way-to-harden-wood-to-make-a-knife-that-rivals-steel-1.6219874][Scientists have found a way to harden wood to make a knife that rivals steel]]
   Hard wood
+- [[https://knowablemagazine.org/article/health-disease/2021/how-noise-pollution-affects-heart-health][Sounding the alarm: How noise hurts the heart]] 你的sb舍友会导致你短命
 
 ** 关于编码 --- UTF-8 遍地开花
 - [[http://www.hanselman.com/blog/why-the-askobama-tweet-was-garbled-on-screen-know-your-utf8-unicode-ascii-and-ansi-decoding-mr-president][Why the #AskObama Tweet was Garbled on Screen: Know your UTF-8,
@@ -259,6 +260,11 @@ Cloudflare 的[[https://blog.cloudflare.com/][博客]]有不少关于熵和随�
 
 - [[https://arstechnica.com/cars/2022/02/radio-station-snafu-in-seattle-bricks-some-mazda-infotainment-systems/][Radio station snafu in Seattle bricks some Mazda infotainment systems]]
   马自达的车载娱乐系统因为没有后缀的图像数据变砖了😅
+
+** 关于workflow
+
+- [[https://castel.dev/post/research-workflow/][My Mathematics PhD research workflow]] 一个数学PhD的workflow, 包括LaTeX笔记
+  (cross reference的管理, 一键打开引用论文, 一键添加论文等)和用Wacom的手写笔记.
 
 * 棒棒视频
 
