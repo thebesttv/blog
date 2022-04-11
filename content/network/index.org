@@ -1,0 +1,12 @@
+#+title: 计网
+
+* Computer Networking: A Top-Down Approach
+
+- [[https://gaia.cs.umass.edu/kurose_ross/index.php][Homepage of the book]]
+- [[https://wps.pearsoned.com/ecs_kurose_compnetw_6/216/55463/14198700.cw/index.html][Resources of 6th edition]] contains interactive animations
+- [[https://gaia.cs.umass.edu/kurose_ross/wireshark.php][Wireshark Lab]]
+
+* DNS
+
+- [[https://jvns.ca/blog/2022/02/01/a-dns-resolver-in-80-lines-of-go/][A toy DNS resolver]]
+- [[https://blog.adamchalmers.com/making-a-dns-client/][What I learned from making a DNS client in Rust]]
