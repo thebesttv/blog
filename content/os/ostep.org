@@ -851,3 +851,68 @@ waiting queue and put it to sleep.  When the lock is released, check
 the queue and wakes up the first sleeping thread.
 
 Due consideration is needed to prevent data races.
+
+* 36. I/O Devices
+
+#+begin_quote
+Making information persist, despite computer crashes, disk failures, or power
+outages is a tough and interesting challenge.
+#+end_quote
+
+A typical system has a hierarchical structure where high performance devices
+(e.g., RAM and GPU) are close to CPU and low performance devices are on lower
+tiers.
+
+** A Canonical Device & Protocol
+
+A canonical device has a /hardware interface/ to the system and its /internal
+implementation/.  The interface is composed of three registers:
+- *status* register: tells the current device status (busy, idle, error, ...)
+- *command* register: used to send command to device
+- *data* register: pass data between device & system
+
+For the OS to make the device do something, a simple protocol:
+1. The OS *polls* the status register of the device until it is ready.
+2. OS sends data through data register.  Here the CPU itself does the IO, an
+   inefficient method called [[https://en.wikipedia.org/wiki/Programmed_input%E2%80%93output][programmed I/O (PIO)]].
+3. OS sends command via command register.
+4. The device starts processing.
+5. OS waits until the device is done by polling its status register again.
+
+This simple protocol has some inefficiencies.
+
+*** Polling wastes CPU time
+
+Instead, the OS can put the waiting process to sleep and use interrupt to
+handle device status change while also waking up the sleeping process.  This
+allows for overlap of computation and IO.
+
+However, interrupts has some overhead.  If the device can handle request quite
+quickly, polling may be better.  Thus, a *hybrid* would be to poll for a little
+while, and if the device is not yet finished, use interrupts.  This
+*two-phased* approach may achieve the best of both worlds.
+
+Also, if the system is suddenly flooded with many interrupts, it may
+livelock---only processing interrupts and not waking up processes to handle the
+request.  An optimization would be *coalescing*---the devices merges multiple
+interrupts into a single one, thus lowering the system's burden.
+
+*** PIO waits CPU time
+
+When transfering large chunk of data from RAM to IO port, CPU time is again
+wasted doing trivial data transfer.  Adding [[https://en.wikipedia.org/wiki/Direct_memory_access][hardware DMA]] enables CPU to
+delegate data transfer to a specific hardware device, thus freeing more CPU
+time.
+
+** Methods of Device Interaction
+
+[[https://en.wikipedia.org/wiki/Memory-mapped_I/O][Memory-mapped IO & Port-mapped IO]]
+- port-mapped IO uses explicit IO instructions on a specific IO port
+- memory-mapped IO maps device registers to memory address space, thus only
+  regular memory transfer instructions are needed for IO
+
+** Device Driver
+
+Device driver makes OS device-neutral---the details of device interactions are
+hidden from major OS subsystems.
+
