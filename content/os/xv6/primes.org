@@ -1,0 +1,176 @@
+#+title: Two versions of primes.c
+
+From [[https://pdos.csail.mit.edu/6.S081/2021/labs/util.html][6.S081 Lab]].
+
+Here =sieve= reads a stream of numbers from =fdr=---the first is considered the
+prime, and the rest are numbers to be sieved.
+#+begin_src c
+  #include "kernel/types.h"
+  #include "user/user.h"
+
+  // fdr: {prime, x1, x2, ...}
+  // sieve will close fdr before returning
+  void sieve(int fdr) {           // fdr is used for reading
+    int n;                        // the first is prime
+    if (read(fdr, &n, 4) != 4) {
+      exit(0);                    // no need to close fdr on exit
+    }
+    printf("prime %d\n", n);
+
+    int p[2];
+    pipe(p);
+
+    int pid = fork();
+    if (pid == 0) {               // child
+      close(fdr);                 // child does not use fdr
+      close(p[1]);                // child only reads from p
+      sieve(p[0]);
+    } else {                      // parent
+      close(p[0]);               // parent only writes to p
+      while (1) {
+        int x;
+        if (read(fdr, &x, 4) != 4)
+          break;
+        if (x % n == 0)
+          continue;
+        write(p[1], &x, 4);
+      }
+      close(p[1]);
+      close(fdr);
+      wait(0);
+    }
+  }
+
+  int main() {
+    int p[2];
+    pipe(p);
+
+    int pid = fork();
+    if (pid == 0) {               // child
+      close(p[1]);
+      sieve(p[0]);                // sieve will close p[0]
+    } else {                      // parent
+      close(p[0]);
+      for (int i = 2; i <= 35; ++i)
+        write(p[1], &i, 4);
+      close(p[1]);
+      pid = wait(0);
+    }
+
+    exit(0);
+  }
+#+end_src
+
+The second version is basically the same as the first, but it avoids recursion
+by making =fdr= (or here, =fd=) global.  Since each process has its own address
+space, this is ok.
+#+begin_src c
+  /*
+   ,* generate all primes from 2 to n
+   ,* using multiple processes connected by pipes
+   ,*
+   ,* from Exercise 3 on
+   ,* https://courses.cs.washington.edu/courses/cse481a/20sp/labs/util.html
+   ,*/
+
+  #include "kernel/types.h"
+  #include "user/user.h"
+
+  int fd;
+
+  int Read(int fd) {
+    // read an int from fd, exit if fails, returns 0 if hits EOF
+    int n, st;
+    st = read(fd, &n, sizeof(n));
+    if (st < 0) {
+      fprintf(2, "read error\n");
+      exit(1);
+    }
+    return st == 0 ? 0 : n;
+  }
+
+  int Fork() {
+    int pid = fork();
+    if (pid < 0) {
+      printf("fork error\n");
+      exit(1);
+    }
+    return pid;
+  }
+
+  void sieve() {
+  #ifdef DEBUG
+    sleep(1);
+    printf("(%d): sieve(fd = %d)\n", getpid(), fd);
+  #endif
+
+    int n = Read(fd);
+    if (n == 0) exit(0);          // eof, no more prime to sieve
+
+    printf("%d\n", n);
+    // will have problems under Linux due to output buffer.
+    // using fflush is the solution.  but in xv6 it works fine
+    // fflush(stdout);
+
+    int p[2];
+    pipe(p);
+
+    int pid = Fork();
+
+    if (pid == 0) {
+      close(p[1]);
+      fd = p[0];
+      return;
+    } else {
+      close(p[0]);
+
+      while (1) {
+        int x = Read(fd);
+        if (x == 0) break;        // eof, no more numbers to read
+
+        if (x % n == 0) continue; // not a prime
+
+        write(p[1], &x, sizeof(x));
+      }
+
+      close(p[1]);
+
+      // wait for child process to end and then exit
+      wait(0);
+      exit(0);
+    }
+  }
+
+  int main(int argc, char *argv[]) {
+    int n = atoi(argv[1]);
+    if ( !(argc == 2 && (n = atoi(argv[1])) >= 2) ) {
+      fprintf(2, "Usage: %s N (N >= 2)\n", argv[0]);
+      exit(1);
+    }
+
+    int p[2];
+    pipe(p);
+
+    int pid = fork();
+    if (pid < 0) {
+      printf("fork error\n");
+      exit(1);
+    }
+
+    if (pid == 0) {
+      close(p[1]);
+      fd = p[0];
+      while (1) sieve();
+    } else {
+      close(p[0]);
+
+      for (int i = 2; i <= n; ++i)
+        write(p[1], &i, sizeof(i));
+      close(p[1]);
+
+      wait(0);
+    }
+
+    exit(0);
+  }
+#+end_src
