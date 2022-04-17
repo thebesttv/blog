@@ -186,6 +186,7 @@
 - [[https://www.cbc.ca/radio/quirks/oct-23-vikings-in-newfoundland-new-rocks-from-the-moon-making-wood-better-and-more-1.6219865/scientists-have-found-a-way-to-harden-wood-to-make-a-knife-that-rivals-steel-1.6219874][Scientists have found a way to harden wood to make a knife that rivals steel]]
   Hard wood
 - [[https://knowablemagazine.org/article/health-disease/2021/how-noise-pollution-affects-heart-health][Sounding the alarm: How noise hurts the heart]] 你的sb舍友会导致你短命
+- [[https://0xffff.one/d/1027-yi-ge-ji-shu-nan-de-zi-bai][一个技术男的自白]] 深度或广度? 还有一些其他的
 
 ** 关于编码 --- UTF-8 遍地开花
 - [[http://www.hanselman.com/blog/why-the-askobama-tweet-was-garbled-on-screen-know-your-utf8-unicode-ascii-and-ansi-decoding-mr-president][Why the #AskObama Tweet was Garbled on Screen: Know your UTF-8,
