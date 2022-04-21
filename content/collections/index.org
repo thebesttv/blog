@@ -249,6 +249,10 @@
   数不是偶数, 也可以用hash.
 - [[https://stackoverflow.com/a/6852396/11938767][How to generate a random integer number from within a range]]
   OSTEP 里看到的, 之前一直用的除法, 没想到还要酱写.
+- [[https://www.zhihu.com/question/31082722/answer/1928249851][用链表的目的是什么？省空间还是省时间？ - invalid s的回答 - 知乎]]
+  #+begin_quote
+  你要学的，是最高效率把玩海量数据的思路；你不仅要能因地制宜的给出解决方案、还要有能力给出综合最优的方案（并作出证明）——停留在链表这个表面上，那是连门在哪都没摸到，谈何入门。
+  #+end_quote
 
 *** 关于随机
 
