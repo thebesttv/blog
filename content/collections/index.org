@@ -187,6 +187,12 @@
   Hard wood
 - [[https://knowablemagazine.org/article/health-disease/2021/how-noise-pollution-affects-heart-health][Sounding the alarm: How noise hurts the heart]] 你的sb舍友会导致你短命
 - [[https://0xffff.one/d/1027-yi-ge-ji-shu-nan-de-zi-bai][一个技术男的自白]] 深度或广度? 还有一些其他的
+- [[https://mp.weixin.qq.com/s/zvExUwCiiBKnBjRXAbOMvA][我在方舱，看见老人们的孤岛求生]], [[https://hayami.typlog.io/camp][博客]] 不能白白死去。
+  #+begin_quote
+  意志消沉并不是一种抵抗的方式，好好生活其实就是一种最大的抵抗。
+
+  记录下所看到的听到的感受到的一切，记住现在的痛苦愤怒和心碎，并提醒人们不要忘记。
+  #+end_quote
 
 ** 关于编码 --- UTF-8 遍地开花
 - [[http://www.hanselman.com/blog/why-the-askobama-tweet-was-garbled-on-screen-know-your-utf8-unicode-ascii-and-ansi-decoding-mr-president][Why the #AskObama Tweet was Garbled on Screen: Know your UTF-8,
