@@ -193,6 +193,13 @@
 
   记录下所看到的听到的感受到的一切，记住现在的痛苦愤怒和心碎，并提醒人们不要忘记。
   #+end_quote
+- [[https://httpie.io/blog/stardust][How we lost 54k GitHub stars]]
+  #+begin_quote
+  When the user is about to destroy something, don’t describe that as a
+  potential scenario in abstract words that the user needs to convert to mental
+  images and put values on.
+  #+end_quote
+
 
 ** 关于编码 --- UTF-8 遍地开花
 - [[http://www.hanselman.com/blog/why-the-askobama-tweet-was-garbled-on-screen-know-your-utf8-unicode-ascii-and-ansi-decoding-mr-president][Why the #AskObama Tweet was Garbled on Screen: Know your UTF-8,
