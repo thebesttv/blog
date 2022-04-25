@@ -199,6 +199,8 @@
   potential scenario in abstract words that the user needs to convert to mental
   images and put values on.
   #+end_quote
+- [[https://www.zhihu.com/question/394331280/answer/2442971918][为什么现在越来越多的国产剧不接地气了？ - 小球藻追梦人的回答 - 知乎]]
+  怀念那个球进了的时代.
 
 
 ** 关于编码 --- UTF-8 遍地开花
