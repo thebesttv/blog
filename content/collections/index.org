@@ -243,6 +243,10 @@
   #+begin_quote
   [...] the first statement, while imperatively a valid command, is declaratively a lie.
   #+end_quote
+- [[https://www.reddit.com/r/emacs/comments/ucldkz/are_we_living_in_the_golden_age_of_emacs][Are we living in the golden age of Emacs?]]
+  #+begin_quote
+  lsp and tree-sitter changed the entire ecosystem of editors.
+  #+end_quote
 
 *** Lisp
 
