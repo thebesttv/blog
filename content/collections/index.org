@@ -274,6 +274,8 @@
   #+begin_quote
   你要学的，是最高效率把玩海量数据的思路；你不仅要能因地制宜的给出解决方案、还要有能力给出综合最优的方案（并作出证明）——停留在链表这个表面上，那是连门在哪都没摸到，谈何入门。
   #+end_quote
+- [[https://www.noulakaz.net/2007/03/18/a-regular-expression-to-check-for-prime-numbers/][A regular expression to check for prime numbers]]
+  像是黑魔法, 然鹅是暴力枚举因子.
 
 *** 关于随机
 
