@@ -203,6 +203,7 @@
   怀念那个球进了的时代.
 - [[https://www.zhihu.com/question/67013987/answer/730478844][你们的老师做过什么惊为天人的事情？ - 剑圣的跳刀的回答 - 知乎]]
 - [[https://www.zhihu.com/question/40599605][为什么「兔子」叫「兔几」，「橙子」却叫「橙砸」？]] 哈哈哈好欢乐的问题
+- [[https://qualityfocus.club/fun-debug][一次集文化差异、网络工程与诸多巧合于一身的debug！]] 一个由泡茶引发的断网
 
 
 ** 关于编码 --- UTF-8 遍地开花
