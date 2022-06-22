@@ -207,6 +207,8 @@
 - [[https://ugmonk.com/blogs/journal/analog-the-simplest-productivity-system][Analog: The Simplest Productivity System]] Somethings are better ANALOG.
 - [[https://www.ifanr.com/app/1448161][再也不用「挤牙膏」！高露洁换上的「润滑剂」包装，让牙膏从此一滴不剩]]
   Building a Frictionless Future
+- [[https://spectrum.ieee.org/plastic-microprocessor][The First High-Yield, Sub-Penny Plastic Processor]]
+  "Plastic inside"
 
 
 ** 关于编码 --- UTF-8 遍地开花
