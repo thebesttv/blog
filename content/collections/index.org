@@ -235,6 +235,7 @@
     $ clang++ main.cpp && ./a.out
     This is not thebesttv.
   #+end_src
+- [[https://galogetlatorre.blogspot.com/2013/07/how-can-you-be-fooled-by-u202e-trick.html][How can you be fooled by the U+202E trick?]] 又是一个改变文字方向的attack
 
 ** 关于编辑器
 
