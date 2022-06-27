@@ -1,0 +1,60 @@
+#+title: All about C
+
+* Ways to Define a Function
+
+When writing a function definition, the return type, function name,
+argument list, and function body can be placed in different lines.
+
+You can write return type at one line and function name at another when
+defining a funciton (thus the name is at the very beginning of the
+line), and write return type and function name at the same line when
+declaring it (thus the name is not the first in the line).  This style
+can be helpful for finding function definitions.  For example, in xv6,
+the function =filedup()=, its declaration is in =kernel/defs.h=:
+#+begin_src c
+  struct file*    filedup(struct file*);
+#+end_src
+and its definition in =kernel/file.c=:
+#+begin_src c
+  struct file*
+  filedup(struct file *f)
+  {
+    acquire(&ftable.lock);
+    if(f->ref < 1)
+      panic("filedup");
+    f->ref++;
+    release(&ftable.lock);
+    return f;
+  }
+#+end_src
+
+Since function names do not normally start at the very beginning of the
+line except in function definitions (function names in declarations are
+preceded by its return type, function calls are always indented,
+function names used as a pointer are either at the end of a single-line
+assignment or indented to the next line), it's very easy to use a
+regular expression in a global search to locate a function definition
+(e.g. =^filedup\(= can find the above function definition).
+
+
+* Interesting Constants
+
+The constant =0xfull= is of type =unsigned long long= and value 0xf
+(15).
+
+* Function pointer in =struct=
+
+A function pointer in a C =struct= *looks* quite similar to a member
+function in C++.  In xv6, the function =filewrite()= in =kernel/file.c=:
+#+begin_src c
+  ret = devsw[f->major].write(1, addr, n);
+#+end_src
+where =devsw= is defined
+#+begin_src c
+  struct devsw {
+    int (*read)(int, uint64, int);
+    int (*write)(int, uint64, int);
+  };
+
+  struct devsw devsw[NDEV];
+#+end_src
