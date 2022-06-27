@@ -259,6 +259,7 @@
   #+begin_quote
   [...] the first statement, while imperatively a valid command, is declaratively a lie.
   #+end_quote
+- [[https://www.positech.co.uk/cliffsblog/][Code bloat has become astronomical]] 一个中年程序员的碎碎念
 
 *** Lisp
 
