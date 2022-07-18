@@ -209,6 +209,16 @@
   Building a Frictionless Future
 - [[https://spectrum.ieee.org/plastic-microprocessor][The First High-Yield, Sub-Penny Plastic Processor]]
   "Plastic inside"
+- Hacker News 上的[[https://news.ycombinator.com/item?id=30157986][一个评论]], 能有专门来刺探面试题目的人是没想到的
+  #+begin_quote
+  I once interviewed a person who couldn't answer a single question, not
+  even the easiest ones.  He would just say "I don't know, ask me the
+  next question".  A few weeks later I realized it was probably a plant
+  that another candidate sent to collect the interview questions.  And I
+  think I even know who it was.  We hired her, she wasn't very good
+  writing code.  But she answered all our questions perfectly, which
+  only happened once before.
+  #+end_quote
 
 
 ** 关于编码 --- UTF-8 遍地开花
