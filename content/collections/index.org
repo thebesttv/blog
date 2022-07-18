@@ -225,6 +225,24 @@
 - [[https://zhuanlan.zhihu.com/p/542488093][“Only One Book”计划（计算机理论）]] 每个领域只推一本书, 防止选择困难症~
 
 
+** 关于健康 --- 留得青山在, 不怕没柴烧
+- [[https://web.archive.org/web/20100815083705/http://sheddingbikes.com/posts/1281257293.html][Common Programmer Health Problems]]
+  /Learn Python The Hard Way/ 的作者关于程序员健康的建议
+  #+begin_quote
+  Overall the general cause of all of these problems can be summarized
+  as *treating programming as an obsession*.  You may want to be very
+  good at it, like I did, so you _exclude everything else in your life
+  in order to master it_.  You don't go to the bathroom, you have macho
+  10 hour coding sessions, you don't eat right, and all manner of
+  mythological beliefs about "real programmers".
+
+  Truth is *real programmers are kind of idiots*.  They don't eat right.
+  They don't have sex on a regular basis.  They can't run without
+  gasping for breath.  They have huge problems with their internal
+  organs not caused by disease.  Really, it's just not worth it if you
+  have to kill yourself to be good at something.
+  #+end_quote
+
 ** 关于编码 --- UTF-8 遍地开花
 - [[http://www.hanselman.com/blog/why-the-askobama-tweet-was-garbled-on-screen-know-your-utf8-unicode-ascii-and-ansi-decoding-mr-president][Why the #AskObama Tweet was Garbled on Screen: Know your UTF-8,
   Unicode, ASCII and ANSI Decoding Mr. President]]
