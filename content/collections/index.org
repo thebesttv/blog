@@ -219,6 +219,8 @@
   writing code.  But she answered all our questions perfectly, which
   only happened once before.
   #+end_quote
+- [[https://finance.sina.com.cn/money/bank/gsdt/2022-07-06/doc-imizmscv0377623.shtml][储户近200万巨款不翼而飞 人脸识别漏洞成骗子作案工具]]
+  有点可怕了, 感觉随着个人信息的分散式泄漏, 将来的问题会越来越多.
 
 
 ** 关于编码 --- UTF-8 遍地开花
