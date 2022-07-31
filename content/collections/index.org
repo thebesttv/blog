@@ -362,6 +362,7 @@ Cloudflare 的[[https://blog.cloudflare.com/][博客]]有不少关于熵和随�
   You will observe with concern how long a useful truth may be known,
   and exist, before it is generally received and practiced on.
   #+end_quote
+- [[https://youtu.be/Big80AStHSU][This Keyboard Changed My Life]] 一个患有严重 RSI 的程序员的自述
 
 ** 各种剧
 
