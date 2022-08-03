@@ -352,6 +352,7 @@ Cloudflare 的[[https://blog.cloudflare.com/][博客]]有不少关于熵和随�
 - [[https://youtu.be/kz165f1g8-E][The Genius of 3D Printed Rockets]] 3d打印火箭🤯
 - [[https://youtu.be/OgXzUwJBmno][Self-Reconfigurable Robots and Digital Hormones]] 模块化机器人间的交流
 - [[https://youtu.be/9cT0jXI7l4E][Building a Next-Level Camera]] 好神奇的镜头
+- [[https://youtu.be/Big80AStHSU][This Keyboard Changed My Life]] 一个患有严重 RSI 的程序员的自述
 
 
 ** Veritasium 真理元素
@@ -363,7 +364,6 @@ Cloudflare 的[[https://blog.cloudflare.com/][博客]]有不少关于熵和随�
   You will observe with concern how long a useful truth may be known,
   and exist, before it is generally received and practiced on.
   #+end_quote
-- [[https://youtu.be/Big80AStHSU][This Keyboard Changed My Life]] 一个患有严重 RSI 的程序员的自述
 
 ** 各种剧
 
