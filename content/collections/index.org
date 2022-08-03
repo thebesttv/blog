@@ -223,6 +223,12 @@
   有点可怕了, 感觉随着个人信息的分散式泄漏, 将来的问题会越来越多.
 - [[https://www.webbcompare.com/][WebbCompare]] 哈勃和韦伯望远镜拍摄照片的对比, 韦伯拍的真的好惊艳~
 - [[https://zhuanlan.zhihu.com/p/542488093][“Only One Book”计划（计算机理论）]] 每个领域只推一本书, 防止选择困难症~
+- [[https://threadreaderapp.com/thread/1449858706750033921.html][I once killed a $125 million deal by being “too honest.”]]
+  #+begin_quote
+  a deal isn't done until it's closed.  No matter how much you want to
+  be on the same side of the table as the other party, don't show your
+  cards until the game is over.
+  #+end_quote
 
 
 ** 关于健康 --- 留得青山在, 不怕没柴烧
