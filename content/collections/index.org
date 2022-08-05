@@ -298,6 +298,8 @@
   [...] the first statement, while imperatively a valid command, is declaratively a lie.
   #+end_quote
 - [[https://www.positech.co.uk/cliffsblog/][Code bloat has become astronomical]] 一个中年程序员的碎碎念
+- [[https://thorstenball.com/blog/2022/05/17/professional-programming-the-first-10-years/][Professional Programming: The First 10 Years]]
+  一个工作十年的程序员所学到的
 
 *** Lisp
 
