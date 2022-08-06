@@ -336,10 +336,19 @@ Cloudflare 的[[https://blog.cloudflare.com/][博客]]有不少关于熵和随�
   Linux 的熵池
 - [[https://blog.cloudflare.com/randomness-101-lavarand-in-production/][Randomness 101: LavaRand in Production]] 利用熔岩灯生成随机数
 
-** 脆弱软件
+** 关于软件
 
+大概未经测试的软件总是脆弱的😮‍💨
 - [[https://arstechnica.com/cars/2022/02/radio-station-snafu-in-seattle-bricks-some-mazda-infotainment-systems/][Radio station snafu in Seattle bricks some Mazda infotainment systems]]
   马自达的车载娱乐系统因为没有后缀的图像数据变砖了😅
+
+*** SQLite
+
+作为一个无处不在, 且运行于几乎所有架构与系统的数据库, SQLite 的测试代码
+量可谓恐怖---测试代码行数是 SQLite 库的 608 倍, 几乎十亿行🤯
+- [[https://liyafu.com/2022-07-31-sqlite-untold-story/][SQLite 背后的故事]]
+- [[https://www.sqlite.org/testing.html][How SQLite Is Tested]]
+- [[https://news.ycombinator.com/item?id=18685748][Hack News 上的一个评论]], 下方 SQLite 的作者解释了 100% MC/DC 的好处
 
 ** 关于workflow
 
