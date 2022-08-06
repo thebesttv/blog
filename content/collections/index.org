@@ -426,6 +426,7 @@ Cloudflare 的[[https://blog.cloudflare.com/][博客]]有不少关于熵和随�
 - [[https://idealclover.top/][翠翠 / Idealclover]]
 - [[https://qinyuanpei.github.io/][飞鸿踏雪]]
 - [[https://emacsninja.com/][Emacs ninja]]
+- [[https://liyafu.com/][Light & Truth]]
 
 * 有意思的
 
