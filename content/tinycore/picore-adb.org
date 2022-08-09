@@ -162,8 +162,6 @@ Tiny Core 目前的版本是 13.X, 在[[http://tinycorelinux.net/downloads.html]
   cd protobuf-3.21.4
   ./configure
   make -j$(nproc)
-  # sudo make install
-  # sudo ldconfig
 #+end_src
 然后打包
 #+begin_src bash
@@ -175,7 +173,6 @@ Tiny Core 目前的版本是 13.X, 在[[http://tinycorelinux.net/downloads.html]
 #+begin_src bash
   mv tbt-protobuf-3.21.4.tcz /mnt/mmcblk0p2/tce/optional/
   echo 'tbt-protobuf-3.21.4.tcz' >> /mnt/mmcblk0p2/tce/onboot.lst
-  # tce-load -i tbt-protobuf-3.21.4.tcz
 #+end_src
 
 ** brotli
