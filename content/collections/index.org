@@ -343,6 +343,10 @@ Cloudflare 的[[https://blog.cloudflare.com/][博客]]有不少关于熵和随�
   Linux 的熵池
 - [[https://blog.cloudflare.com/randomness-101-lavarand-in-production/][Randomness 101: LavaRand in Production]] 利用熔岩灯生成随机数
 
+** 关于AI
+
+- [[https://simonwillison.net/2022/Jul/9/gpt-3-explain-code/][Using GPT-3 to explain how code works]] 没想到GPT-3这么厉害?
+
 ** 关于软件
 
 大概未经测试的软件总是脆弱的😮‍💨
