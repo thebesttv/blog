@@ -301,6 +301,13 @@
 - [[https://thorstenball.com/blog/2022/05/17/professional-programming-the-first-10-years/][Professional Programming: The First 10 Years]]
   一个工作十年的程序员所学到的
 
+** 关于CPU
+
+- [[https://www.zhihu.com/question/49190987/answer/115183276][如果英特尔一直以挤牙膏的方式研发 CPU，CPU 的性能是否会进入一段停滞期？ - 艾斯奥特曼的回答 - 知乎]]
+  #+begin_quote
+  Intel并不是在挤牙膏，而是一直在努力探索。只有当你成为Intel的追赶者或者竞争者的时候才能感到他们的努力和强大。
+  #+end_quote
+
 *** Lisp
 
 - [[http://winestockwebdesign.com/Essays/Lisp_Curse.html][The Lisp Curse --- Rudolf Winestock]]
