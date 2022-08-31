@@ -229,7 +229,14 @@
   be on the same side of the table as the other party, don't show your
   cards until the game is over.
   #+end_quote
+- [[https://www.zhihu.com/question/462506633/answer/2501299333][如果生三胎，国家赠送一套房子，你会生吗？ - 岳照眠的回答 - 知乎]]
+  #+begin_quote
+  不会，因为很明显孩子生下来才给我房子，如果我生了孩子国家不给我房子，我一点办法都没有。
 
+  到时候孩子生了，房子没有。我能把孩子塞肚子里吗？很明显不能。
+
+  我没有后悔的余地，国家有。
+  #+end_quote
 
 ** 关于健康 --- 留得青山在, 不怕没柴烧
 - [[https://web.archive.org/web/20100815083705/http://sheddingbikes.com/posts/1281257293.html][Common Programmer Health Problems]]
