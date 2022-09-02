@@ -237,6 +237,10 @@
 
   我没有后悔的余地，国家有。
   #+end_quote
+- [[https://mymodernmet.com/raku-inoue-plant-arrangements/][Artist Forages Fallen Flora and Arranges It Into Exquisite Portraits of Animals and Insects]]
+  有好看的鸟鸟~
+  {{{image(80)}}}
+  [[./index/raku-inoue-plant-arrangements-19.jpg]]
 
 ** 关于健康 --- 留得青山在, 不怕没柴烧
 - [[https://web.archive.org/web/20100815083705/http://sheddingbikes.com/posts/1281257293.html][Common Programmer Health Problems]]
