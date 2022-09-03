@@ -449,8 +449,17 @@ Cloudflare 的[[https://blog.cloudflare.com/][博客]]有不少关于熵和随�
 
 * 快乐游戏
 
+#+begin_quote
+电影和漫画是让你看故事, 但游戏是让你参与故事
+#+end_quote
+
 - 泰拉瑞亚
 - Spiritfarer 灵魂摆渡人 (好耶, 抱抱)
+- Celeste 蔚蓝 (死了好多好多次, 还把手柄的LT打凉了...)
+  - [[https://www.bilibili.com/video/BV13K411n7jp][【游戏奇妙物语】《蔚蓝》害死自己3068次后，我驯服了另一个自己…]]
+    #+begin_quote
+    让我们紧紧拥抱另一个自我
+    #+end_quote
 - 史莱姆牧场
 - GTA5
 - 泰坦陨落2 (协议三, 保护铁驭)
