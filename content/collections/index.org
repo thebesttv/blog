@@ -394,6 +394,7 @@ Cloudflare 的[[https://blog.cloudflare.com/][博客]]有不少关于熵和随�
 - [[https://youtu.be/OgXzUwJBmno][Self-Reconfigurable Robots and Digital Hormones]] 模块化机器人间的交流
 - [[https://youtu.be/9cT0jXI7l4E][Building a Next-Level Camera]] 好神奇的镜头
 - [[https://youtu.be/Big80AStHSU][This Keyboard Changed My Life]] 一个患有严重 RSI 的程序员的自述
+- [[https://www.bilibili.com/video/BV1Eq4y187Qi][震撼玩家！经典生存游戏《森林》到底讲了什么故事？]] 期待续作的讲解~
 
 
 ** Veritasium 真理元素
