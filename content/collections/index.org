@@ -241,6 +241,11 @@
   有好看的鸟鸟~
   {{{image(80)}}}
   [[./index/raku-inoue-plant-arrangements-19.jpg]]
+- [[https://www.zhihu.com/question/291597382/answer/2658464738][为什么越来越多博士逃离科研？ - 阿昆的科研日常的回答 - 知乎]]
+  什么是真正重要的?
+  #+begin_quote
+  以前我可能没得选，但现在，我要把自己有限的时间留给那些值得的人和事。
+  #+end_quote
 
 ** 关于健康 --- 留得青山在, 不怕没柴烧
 - [[https://web.archive.org/web/20100815083705/http://sheddingbikes.com/posts/1281257293.html][Common Programmer Health Problems]]
