@@ -254,6 +254,12 @@
 
   生活还会继续～
   #+end_quote
+- [[https://www.zhihu.com/question/450856912/answer/2378730522][中国一旦攻克芯片难题，芯片会变成白菜价吗？ - 实在哥的回答 - 知乎]]
+  #+begin_quote
+  中国早就攻克了住房建造的难题。
+
+  请问房地产变白菜价了吗?
+  #+end_quote
 
 ** 关于健康 --- 留得青山在, 不怕没柴烧
 - [[https://web.archive.org/web/20100815083705/http://sheddingbikes.com/posts/1281257293.html][Common Programmer Health Problems]]
