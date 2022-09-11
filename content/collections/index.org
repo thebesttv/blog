@@ -246,6 +246,8 @@
   #+begin_quote
   以前我可能没得选，但现在，我要把自己有限的时间留给那些值得的人和事。
   #+end_quote
+- [[https://dys2p.com/en/2021-12-tamper-evident-protection.html][Random Mosaic – Detecting unauthorized physical access with beans, lentils and colored rice]]
+  简单廉价的手段来确保货物没被拆封过
 
 ** 关于健康 --- 留得青山在, 不怕没柴烧
 - [[https://web.archive.org/web/20100815083705/http://sheddingbikes.com/posts/1281257293.html][Common Programmer Health Problems]]
