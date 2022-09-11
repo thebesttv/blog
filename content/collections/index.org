@@ -248,6 +248,12 @@
   #+end_quote
 - [[https://dys2p.com/en/2021-12-tamper-evident-protection.html][Random Mosaic – Detecting unauthorized physical access with beans, lentils and colored rice]]
   简单廉价的手段来确保货物没被拆封过
+- [[https://www.zhihu.com/question/505481994/answer/2381645820][为什么明明是葬礼，可是在吃席的时候，人们还是有说有笑？ - 卢啸天的回答 - 知乎]]
+  #+begin_quote
+  为了让大家知道，这个家还没有散。
+
+  生活还会继续～
+  #+end_quote
 
 ** 关于健康 --- 留得青山在, 不怕没柴烧
 - [[https://web.archive.org/web/20100815083705/http://sheddingbikes.com/posts/1281257293.html][Common Programmer Health Problems]]
