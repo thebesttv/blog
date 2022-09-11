@@ -239,7 +239,7 @@
   #+end_quote
 - [[https://mymodernmet.com/raku-inoue-plant-arrangements/][Artist Forages Fallen Flora and Arranges It Into Exquisite Portraits of Animals and Insects]]
   有好看的鸟鸟~
-  {{{image(80)}}}
+  {{{image(60)}}}
   [[./index/raku-inoue-plant-arrangements-19.jpg]]
 - [[https://www.zhihu.com/question/291597382/answer/2658464738][为什么越来越多博士逃离科研？ - 阿昆的科研日常的回答 - 知乎]]
   什么是真正重要的?
