@@ -414,7 +414,21 @@ Cloudflare 的[[https://blog.cloudflare.com/][博客]]有不少关于熵和随�
 - [[https://youtu.be/9cT0jXI7l4E][Building a Next-Level Camera]] 好神奇的镜头
 - [[https://youtu.be/Big80AStHSU][This Keyboard Changed My Life]] 一个患有严重 RSI 的程序员的自述
 - [[https://www.bilibili.com/video/BV1Eq4y187Qi][震撼玩家！经典生存游戏《森林》到底讲了什么故事？]] 期待续作的讲解~
-
+- [[https://youtu.be/aS3-iSEwNhs][The Crunch Culture Conundrum]]  热情是把双刃剑
+  #+begin_quote
+  In a passion fueled industry, who doesn't want passionate people?
+  It's a double-edged sword.  You need people who really care about the
+  work they do, because the more they care, the better their work will
+  be.  But unless that drive is kept in check, it quickly becomes
+  self-destructive.
+  #+end_quote
+  一条评论
+  #+begin_quote
+  That Nintendo story also brings to mind the famous Miyamoto quote: "A
+  delayed game is eventually good, but a rushed game is forever bad."
+  Practical, but also works on the human level in this case.
+  ---​[[https://www.youtube.com/channel/UCzdQOZVPcWHrceRZ7jdpZaQ][GhostSamurai]]
+  #+end_quote
 
 ** Veritasium 真理元素
 
