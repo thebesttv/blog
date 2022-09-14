@@ -1,0 +1,13 @@
+#+title: 使用 pcap2socks 加速 XBox
+
+由于 XBox 无法直接走代理, 找到了这个 [[https://github.com/zhxie/pcap2socks][pcap2socks]], 具体原理不太清楚, 不过
+还挺好用的.  介绍: [[https://www.nbmao.com/archives/4240][Pcap2socks-直接利用 SOCKS 代理的游戏加速器]].
+
+下载 release 的代码, 然后 =cargo build= 一下, 生成可执行文件在
+=target/debug= 下, 就可以运行了
+#+begin_src bash
+  sudo ./pcap2socks -s 10.6.0.1 -p 10.6.0.2 -d 127.0.0.1:1089 -i wlo1
+#+end_src
+其中 =127.0.0.1:1089= 是本地 socks5 的地址.
+
+然后在 XBox 网络 \to 高级 \to IP 里手动更改成对应的就行了.
