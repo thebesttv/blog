@@ -1,0 +1,310 @@
+#+title: Pointer Analysis
+
+#+cite_export: csl
+#+bibliography: cite.bib
+
+- [[https://en.wikipedia.org/wiki/Pointer_analysis][Wiki - Pointer analysis]]
+- [ ] [[http://gbalats.github.io/2016/10/24/macro-constructors.html][Datalog Macro-Constructors]] 大概讲的 Datalog context sensitive pta
+  的具体实现
+- [ ] 视频 [[https://youtu.be/Z2IkUPe1xmE][[POPL'22] Return of CFA: Call-Site Sensitivity Can Be
+  Superior to Object Sensitivity ...]]
+
+TODO: 有几种sensitivity，区别是什么，这些sensitivity哪些重要
+
+* Datalog
+
+Pure Datalog has such properties
+- it is not Turing-complete
+- every Datalog program runs in polynomial time, every polynomial
+  algorithm can be written in Datalog
+
+* Context Sensitivity
+
+There is another form of context sensitivity
+- based on equality constraints: assignment =x = y= is modeled with
+  constraint $pt(y) = pt(x)$ instead of $pt(y) \subseteq pt(x)$
+#+begin_quote
+While this approach has been shown to scale for C++ programs, we are
+unaware of a scalable implementation for Java-like languages. In
+particular, the increased use of virtual dispatch in Java negatively
+affects the scalability of the equality-based approach.
+[cite:@sridharanAlias2013; p. 210]
+#+end_quote
+
+The two papers present two orthogonal techniques that can be combined:
+- Zipper[cite:@liZipper2020]: implements selective context sensitivity
+- 
+The combined approach (/1callH+SL+Zip/) is typically faster than
+/1callH+SL/ at only a small cost of precision.
+
+** Categories
+
+The research of context sensitivity can be divided into three orthogonal
+categories [cite:@liZipper2020]
+- kind of context elements: 用程序中的什么来表示上下文
+  - call-site, inherited from the foundational approaches used both for C
+    and for functional languages [Sharir and Pnueli 1981; Shivers 1991]
+  - object: uses allocation sites of receiver objects [Milanova et
+    al. 2005]
+    #+begin_quote
+    Generally, object sensitivity is more precise and efficient than
+    call-site sensitivity and is considered the most effective
+    context-sensitivity variant for producing good precision for Java.
+    #+end_quote
+  - type [Smaragdakis et al. 2011]: as object sensitivity is difficult
+    to scale for large and complex Java programs
+- composition of context elements: 对上下文 (context string) 的取舍
+  - k-limiting: only use the *most recent* k elements
+  - context-tunneling: maintain an *arbitrary k-length sub-sequence* of
+    context strings.  Tunneling is a generalization of the traditional
+    k-limiting approach.
+    - identify redundant context elements not useful for improving
+      precision & skipping them
+    - machine-learning approach to select context elements
+- selective use of context sensitivity: the selection of which parts of
+  a given program to analyze with context sensitivity
+  - conventional: uniformly apply context sensitivity to every method.
+    This approach achieves the best precision, but comes at the price of
+    scalability, as functions that are expensive to analyze but
+    contribute little to precision are also included.
+  - selective object sensitivity: selectively applies deeper contexts to
+    a set of functions that are likely to benefit.  This approach has
+    the potential to speed up the analysis at a small cost of precision.
+    But this is not always the case[fn:1]: sometimes the decrease in
+    precision may be so large as to hamper the efficiency, as spurious
+    points-to information slows down the analysis.
+    - heuristic: require manual tuning of multiple complicated parameters
+    - machine-learning: require training and manual oversight during the
+      tuning phase, they can behave unpredictably for new inputs, and they
+      offer few insights on why they work
+    - a more principled approach [cite:@liZipper2020]
+
+There is also
+- hybrid context sensitivity
+  [Kastrinis and Smaragdakis 2013]
+  selective-2-object-sensitivity (s2obj)
+
+** Incorporate into Datalog
+
+To incorporate context sensitivity, add two constructors
+\[ \text{Record}(heap: H, ctx: C ) = newHCtx: HC, \\
+   \text{Merge}(heap: H, hctx: HC, invo: I, ctx: C ) = newCtx: C, \]
+where $C$ is a set of (calling) contexts, and $HC$ is a set of heap
+contexts.
+
+*Record* and *Merge* serve as /constructors/ of contexts:
+- *Record* creates a new /heap context/ for each allocation instruction
+  (aka. =new= instruction), e.g. =a = new A()=.  The object created at
+  that allocation site is /qualified with the heap context/ that
+  *Record* returns.
+- *Merge* creates a new /calling context/ (or just /context/) at each
+  call site for method invocations, e.g. =o.f()=.
+
+Normally, a k-level calling context is accompanied by a (k-1)-level heap
+context.
+
+** Call-Site Sensitivity
+
+*** Problem
+
+The effectiveness of call-site sensitivity relies on *syntactic patterns
+in the program* [cite:@smaragdakis_pointer_2015; p.36].  For example,
+only the last call-site is remembered using the 1-call-site algorithm.
+As shown in Fig. [[call-site-vs-object-sensitivity]], the function =doSet=
+is wrapped by =set=.  Although =set= is called from two different
+call-sites ([5] and [6]), both source invocations eventually point to
+=[12]:A.doSet(B)=, with the same context information.  In this case,
+nested function calls can lead to lost precision.
+
+#+caption: Call-Site vs. Object Sensitivity [cite:@nju-pointer-cs; p.161]
+#+name: call-site-vs-object-sensitivity
+{{{image(80)}}}
+[[./pta/call-site-vs-object-sensitivity.png]]
+
+调用点敏感类似于在走迷宫时, 只记住最近走过的k个门.
+一旦函数调用层数深了, 就会忘记最早的一些调用点.
+
+** Object Sensitivity
+
+object sensitivity (or *allocation-site* sensitivity)
+
+#+begin_quote
+the context of a method call is the receiver object together with *the
+"parent" receiver object* (the receiver object of the method that
+*allocated* the receiver object of the call).
+[cite:@smaragdakis_pointer_2015; p.38]
+#+end_quote
+
+*** An Example
+
+The call chain is =A.f() -> B.g(a) -> C.h(a) -> D.i(a) -> E.j(a) -> A.f()=.
+#+begin_src java
+  class A {
+      void f() {                  // [29]
+          B b = new B();
+          b.g(this);
+      }
+      void f2() { }}              // [29]
+  class B {
+      void g(A a) {               // [29, 3]
+          C c = new C();
+          c.h(a);
+      }}
+  class C {
+      void h(A a) {
+          D d = new D();          // [29, 3, 9]
+          d.i(a);
+      }}
+  class D {
+      void i(A a) {
+          E e = new E();          // [29, 3, 9, 14]
+          e.j(a);
+      }}
+  class E {
+      void j(A a) {               // [29, 3, 9, 14, 19]
+          a.f2();
+      }}
+  class Ex1 {
+      public static void main(String[] args) {
+          A a = new A();
+          a.f();
+      }}
+#+end_src
+The output of a 2-object c.s. pta:
+#+begin_src text
+  [NewObj{<Ex1: void main(java.lang.String[])>[0@L28] new A}]
+    :<A: void f()>/%this
+   -> [[]:NewObj{<Ex1: void main(java.lang.String[])>[0@L28] new A}]
+
+  [NewObj{<Ex1: void main(java.lang.String[])>[0@L28] new A}]
+    :<A: void f2()>/%this
+   -> [[]:NewObj{<Ex1: void main(java.lang.String[])>[0@L28] new A}]
+
+  [NewObj{<Ex1: void main(java.lang.String[])>[0@L28] new A},
+   NewObj{<A: void f()>[0@L3] new B}]
+    :<B: void g(A)>/%this
+   -> [[NewObj{<Ex1: void main(java.lang.String[])>[0@L28] new A}]:NewObj{<A: void f()>[0@L3] new B}]
+
+  [NewObj{<A: void f()>[0@L3] new B},
+   NewObj{<B: void g(A)>[0@L9] new C}]
+    :<C: void h(A)>/%this
+   -> [[NewObj{<A: void f()>[0@L3] new B}]:NewObj{<B: void g(A)>[0@L9] new C}]
+
+  [NewObj{<B: void g(A)>[0@L9] new C},
+   NewObj{<C: void h(A)>[0@L14] new D}]
+    :<D: void i(A)>/%this
+   -> [[NewObj{<B: void g(A)>[0@L9] new C}]:NewObj{<C: void h(A)>[0@L14] new D}]
+
+  [NewObj{<C: void h(A)>[0@L14] new D},
+   NewObj{<D: void i(A)>[0@L19] new E}]
+    :<E: void j(A)>/%this
+   -> [[NewObj{<C: void h(A)>[0@L14] new D}]:NewObj{<D: void i(A)>[0@L19] new E}]
+#+end_src
+
+** The Approach in Cartesian Product Algorithm
+
+TODO
+
+#+begin_quote
+The algorithm treats as context of a method call *the abstract values of
+all parameters* to the method call, including the *receiver object* and
+*actual arguments*.  This approach has not yet been found to yield
+useful scalability/precision tradeoffs for pointer analysis, although it
+has had application in _less expensive analyses_ (e.g., type inference).
+#+end_quote
+
+** Introspective Analysis
+
+TODO
+
+#+begin_quote
+adjusts its context per program site, based on easy-to-compute
+statistics from a context-insensitive analysis run
+#+end_quote
+
+** Hybrid Analysis
+
+#+begin_quote
+A hybrid analysis models *separately* static and virtual method calls,
+favoring _object sensitivity_ for the former and _call-site sensitivity_
+for the latter.
+#+end_quote
+
+In practice, a mix of object- and call-string sensitivity is often used,
+e.g., with call-string sensitivity being employed only for static
+methods (which have no receiver argument).
+
+** Related Papers
+
+*** A Principled Approach to Selective Context Sensitivity for Pointer Analysis [cite:@liZipper2020]
+- 识别程序中的函数, 哪些是 precision-critical, 哪些是 efficiency-critical 的
+- 解释了 causes of imprecision in context-insensitive pointer analysis
+  #+begin_quote
+  We describe three general patterns of value flow that help in
+  explaining *how and where most of the imprecision is introduced* in a
+  context-insensitive pointer analysis
+  #+end_quote
+- 提出了两个算法
+  - Zipper:
+  - Zipper^e: 只分析程序中对精度影响大, 并且对效率影响不大的函数进行分析
+
+*** Pick Your Contexts Well: Understanding Object-Sensitivity [cite:@objSensitivity2011]
+
+- Main concerns
+  - understanding object-sensitivity in depth
+  - formalizing it conveniently
+  - exploring design choices that produce even more scalable and precise
+    analyses than current practice
+
+* Field Sensitivity
+
+# Pointer Analysis p10
+
+Field sensitivity:
+
+/Field based/ analysis distinguishes fields, but only identifies
+FldPointsTo facts by the heap object's *type* and not its full identity.
+Fields of different heap objects of the same type are merged.  For
+example
+#+begin_src java -n
+  class A {
+      int f, g;
+  }
+  A x = new A();
+  A y = new A();
+#+end_src
+Although =x= and =y= point to different heap objects (x \to o_4, y \to
+o_5), =x.f= and =y.f= are both considered as =A.f=, =x.g= and =y.g= as
+=A.g=.
+
+* Steensgaard's Analysis
+
+#+begin_quote
+Steensgaard-style pointer analysis is best termed /unification-based/
+and uses /equality constraints/ as opposed to the subset constraints of
+the Andersen approach.
+
+[...] the analysis can execute in *practically-linear time* (relative to
+the number of input instructions) [...]
+
+Overall, Steensgaard-style analyses have been quite popular, especially
+in procedural languages such as C, due to their simplicity and
+*unparalleled speed*.  However, they have become progressively less used
+in recent programming languages and modern settings, where the speed of
+an Andersen-style analysis is usually quite sufficient.
+
+[cite//b:@smaragdakis_pointer_2015]
+#+end_quote
+
+* Access Path Abstraction
+
+TODO
+
+* Bibliography
+
+#+print_bibliography:
+
+* Footnotes
+
+[fn:1] See the last paragraph at [cite//b:@jeonReturnOfCFA2022] /Section
+5.3 Comparison with Selective Object Sensitivity/.
