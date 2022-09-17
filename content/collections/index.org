@@ -260,6 +260,7 @@
 
   请问房地产变白菜价了吗?
   #+end_quote
+- [[https://mp.weixin.qq.com/s/q461so9lWk4FKJGZ-p7Vcg][提问的智慧-中国版]] 相比原版做了些本土化, 而且简短了不少🤠
 
 ** 关于健康 --- 留得青山在, 不怕没柴烧
 - [[https://web.archive.org/web/20100815083705/http://sheddingbikes.com/posts/1281257293.html][Common Programmer Health Problems]]
