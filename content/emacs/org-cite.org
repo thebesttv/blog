@@ -1,0 +1,74 @@
+#+title: Using org-cite for references
+
+#+cite_export: csl
+#+bibliography: org-cite.json
+# #+bibliography: "/home/thebesttv/My Library.json"
+
+-----
+- [cite/t:@tecIntroducingCitations2021a] is a great reference material
+  for [[https://blog.tecosaur.com/tmio/2021-07-31-citations.html#cite-syntax][citation syntax]], styles, and CSL locators.
+- [cite/t:@kristofferCitationsInOrgMode2022] indoruces both Org-cite
+  and Citar.
+
+* Basic Config for using org-cite
+
+Specify =csl= backend and a bibliography database (=.bib= or =.json=
+file).  If the file path contains any space, surround it using double
+quotes.  Note that you may need to manually execute =(require 'oc-csl)=
+for org export to work with CSL.
+#+begin_src org
+  ,#+cite_export: csl
+  ,#+bibliography: org-cite.json
+  # or
+  ,#+bibliography: "/home/thebesttv/My Library.json"
+#+end_src
+
+The database file =org-cite.json=:
+#+begin_src js
+[
+    {"id":"kristofferCitationsInOrgMode2022","accessed":{"date-parts":[[2022,9,19]]},"author":[{"family":"Kristoffer","given":"Balintona"}],"citation-key":"kristofferCitationsInOrgMode2022","container-title":"Kristoffer Balintona","issued":{"date-parts":[[2022,6,14]]},"language":"en-us","title":"Citations in org-mode: Org-cite and Citar","title-short":"Citations in org-mode","type":"webpage","URL":"https://kristofferbalintona.me/posts/202206141852"},
+    {"id":"tecIntroducingCitations2021a","accessed":{"date-parts":[[2022,9,19]]},"author":[{"family":"TEC","given":""}],"citation-key":"tecIntroducingCitations2021a","issued":{"date-parts":[[2021,7,31]]},"language":"en","title":"Introducing citations!","type":"webpage","URL":"https://blog.tecosaur.com/tmio/2021-07-31-citations.html"}
+]
+#+end_src
+
+In org-mode, use formats such as =[cite:@key1;@key2]= to cite:
+- default: =[cite:@kristofferCitationsInOrgMode2022]=
+  \to [cite:@kristofferCitationsInOrgMode2022]
+- text: =[cite/t:@tecIntroducingCitations2021a]=
+  \to [cite/t:@tecIntroducingCitations2021a]
+- bare & combine the two keys: =[cite//b:@kristoffer...;@tec...]=
+  \to [cite//b:@kristofferCitationsInOrgMode2022;@tecIntroducingCitations2021a]
+
+Used together with CSL locators:
+- page (=p=, =p.=, =pp.=): allows you to specify a page number.
+
+  =[cite//b: *see* /this/ @tecIntroducingCitations2021a p. 18]= \to
+  [cite//b: *see* /this/ @tecIntroducingCitations2021a p. 18]
+
+Instead of manually typing citation, use =C-c C-x @= (=org-cite-insert=)
+to insert one.  When used together with helm, use =M-RET= to exit.
+
+If the title contains an em-dash, use it directly (—) instead of using
+three dashes (=-=).
+
+* Managing Bibliography
+
+Use Zotero to manage bibliography.
+Use [[https://retorque.re/zotero-better-bibtex/][Better Bibtex For Zotero]] to export =.bib= (Better BibTeX) or =.json=
+(Better CSL JSON) file.
+
+By default, both /abstract/ and /file path/ are included in the exported
+database.  To omit those fields, add a comma-separated list
+"=abstract,file=" to Zotero: Edit \to Preferences \to Better BibTeX \to
+Export \to Fields \to Fields to omit from export.
+
+* Bibliography
+
+Use =#+PRINT_BIBLIOGRAPHY:= to print biblography at the current
+location, like this:
+#+begin_src org
+#+print_bibliography:
+#+end_src
+The result will be:
+
+#+print_bibliography:
