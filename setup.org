@@ -26,6 +26,9 @@
 # use dark background for code, taken from https://emacs.stackexchange.com/q/3374/33265
 #+HTML_HEAD: <style>pre.src { background-color: #303030; color: #e5e5e5; }</style>
 
+# add shadow to inline code
+#+HTML_HEAD: <style> code { background-color: #E8E8E8; border-radius: 3px; padding: 2px } </style>
+
 # change code line height to normal
 #+HTML_HEAD: <style> pre.src { line-height: normal; } </style>
 
