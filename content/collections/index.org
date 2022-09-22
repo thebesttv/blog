@@ -285,6 +285,7 @@
   organs not caused by disease.  Really, it's just not worth it if you
   have to kill yourself to be good at something.
   #+end_quote
+- [[https://mp.weixin.qq.com/s/i7xeJArw5GN-cgZo3lIAHA][每天戴耳机超过一小时，多久会聋？]] 555要少戴耳机了
 
 ** 关于编码 --- UTF-8 遍地开花
 - [[http://www.hanselman.com/blog/why-the-askobama-tweet-was-garbled-on-screen-know-your-utf8-unicode-ascii-and-ansi-decoding-mr-president][Why the #AskObama Tweet was Garbled on Screen: Know your UTF-8,
