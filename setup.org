@@ -17,8 +17,8 @@
 # remove theme's default table caption, use org-mode's instead
 #+HTML_HEAD: <style> caption::before { all: initial; } </style>
 
-# change table & image caption number to bold
-#+HTML_HEAD: <style> .table-number, .figure-number { font-weight: bold; } </style>
+# change table, image, and code block caption number to bold
+#+HTML_HEAD: <style> .table-number, .figure-number, .listing-number { font-weight: bold; } </style>
 
 # center table
 #+HTML_HEAD: <style> table { margin-left: auto; margin-right: auto; } </style>
