@@ -266,6 +266,7 @@
   Whatever you’re excited about, be excited about it publicly.
   Whatever you’re curious about, be curious about it publicly.
   #+end_quote
+- [[https://www.zhihu.com/question/312017458/answer/649571239][要不要给导师送特产？ - 知乎]] 哈哈哈哈🐓打鸣
 
 ** 关于健康 --- 留得青山在, 不怕没柴烧
 - [[https://web.archive.org/web/20100815083705/http://sheddingbikes.com/posts/1281257293.html][Common Programmer Health Problems]]
