@@ -1,7 +1,18 @@
 #+title: Pointer Analysis
 
+#+options: toc:t
+#+latex_compiler: xelatex
+#+latex_header: \usepackage{ctex}
+#+latex_header: \usepackage[margin=3cm]{geometry}
+#+latex_header: \usepackage{algorithm}
+#+latex_header: \usepackage{algorithmic}
+#+latex_header: \usepackage{multirow}
+#+latex_header: \usepackage{diagbox}
+
+#+macro: image        #+ATTR_HTML: :width $1% :style margin-left: auto; margin-right: auto;
+
 #+cite_export: csl
-#+bibliography: cite.bib
+#+bibliography: pta.json
 
 - [[https://en.wikipedia.org/wiki/Pointer_analysis][Wiki - Pointer analysis]]
 - [ ] [[http://gbalats.github.io/2016/10/24/macro-constructors.html][Datalog Macro-Constructors]] 大概讲的 Datalog context sensitive pta
@@ -9,7 +20,11 @@
 - [ ] 视频 [[https://youtu.be/Z2IkUPe1xmE][[POPL'22] Return of CFA: Call-Site Sensitivity Can Be
   Superior to Object Sensitivity ...]]
 
-TODO: 有几种sensitivity，区别是什么，这些sensitivity哪些重要
+- value-based context-sensitivity [Khedker and Karkare 2008; Padhye and
+  Khedker 2013] from [cite:@jeonPreciseScalablePointsto2018 sec. 2 para. 2]
+
+TODO: context-tunneling 的各种 policy
+- 先看那篇最开始的提出tunneling的18年的论文?
 
 * Datalog
 
@@ -28,11 +43,12 @@ While this approach has been shown to scale for C++ programs, we are
 unaware of a scalable implementation for Java-like languages. In
 particular, the increased use of virtual dispatch in Java negatively
 affects the scalability of the equality-based approach.
-[cite:@sridharanAlias2013; p. 210]
+[cite:@sridharanAliasAnalysisObjectOriented2013 p. 210]
 #+end_quote
 
 The two papers present two orthogonal techniques that can be combined:
-- Zipper[cite:@liZipper2020]: implements selective context sensitivity
+- Zipper[cite:@liPrincipledApproachSelective2020]:
+  implements selective context sensitivity
 - 
 The combined approach (/1callH+SL+Zip/) is typically faster than
 /1callH+SL/ at only a small cost of precision.
@@ -40,9 +56,9 @@ The combined approach (/1callH+SL+Zip/) is typically faster than
 ** Categories
 
 The research of context sensitivity can be divided into three orthogonal
-categories [cite:@liZipper2020]
+categories [cite:@liPrincipledApproachSelective2020]
 - kind of context elements: 用程序中的什么来表示上下文
-  - call-site, inherited from the foundational approaches used both for C
+  - call-site: inherited from the foundational approaches used both for C
     and for functional languages [Sharir and Pnueli 1981; Shivers 1991]
   - object: uses allocation sites of receiver objects [Milanova et
     al. 2005]
@@ -55,14 +71,25 @@ categories [cite:@liZipper2020]
     to scale for large and complex Java programs
 - composition of context elements: 对上下文 (context string) 的取舍
   - k-limiting: only use the *most recent* k elements
-  - context-tunneling: maintain an *arbitrary k-length sub-sequence* of
-    context strings.  Tunneling is a generalization of the traditional
-    k-limiting approach.
+  - context-tunneling: instead of keeping the /most recent/ k context
+    elements, keep the */most important/* k elements.  Context-tunneling
+    maintains an *arbitrary k-length sub-sequence* of context strings.
+    It is a generalization of the traditional k-limiting approach.
+    #+begin_quote
+    Don't keep the most recent K, keep the most important K.
+    #+end_quote
+    - Tunneling abstractoin is a set of relations between the methods,
+      which determine when to apply context-tunneling (skip
+      elements???).
     - identify redundant context elements not useful for improving
       precision & skipping them
     - machine-learning approach to select context elements
 - selective use of context sensitivity: the selection of which parts of
-  a given program to analyze with context sensitivity
+  a given program to analyze with context sensitivity.
+  #+begin_quote
+  Selective context analysis *applies differnt k to different methods*.
+  [cite:@jeonPreciseScalablePointsto2018 p. 3]
+  #+end_quote
   - conventional: uniformly apply context sensitivity to every method.
     This approach achieves the best precision, but comes at the price of
     scalability, as functions that are expensive to analyze but
@@ -77,7 +104,8 @@ categories [cite:@liZipper2020]
     - machine-learning: require training and manual oversight during the
       tuning phase, they can behave unpredictably for new inputs, and they
       offer few insights on why they work
-    - a more principled approach [cite:@liZipper2020]
+    - a more principled approach
+      [cite:@liPrincipledApproachSelective2020]
 
 There is also
 - hybrid context sensitivity
@@ -108,7 +136,7 @@ context.
 *** Problem
 
 The effectiveness of call-site sensitivity relies on *syntactic patterns
-in the program* [cite:@smaragdakis_pointer_2015; p.36].  For example,
+in the program* [cite:@smaragdakisPointerAnalysis2015 p.36].  For example,
 only the last call-site is remembered using the 1-call-site algorithm.
 As shown in Fig. [[call-site-vs-object-sensitivity]], the function =doSet=
 is wrapped by =set=.  Although =set= is called from two different
@@ -116,7 +144,7 @@ call-sites ([5] and [6]), both source invocations eventually point to
 =[12]:A.doSet(B)=, with the same context information.  In this case,
 nested function calls can lead to lost precision.
 
-#+caption: Call-Site vs. Object Sensitivity [cite:@nju-pointer-cs; p.161]
+#+caption: Call-Site vs. Object Sensitivity [cite:@tanStaticProgramAnalysis2021 p.161]
 #+name: call-site-vs-object-sensitivity
 {{{image(80)}}}
 [[./pta/call-site-vs-object-sensitivity.png]]
@@ -132,7 +160,7 @@ object sensitivity (or *allocation-site* sensitivity)
 the context of a method call is the receiver object together with *the
 "parent" receiver object* (the receiver object of the method that
 *allocated* the receiver object of the call).
-[cite:@smaragdakis_pointer_2015; p.38]
+[cite:@smaragdakisPointerAnalysis2015 p.38]
 #+end_quote
 
 *** An Example
@@ -236,7 +264,7 @@ methods (which have no receiver argument).
 
 ** Related Papers
 
-*** A Principled Approach to Selective Context Sensitivity for Pointer Analysis [cite:@liZipper2020]
+*** A Principled Approach to Selective Context Sensitivity for Pointer Analysis [cite:@liPrincipledApproachSelective2020]
 - 识别程序中的函数, 哪些是 precision-critical, 哪些是 efficiency-critical 的
 - 解释了 causes of imprecision in context-insensitive pointer analysis
   #+begin_quote
@@ -248,7 +276,7 @@ methods (which have no receiver argument).
   - Zipper:
   - Zipper^e: 只分析程序中对精度影响大, 并且对效率影响不大的函数进行分析
 
-*** Pick Your Contexts Well: Understanding Object-Sensitivity [cite:@objSensitivity2011]
+*** Pick Your Contexts Well: Understanding Object-Sensitivity [cite:@smaragdakisPickYourContexts2011]
 
 - Main concerns
   - understanding object-sensitivity in depth
@@ -293,7 +321,7 @@ in procedural languages such as C, due to their simplicity and
 in recent programming languages and modern settings, where the speed of
 an Andersen-style analysis is usually quite sufficient.
 
-[cite//b:@smaragdakis_pointer_2015]
+[cite//b:@smaragdakisPointerAnalysis2015]
 #+end_quote
 
 * Access Path Abstraction
@@ -306,5 +334,5 @@ TODO
 
 * Footnotes
 
-[fn:1] See the last paragraph at [cite//b:@jeonReturnOfCFA2022] /Section
-5.3 Comparison with Selective Object Sensitivity/.
+[fn:1] See the last paragraph at [cite//b:@jeonReturnCFACallsite2022]
+/Section 5.3 Comparison with Selective Object Sensitivity/.
