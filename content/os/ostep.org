@@ -916,3 +916,35 @@ time.
 Device driver makes OS device-neutral---the details of device interactions are
 hidden from major OS subsystems.
 
+* TODO 37. Hard Disk Drives
+
+A disk drive consists of an array of *sectors* (the address space of the drive)
+that store user data.  Traditionally, each sector has a fixed size of 512
+bytes, but [[https://en.wikipedia.org/wiki/Advanced_Format][Advanced Format]] allows 4KB sectors.
+
+A disk has one or mote *platters*; each platter has 2 sides, each of which is
+called a *surface* (盘面).
+
+IO time consists of three parts:
+- *seek time* (寻道时间): time head takes seeking the right track.  $T_{seek}$
+- *rotational delay* (旋转等待时间): head waits for the correct sector.
+  $T_{loop} = 60 \cdot 1000 / \text{RPM} \, \text{ms}$
+- *transfer time* (传输时间): time spent reading/writing a single
+  sector. $T_{transfer}$
+
+* TODO 38. Redundant Arrays of Inexpensive Disks (RAIDs)
+
+RAID connects multiple disks in concert and uses redundancy to build a large,
+fast and reliable storage system, all transparent to the OS.
+
+We assume a simple *fault model*---the *fail-stop* fault model, where a disk
+can be either working or failed.  A RAID is evaluated along three axes:
+capacity, reliability, and performance.
+
+** RAID 0: Striping
+
+RAID 0 is technically not a RAID as it uses no reduncancy.  It serves only as
+an upper-bound on performance and capacity.  Assume there're $N$ disks each
+with $B$ blocks.  A RAID array of *chunk size* $k$ blocks will form a *stripe*
+of $N \times k$ blocks.  Each chunk sits in one disk.  The stripe spreads
+across the $N$ disks.
