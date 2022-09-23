@@ -1,9 +1,12 @@
 #+title: 计网
 
+- [[https://www.nayab.xyz/networking/capture-wireless-packets-monitor-mode-linux][Capture wireless packets in monitor mode in Linux]]
+
 * Computer Networking: A Top-Down Approach
 
 - [[https://gaia.cs.umass.edu/kurose_ross/index.php][Homepage of the book]]
-- [[https://wps.pearsoned.com/ecs_kurose_compnetw_6/216/55463/14198700.cw/index.html][Resources of 6th edition]] contains interactive animations
+- [[https://wps.pearsoned.com/ecs_kurose_compnetw_6/216/55463/14198700.cw/index.html][Resources for the 6th edition]]
+- [[https://media.pearsoncmg.com/intl/ge/2021/cws/ge_kurose_compnetwork_8/cw/index.php][Student Resources at Pearson]] contains interactive animations
 - [[https://gaia.cs.umass.edu/kurose_ross/wireshark.php][Wireshark Lab]]
 
 * DNS
