@@ -3,6 +3,7 @@
 这里是一系列待看的文章、待填的坑（可能就一直留着不填了），主要源自阮一峰的《科技爱好者周刊》。
 
 - [[https://github.com/n7olkachev/imgdiff][imgdiff]] Faster than the fastest in the world pixel-by-pixel image difference tool.
+- [[https://github.com/conanhujinming/tips_for_interview][Jinming Hu - 我的一些面试心得；自学CS历程分享；找工作求职经验分享]]
 
 * Book List
 
