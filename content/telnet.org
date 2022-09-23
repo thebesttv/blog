@@ -1,0 +1,39 @@
+#+title: Telnet
+
+An end-of-line is transmitted as the character sequence CR (carriage
+return) followed by LF (line feed).  If it is desired to transmit an
+actual carriage return this is transmitted as a carriage return
+followed by a NUL (all bits zero) character.
+
+* 各种 options
+
+[[https://www.iana.org/assignments/telnet-options/telnet-options.xhtml][Telnet Options]]---the official list of assigned option numbers.
+
+** Echo---​[[https://www.iana.org/go/rfc857][RFC857]] [fn:1]
+
+
+** Suppress Go Ahead---​[[https://www.iana.org/go/rfc858][RFC858]]
+
+#+begin_quote
+As the SUPRESS-GO-AHEAD option is sort of the opposite of a line at a
+time mode, the sender of data which is suppressing GO AHEADs should
+attempt to actually transmit characters as soon as possible (i.e.,
+with minimal buffering) consistent with any other agreements which
+are in effect.
+#+end_quote
+
+* Footnotes
+
+[fn:1] 在 org-mode 中, em-dash (=---=) 后面加上链接 (=[[...][...]]=)
+会导致 em-dash 不显示,按照 manual [[https://orgmode.org/manual/Escape-Character.html][16.11 Escape Character]] 中所说,最简单
+的办法是在 =-= 和 =[= 之间加上一个零宽空格(zero width space).
+#+begin_src
+  Suppress Go Ahead---[[link][text]]  # 单纯酱是不行的
+  # 应该在 -[ 之间输入一个零宽空格:
+  # C-x 8 <RET> zero width space <RET>
+  # C-x 8 <RET> 200B <RET>
+  Suppress Go Ahead---​[[link][text]]  # 加了,但看不出来加了
+  # 不过看一下源码,就会发现其实是酱:
+  Suppress Go Ahead---&ZeroWidthSpace;[[link][text]]
+#+end_src
+

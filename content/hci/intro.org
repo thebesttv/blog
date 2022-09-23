@@ -1,0 +1,25 @@
+#+title: 人机交互笔记
+
+现代计算机的软硬件如何变得易于使用
+
+之前教材：Alan Dix, Janet Finlay. Human-Computer Interaction (3rd)
+参考教材：Helen Sharp 交互设计：超越人机交互(5th)
+          Achintya K.Bhowmil 实感交互 - 人工智能下的交互技术
+
+人机交互的发展——从人适应计算机，到计算机适应人的过程
+
+CHI conference
+
+多通道（感官）交互
+
+手写识别
+- online
+- offline
+
+-----
+
+书：
+- [[http://www.id-book.com/][Interaction Design: beyond human-computer interaction (5th edition)]]
+
+
+好有意思的一个设计：[[http://dataphys.org/list/durrell-bishops-marble-answering-machine/][Durrell Bishop 的弹珠答录机]]，还有[[https://vimeo.com/19930744][视频演示]]。

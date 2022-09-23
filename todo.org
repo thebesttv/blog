@@ -1,0 +1,44 @@
+* flag & 坑
+- 学 git
+- [[https://github.com/cute-jumper/ace-pinyin][ace-pinyin - Jump to Chinese character by pinyin with `avy' or
+  `ace-jump-mode`]]
+- [[https://github.com/DogLooksGood/meow][modular Emacs on wish / 猫态编辑]]
+  [[https://emacs-china.org/t/meow/15679][Emacs China - 猫态编辑：Meow]]
+- html, css, js
+- [[https://www.reddit.com/r/emacs/comments/mee5gz/using_emacs_as_simple_webserver_on_vps/gsghhx4?utm_source=share&utm_medium=web2x&context=3][三大 webserver]]
+  - [[http://nic.ferrier.me.uk/blog/2012_08/elnode-nears-1-point-0][Elnode - the EmacsLisp Async Webserver]]
+- https://softwarefoundations.cis.upenn.edu/  我也不造这是啥
+- [[http://ergoemacs.org/misc/which_chapters_of_elisp_manual_to_read.html][Which Chapters of Elisp Manual to Read?]]
+- [[https://yoo2080.wordpress.com/2013/08/07/living-with-emacs-lisp/][Living with Emacs Lisp]]
+- [[http://cachestocaches.com/series/emacs-productivity/][Emacs For Productivity]]
+- [[http://danmidwood.com/content/2014/11/21/animated-paredit.html][The Animated Guide to Paredit]]
+- [[https://css-tricks.com/svg-favicons-and-all-the-fun-things-we-can-do-with-them/][SVG, Favicons, and All the Fun Things We Can Do With Them]]
+- [[https://css-tricks.com/emojis-as-favicons/][Emojis as Favicons]]
+- [[https://cyb.org.uk/2021/05/03/bash-productivity.html][Be more productive with use of your BASH history]]
+- [[https://pages.lip6.fr/Christian.Queinnec/WWW/LiSP.html][Lisp in Small Pieces]]
+- [[https://cjting.me/2021/06/10/hot-reload-c/][热重载 C]]
+- [[https://github.com/SmartKeyerror/Psyduck][使用 XMind 记录 Linux 操作系统，网络，C++，Golang 以及数据库的一些设计]]
+- [[https://github.com/Asabeneh/30-Days-Of-JavaScript][About 30 days of JavaScript programming]]
+- [[https://skamille.medium.com/an-incomplete-list-of-skills-senior-engineers-need-beyond-coding-8ed4a521b29f][An incomplete list of skills senior engineers need, beyond coding]]
+- [[https://youtu.be/15w3I6MwCfs][Orgmode E01S02: ToDo keywords]]
+- [[https://kitchingroup.cheme.cmu.edu/blog/2019/02/12/Using-results-from-one-code-block-in-another-org-mode/][Using results from one code block in another org-mode]]
+- [[https://www.reddit.com/r/emacs/comments/77jn7e/how_do_i_get_started_with_orgmode/][How do I get started with org-mode?]]
+- [[https://erkin.party/blog/200715/evolution/][The evolution of a Scheme programmer]]
+
+* fix
+- emacs在后台作为daemon运行时，在发布的网站上导出的代码没有高亮
+- 博客放图
+  压缩了再放
+- 图床？
+- 加上 pastebin ？
+
+* ffmpeg
+- [[https://opensource.com/article/17/6/ffmpeg-convert-media-file-formats][A quick guide to using FFmpeg to convert media files]]
+- [[https://api.video/blog/video-trends/ffmpeg-for-beginners-processing-converting-and-streaming-video][FFMPEG for Beginners: Scripts for Processing, Converting, and Streaming Video]]
+- [[http://www.ruanyifeng.com/blog/2020/01/ffmpeg.html][FFmpeg 视频处理入门教程]]
+
+* Web Dev
+- [[http://www.xahlee.info/js/index.html][Xah Web Dev Tutorials]]
+- [[https://github.com/microsoft/Web-Dev-For-Beginners][Web-Dev-For-Beginners]]
+- [[https://thecsspodcast.libsyn.com/][The CSS Podcast]]
+- [[https://www.petefreitag.com/item/208.cfm][Adding a CSS StyleSheet to your RSS Feed]]

@@ -1,0 +1,317 @@
+#+title: Ch8 --- The IO Library
+
+* The IO Classes
+
+=iostream= defines the basic types used to read from and write to a
+stream, =fstream= defines the types used to read and write named
+files, and =sstream= defines the types used to read and write
+in-memory =string=​s.
+
+{{{image(100)}}}
+[[./ch8/io-types.png]]
+
+** No Copy or Assign for IO Objects 🧐
+
+Because we can't copy the IO types, we cannot have _a parameter or
+return type_ that is one of the stream types.  Functions that do IO
+typically pass and return the stream through *references*.  _Reading
+or writing an IO object *changes its state*_, so the reference must
+*not* be =const=.
+
+** Condition States
+
+The IO classes define functions and flags that let us access and
+manipulate the *condition state* of a stream:
+{{{image(100)}}}
+[[./ch8/io-state.png]]
+
+#+begin_box
+- [[http://cplusplus.com/reference/ios/ios_base/iostate/][=iostate=]]
+- [[http://cplusplus.com/reference/ios/basic_ios/rdstate/][=rdstate=]]
+- [[https://cplusplus.com/reference/ios/basic_ios/clear/][=clear=]]
+- [[http://cplusplus.com/reference/ios/basic_ios/setstate/][=setstate=]]
+
+The =iostate= can be thought of (only thought of, its real value is
+machine-dependent) as a 3-bit bitset: {badbit, failbit, eofbit}.  Each
+bit is independent.  The =goodbit= is on iff the set is 000.
+#+end_box
+
+Once an error has occurred, _subsequent IO operations on that stream
+will fail_.  We can read from or write to a stream only when it is in
+a *non-error state*.  Because a stream might be in an error state,
+code ordinarily should check whether a stream is okay before
+attempting to use it.  The easiest way to determine the state of a
+stream object is to use that object as a condition: =while (cin >>
+word)=.
+
+*** Interrogating the State of a Stream
+
+The IO library defines a *machine-dependent* integral type named
+=iostate= that it uses to convey information about the state of a
+stream.  This type is used as *a collection of bits*.  The IO classes
+define four =constexpr= values of type =iostate= that _represent
+particular bit patterns_.  These values are used to indicate
+particular kinds of IO conditions.  They can be _used with the bitwise
+operators to test or set multiple flags in one operation_.
+
+- The =badbit= indicates a */system-level failure/*, such as an
+  unrecoverable read or write error.  It is usually *not possible* to
+  use a stream once badbit has been set.
+- The =failbit= is set after a *recoverable error*, such as reading a
+  character when numeric data was expected.  It is often possible to
+  correct such problems and continue using the stream.
+- Reaching end-of-file sets both =eofbit= and =failbit=.
+- The =goodbit=, which is guaranteed to have the value 0, indicates no
+  failures on the stream.
+
+If any of =badbit=, =failbit=, or =eofbit= are set, then a condition
+that evaluates that stream will fail.
+
+*** Managing the Condition State
+
+The function =rdstate= returns the current =iostate=.  The two
+functions for modifying =iostate=---​=setstate= and =clear=---however,
+are a bit confusing.
+
+- =void clear (iostate state = goodbit);=
+
+  =clear= *resets* =iostate= to =state=.
+
+- =void setstate (iostate state);=
+
+  =setstate= *combines* =state= to the current =iostate=, effectively
+  doing a bitwise *OR* operation.  This function behaves as if defined
+  as:
+  #+begin_src cpp
+    void basic_ios::setstate (iostate state) {
+      clear(rdstate() | state);
+    }
+  #+end_src
+
+
+#+begin_src cpp
+  auto old_state = cin.rdstate(); // remember the current state of cin
+  cin.clear();                    // make cin valid
+  process_input(cin);             // use cin
+  cin.setstate(old_state);        // now reset cin to its old state
+#+end_src
+
+The following code turns off =failbit= and =badbit= but leaves
+=eofbit= untouched:
+#+begin_src cpp
+  cin.clear(cin.rdstate() & ~cin.failbit & ~cin.badbit);
+#+end_src
+
+If =cin= encounter a non-=int= value when reading an =int=, its state
+will be in error, and the input is not discarded.  You must =ignore=
+it explicitly in order to proceed[fn:1]:
+#+begin_src cpp
+  #include <iostream>
+  #include <cstdlib>
+  #include <limits>
+  using namespace std;
+
+  int main() {
+      int ival;
+      try {
+          while (cin >> ival, !cin.eof()) {
+              if (cin.bad()) {
+                  throw runtime_error("IO stream corrupted");
+              }
+              if (cin.fail()) {
+                  cerr << "Invalid input - try again" << endl;
+                  cin.clear();
+                  // ignore until '\n'
+                  cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                  continue;
+              } else {
+                  cout << ival << endl;
+              }
+          }
+          return EXIT_SUCCESS;
+      } catch(runtime_error err) {
+          cout << err.what();
+          return EXIT_FAILURE;
+      }
+  }
+#+end_src
+
+** Managing the Output Buffer
+
+Each output stream manages a buffer, which it uses to hold the data
+that the program reads and writes.  There are several conditions that
+cause the buffer to be flushed---that is, to be written---to the
+actual output device or file:
+- The program completes normally.  All output buffers are flushed as
+  part of the =return= from =main=.
+- At some indeterminate time, _the buffer can become full_, in which
+  case it will be flushed before writing the next value.
+- We can flush the buffer explicitly using a /manipulator/ such as
+  =endl=.
+- We can use the =unitbuf= manipulator to set the stream's internal
+  state to empty the buffer after each output operation.  By default,
+  =unitbuf= is set for =cerr=, so that writes to =cerr= are flushed
+  immediately.
+- An output stream might be *tied to another stream*.  In this case,
+  the output stream is _flushed whenever the stream to which it is
+  tied is read or written_. By default, =cin= and =cerr= are both tied
+  to =cout=.  Hence, reading =cin= or writing to =cerr= flushes the
+  buffer in =cout=.
+
+*** The =endl=, =flush=, =ends=, and =unitbuf= Manipulator
+
+=flush= flushes the stream but adds no characters to the output;
+=ends= inserts a null character into the buffer and then flushes it:
+#+begin_src cpp
+  cout << "hi!" << endl;  // writes hi and a newline, then flushes the buffer
+  cout << "hi!" << flush; // writes hi, then flushes the buffer; adds no data
+  cout << "hi!" << ends;  // writes hi and a null, then flushes the buffer
+#+end_src
+
+*** Tying Input and Output Streams Together
+
+#+begin_src cpp
+  ostream* std::ios::tie () const;          // (1)
+  ostream* std::ios::tie (ostream* tiestr); // (2)
+#+end_src
+
+Get/set tied stream.
+
+The first form /(1)/ returns a pointer to the tied output stream.  The
+second form /(2)/ ties the object to =tiestr= and returns a pointer to
+the stream tied *before* the call, if any.
+
+The tied stream is an output stream object which is flushed before
+each IO operation in this stream object.
+
+* File Input and Output
+
+In addition to the behavior that they inherit from the =iostream=
+types, the types defined in =fstream= add members to manage the file
+associated with the stream.
+
+{{{image(100)}}}
+[[./ch8/fstream.png]]
+
+** Using File Stream Objects
+
+Once a file stream has been opened, it remains associated with the
+specified file.  Indeed, calling =open= on a file stream that is
+already open will fail and set =failbit=.  To associate a file stream
+with a different file, we must first _close the existing file_.  Once
+the file is closed, we can open a new one:
+#+begin_src cpp
+  ifstream in(ifile);
+  in.close();
+  in.open(ifile + "2");
+#+end_src
+
+#+begin_src cpp
+  // for each file passed to the program
+  for (auto p = argv + 1; p != argv + argc; ++p) {
+      ifstream input(*p);        // create input and open the file
+      if (input) {               // if the file is ok, process this file
+          process(input);
+      } else
+          cerr << "couldn’t open: " + string(*p);
+  } // input goes out of scope and is destroyed on each iteration
+#+end_src
+
+*When an =fstream= object is destroyed, =close= is called
+automatically.*
+
+** File Modes
+
+Each stream has an associated *file mode* that represents how the file
+may be used.
+
+{{{image(100)}}}
+[[./ch8/file-modes.png]]
+
+The modes that we can specify have the following restrictions:
+- =out= may be set only for an =ofstream= or =fstream= object.
+- =in= may be set only for an =ifstream= or =fstream= object.
+- =trunc= may be set only when =out= is also specified.
+- =app= mode may be specified so long as =trunc= is not.  If =app= is
+  specified, the file is always opened in output mode, even if out was
+  not explicitly specified.
+- By default, a file opened in =out= mode is *truncated* even if we do
+  not specify =trunc=.  To preserve the contents of a file opened with
+  =out=, either we must also specify =app=, in which case we can write
+  only at the end of the file, or we must also specify =in=, in which
+  case the file is open *for both input and output*.
+- The =ate= and =binary= modes may be specified on any file stream
+  object type and in combination with any other file modes.
+
+Each file stream type defines a default file mode that is used
+whenever we do not otherwise specify a mode.  Files associated with an
+=ifstream= are opened in =in= mode; files associated with an
+=ofstream= are opened in =out= mode; and files associated with an
+=fstream= are opened with both =in= and =out= modes.
+
+The only way to prevent an =ostream= from emptying the given file is
+to specify *=app=*:
+#+begin_src cpp
+  // file1 is truncated in each of these cases
+  ofstream out("file1");                 // out and trunc are implicit
+  ofstream out2("file1", ofstream::out); // trunc is implicit
+  ofstream out3("file1", ofstream::out | ofstream::trunc);
+
+  // to preserve the file’s contents, we must explicitly specify app mode
+  ofstream app("file2", ofstream::app); // out is implicit
+  ofstream app2("file2", ofstream::out | ofstream::app);
+#+end_src
+
+* =string= Streams
+
+The =sstream= header defines three types to support /in-memory IO/.
+
+{{{image(100)}}}
+[[./ch8/stringstream.png]]
+
+#+begin_src cpp
+  struct PersonInfo {
+      string name;
+      vector<string> phones;
+  };
+
+  int main() {
+      string line, word;
+      vector<PersonInfo> people;
+      istringstream record;
+      while (getline(cin, line)) {
+          PersonInfo info;
+          record.clear();
+          record.str(line);
+          record >> info.name;
+          while (record >> word) {
+              info.phones.push_back(word);
+          }
+          people.push_back(info);
+      }
+
+      for (const auto &entry : people) {
+          ostringstream formatted, badNums;
+          for (const auto &nums : entry.phones) {
+              if (!valid(nums)) {
+                  badNums << " " << nums;
+              } else {
+                  formatted << " " << format(nums);
+              }
+          }
+          if (badNums.str().empty())
+              os << entry.name << " "
+                 << formatted.str() << endl;
+          else
+              cerr << "input error: " << entry.name
+                   << " invalid number(s) " << badNums.str() << endl;
+      }
+
+      return 0;
+  }
+#+end_src
+
+* Footnotes
+
+[fn:1] [[https://stackoverflow.com/q/17012270/11938767#comment24584080_17012270][How to clear the state bits in an iostream object in C++? ---
+chris's comment]]

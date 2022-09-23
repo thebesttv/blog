@@ -1,0 +1,326 @@
+#+title: Things to do after installation
+
+#+macro: pkg [[https://archlinux.org/packages/?q=$1][=$1=]]
+#+macro: aur [[https://archlinux.org/packages/?q=$1][=$1=]]
+
+* Packages
+
+** GUI
+
+{{{pkg(xorg-server)}}}
+
+*** KDE Plasma
+
+sudo pacman -S chromium
+
+
+{{{pkg(plasma)}}}, {{{pkg(kde-applications)}}}
+
+** Bluetooth
+
+{{{pkg(bluez)}}}
+{{{pkg(bluez-utils)}}}
+pulseaudio-bluetooth
+bluedevil : kde
+
+** Applications
+
+*** Basic
+
+{{{pkg(rsync)}}}
+{{{pkg(reflector)}}}
+
+asp
+fakeroot
+base-devel
+htop, wget, curl
+libappimage
+
+{{{pkg(bash-completion)}}}
+
+p7zip
+
+*** Documents
+
+{{{pkg(libreoffice-still)}}}
+
+*** Browsers
+
+{{{pkg(firefox)}}}
+{{{pkg(chromium)}}}
+
+*** LaTeX
+
+{{{pkg(texlive-most)}}}
+
+中文支持
+{{{pkg(texlive-langchinese)}}}
+
+{{{pkg(kile)}}}
+
+{{{pkg(vlc)}}}
+
+*** Graphics
+
+xf86-video
+
+mesa
+
+*** Input methods
+
+{{{pkg(fcitx5)}}}
+
+librime
+
+fcitx5-rime  fcitx5-qt fcitx5-gtk
+fcitx5-configtool
+
+Set the following environment variables in =/etc/environment=:
+#+begin_src text
+  GTK_IM_MODULE=fcitx
+  QT_IM_MODULE=fcitx
+  XMODIFIERS=@im=fcitx
+  SDL_IM_MODULE=fcitx
+#+end_src
+
+Several tools:
+- =fcitx5-remote=: return 1 for active, 0 for close
+- =fcitx5-diagnose=: the first command to run when something goes wrong.
+
+Fcitx5 has an "Clipboard" addon that uses =C-;= as its hot key.
+Disabling the addon seems to affect other functionality, so simply
+delete the hot key.
+
+*** Fcitx5 not working in Emacs
+
+See [[https://wiki.archlinux.org/title/Fcitx#Emacs][this]]
+
+- Make sure =LC_CTYPE= is =zh_CN.UTF-8=.
+
+Fonts to install:
+# this seems to be useless
+# - {{{pkg(xorg-fonts-misc-otb)}}} [AUR] (also needs
+#   {{{pkg(fonttosfnt)}}} [AUR]).
+- {{{pkg(ttf-dejavu)}}}
+- {{{pkg(xorg-mkfontscale)}}}
+
+** Fonts
+
+- {{{pkg(adobe-source-han-sans-otc-fonts)}}},
+  {{{pkg(adobe-source-han-serif-otc-fonts)}}} :: Si yuran
+- {{{pkg(noto-fonts-emoji)}}} :: Emoji font.
+- {{{pkg(ttf-hack)}}} :: The [[https://sourcefoundry.org/hack/][Hack]] font.
+
+*** Set default fonts
+
+See [[https://wiki.archlinux.org/title/Font_configuration#Replace_or_set_default_fonts][wiki]].
+
+Add the following lines (in tag =<fontconfig>=) to
+=~/.config/fontconfig/fonts.conf=:
+#+begin_src xml
+  <fontconfig>
+    <match target="pattern">
+      <test qual="any" name="family"><string>monospace</string></test>
+      <edit name="family" mode="assign" binding="same"><string>Hack</string></edit>
+    </match>
+  </fontconfig>
+#+end_src
+
+Use =fc-cache= to update font config, and =fc-match= to check the
+results:
+#+begin_src bash
+  fc-match monospace
+#+end_src
+
+* Configuation
+
+** inputrc
+
+=~/.inputrc=
+#+begin_src text
+  # set editing-mode vi
+  # set show-mode-in-prompt on
+  # set vi-cmd-mode-string c-
+  # set vi-ins-mode-string i-
+  set bell-style none
+  set blink-matching-paren on
+  set colored-completion-prefix on
+  set colored-stats on
+  set completion-ignore-case on
+  set enable-bracketed-paste on
+#+end_src
+
+** bash_aliases
+
+=~/.bash_aliases=
+#+begin_src bash
+  #alias l='ls --color=auto'
+  #alias ls='ls --color=auto'
+  #alias ll='ls -al --color=auto'
+
+  alias ls='ls --color=auto'
+  alias grep='grep --color=auto'
+  alias fgrep='fgrep --color=auto'
+  alias egrep='egrep --color=auto'
+
+  alias ll='ls -alhF'
+  alias la='ls -A'
+  alias l='ls -CF'
+
+  alias lt='du -sh * | sort -hr'
+  #alias lt='du -sh $(ls -a | tail +3) | sort -hr'
+  alias mnt="mount | awk -F' ' '{ printf \"%s\\t%s\\n\",\$1,\$3; }' | column -t | egrep ^/dev/ | sort"
+  alias xclip="xclip -selection c"
+  alias b='buku --suggest'
+
+  # gtkwave:
+  #   1. increase singal font size & signal height
+  #   2. turn off spalash screen
+  alias gtkwave='gtkwave --rcvar "fontname_signals Monospace 20" --rcvar "splash_disable on"'
+
+  alias logisim="java -jar ~/logisim/logisim-generic-2.7.1.jar -nosplash"
+
+  alias kchmviewer="XDG_CURRENT_DESKTOP=GNOME kchmviewer"
+
+  alias longan-flash='stm32flash -w .pio/build/sipeed-longan-nano/firmware.bin -g 0x0 /dev/ttyUSB0'
+#+end_src
+
+** Very slow shutdown
+
+For some reason the shutdown can be very slow (1m30s), as a
+work-around, set the =DefaultTimeoutStopSec=90s= in
+=/etc/systemd/system.conf= to be 10 or some time.
+
+* Printers
+
+{{{pkg(cups)}}}
+
+For KDE:
+{{{pkg(print-manager)}}}
+{{{pkg(system-config-printer)}}}
+
+For Epson:
+{{{pkg(gutenprint, foomatic-db-gutenprint-ppds)}}}
+
+#+begin_src bash
+  sudo systemctl enable cups
+  sudo systemctl start cups
+#+end_src
+
+Install {{{aur(qt4)}}}, {{{aur(epson-printer-utility)}}}.  Enable and
+start =ecbd.service=.
+
+May not be necessarily:
+#+begin_src bash
+  sudo gpasswd -a thebesttv lp
+#+end_src
+
+* I3
+
+- [[https://i3wm.org/docs/refcard.html][I3 Reference Card]]
+- [[https://i3wm.org/docs/userguide.html][User Guide]]
+
+** Config xinit
+
+[[https://github.com/coditva/i3-config/blob/master/xinitrc][An example xinitrc for i3]]
+
+- Set =XDG_CURRENT_DESKTOP=i3= in =~/.xprofile=
+
+** About Menu Bar
+
+KDE seems to default to using a global menu bar that displays on the
+top.  All applications's menu bar display there.  To disable this
+behavior, according to [[https://forum.kde.org/viewtopic.php?t=151072#p437303][this]] link:
+1. Change =MenuBar=Disabled= to =MenuBar=Enabled= for some applications
+   under =~/.config=.  Go to =~/.config=, and execute
+   #+begin_src bash
+     find ./ -type f -exec sed -i 's/MenuBar=Disabled/MenuBar=Enabled/g' {} \;
+   #+end_src
+2. In KDE Setting > Startup and Shutdown > Background Services > disable
+   the "Application menus damon".
+3. Reboot.
+4. In some KDE applications, use =ctrl+m= to show menu bar.
+
+** Volumn Control
+
+For PalseAudio, use {{{pkg(pavucontrol)}}}.
+
+** Bluetooth
+
+Use {{{pkg(blueberry)}}}.
+
+** Easy focus
+
+- https://github.com/cornerman/i3-easyfocus
+- [[/home/thebesttv/99.Applications/i3-easyfocus]]
+
+** Integrating with Emacs
+
+https://sqrtminusone.xyz/posts/2021-10-04-emacs-i3/
+
+** Multi Monitor
+
+- [[https://fedoramagazine.org/using-i3-with-multiple-monitors/][Using i3 with multiple monitors]]
+- [[https://askubuntu.com/q/1262791][Multiple monitors with i3 window manager]]
+
+#+begin_src bash
+  xrandr --output HDMI1 --auto --right-of eDP1
+#+end_src
+
+** Brightness
+
+For Intel GPU, nstall {{{pkg(xorg-xbacklight)}}} to control screen
+brightness.
+
+** Nofitication
+
+There are two choices for notification daemon for =notify-send=:
+- {{{pkg(notify-osd)}}}: it ignores the timeout, so the message can
+  appear for quite a long time.
+- {{{pkg(dunst)}}} is chosen.
+
+* 解压中文ZIP
+
+#+begin_src bash
+  $ unzip -O CP936 XX.zip
+#+end_src
+
+* Teamviewer
+
+According to [[https://aur.archlinux.org/packages/teamviewer#comment-640953][this]], teamviewer does not work with =startx=.
+However, according to [[https://community.teamviewer.com/English/discussion/comment/130997/#Comment_130997][this]] comment, adding the below line to
+=/etc/systemd/system/getty.target.wants/getty@tty1.service=
+can solve the problem.
+#+begin_src text
+  # Under [Service] section
+  Environment=XDG_SESSION_TYPE=x11
+#+end_src
+
+* PulseAudio
+
+** Disable HDMI Audio
+
+According to [[https://askubuntu.com/a/228623][this]] answer, comment the line below in
+=/etc/pulse/default.pa=:
+#+begin_src text
+  load-module module-switch-on-port-available
+#+end_src
+And then restart pulseaudio using =pulseaudio -k=.
+
+However, this also disables auto-switching when using headphones, so
+should not be used.
+
+* Pacman
+
+** Clean up cache
+
+Use =paccache= from {{{pkg(pacman-contrib)}}} to clear cached old packages
+#+begin_src bash
+  paccache -r
+#+end_src
+
+Enable and start paccache.timer to discard unused packages weekly.
+#+begin_src bash
+  sudo systemctl enable paccache.timer
+  sudo systemctl start paccache.timer
+#+end_src

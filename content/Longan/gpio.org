@@ -1,0 +1,213 @@
+#+title: GPIO
+
+- [[https://tttapa.github.io/ESP8266/Chap01%20-%20ESP8266.html][A Beginner's Guide to the ESP8266]]
+- [[https://www.youtube.com/c/Switchdoc/playlists][SwitchDoc Labs]]
+- The Art of Electronics
+
+* GPIO
+
+{{{image(100)}}}
+[[./gpio/gpio.png]]
+
+- [[https://electronics.stackexchange.com/q/28091/298996][Push-pull/open drain; pull-up/pull-down]]
+- [[https://electronics.stackexchange.com/q/156930/298996][STM32 Understanding GPIO Settings]]
+- [[https://github.com/raspberrypilearning/physical-computing-guide/blob/master/pull_up_down.md][Pull Up and Pull Down Resistors]]
+
+- GPIO Behind The Scene [[https://www.youtube.com/watch?v=QxvdmzKxEeg][Part 1]], [[https://www.youtube.com/watch?v=IjKDKGqCm_4][Part 2]]
+
+Single pin, either input or output, 1 bit.
+
+What exactly is "0" or "1"?
+- Raspberry Pi: 0--3.3V
+- Arduino: 0--5V
+- ESP8266: 0--3.3V
+
+** Input
+
+Analog
+
+Floating
+
+Pull-Down
+
+Pull-Up
+
+** Output
+
+Push-Pull
+
+Open-Drain
+
+*** Speed
+
+#+begin_quote
+By increasing the GPIO speed, you increase the rate of change of the
+output voltage (reducing rise time).  However, power consumption and
+noise radiated by the circuit increases along with the GPIO speed.  By
+default, you should keep GPIO speed low unless there is a specific
+reason for increasing it.[fn:1]
+#+end_quote
+
+一篇有意思的文章: [[https://codeandlife.com/2012/07/03/benchmarking-raspberry-pi-gpio-speed/][Benchmarking Raspberry Pi GPIO Speed]]
+
+-----
+
+怎么说呢...感觉差别不大
+
+先试了一下 toggle 的:
+#+begin_src c
+  #include "gd32vf103.h"
+
+  void gpio_toggle(uint32_t gpio_periph, uint32_t pin) {
+      gpio_bit_write(gpio_periph, pin, (bit_status)(1 - gpio_input_bit_get(gpio_periph, pin)));
+  }
+
+  int main(void) {
+      rcu_periph_clock_enable(RCU_GPIOA);
+      gpio_init(GPIOA, GPIO_MODE_OUT_PP, GPIO_OSPEED_2MHZ, GPIO_PIN_3);
+      gpio_bit_reset(GPIOA, GPIO_PIN_3);
+      while (1) {
+          gpio_toggle(GPIOA, GPIO_PIN_3);
+      }
+  }
+#+end_src
+
+2MHz:
+{{{image(100)}}}
+[[./gpio/2-toggle.jpg]]
+
+10MHz:
+{{{image(100)}}}
+[[./gpio/10-toggle.jpg]]
+
+50MHz:
+{{{image(100)}}}
+[[./gpio/50-toggle.jpg]]
+
+然后试了一下直接用 =GPIO_BOP= 和 =GPIO_BC= 的:
+#+begin_src c
+  #include "gd32vf103.h"
+
+  void gpio_toggle(uint32_t gpio_periph, uint32_t pin) {
+      gpio_bit_write(gpio_periph, pin, (bit_status)(1 - gpio_input_bit_get(gpio_periph, pin)));
+  }
+
+  int main(void) {
+      rcu_periph_clock_enable(RCU_GPIOA);
+      gpio_init(GPIOA, GPIO_MODE_OUT_PP, GPIO_OSPEED_2MHZ, GPIO_PIN_3);
+      gpio_bit_reset(GPIOA, GPIO_PIN_3);
+      while (1) {
+          GPIO_BOP(GPIOA) = GPIO_PIN_3;
+          GPIO_BC(GPIOA) = GPIO_PIN_3;
+          GPIO_BOP(GPIOA) = GPIO_PIN_3;
+          GPIO_BC(GPIOA) = GPIO_PIN_3;
+          GPIO_BOP(GPIOA) = GPIO_PIN_3;
+          GPIO_BC(GPIOA) = GPIO_PIN_3;
+          GPIO_BOP(GPIOA) = GPIO_PIN_3;
+          GPIO_BC(GPIOA) = GPIO_PIN_3;
+      }
+  }
+#+end_src
+
+2MHz:
+{{{image(100)}}}
+[[./gpio/2-no-delay.jpg]]
+
+10MHz:
+{{{image(100)}}}
+[[./gpio/10-no-delay.jpg]]
+
+50MHz:
+{{{image(100)}}}
+[[./gpio/50-no-delay.jpg]]
+
+反正我没看出多大差别 @_@
+
+最后弄个动态的吧, 顺便把频率同步到LCD上:
+#+begin_src cpp
+  #include "gd32vf103.h"
+  #include "lcd/lcd.h"
+
+  void gpio_toggle(uint32_t gpio_periph, uint32_t pin) {
+      gpio_bit_write(gpio_periph, pin, (bit_status)(1 - gpio_input_bit_get(gpio_periph, pin)));
+  }
+
+  void setSpeed(uint8_t speed, const char *str) {
+      LCD_ShowString(0, 0, (u8 *)str, WHITE);
+      gpio_init(GPIOA, GPIO_MODE_OUT_PP, speed, GPIO_PIN_3);
+  }
+
+  int main(void) {
+      Lcd_Init();
+      LCD_Clear(BLACK);
+      BACK_COLOR = BLACK;
+      LCD_ShowString(0, 16, (u8 *)"thebesttv", WHITE);
+
+      rcu_periph_clock_enable(RCU_GPIOA);
+      uint8_t speed = GPIO_OSPEED_2MHZ;
+      setSpeed(speed, " 2MHz");
+      gpio_bit_reset(GPIOA, GPIO_PIN_3);
+
+      int cnt = 0;
+      while (1) {
+          cnt += 1;
+          if (cnt == 5000000) {
+              if (speed == GPIO_OSPEED_2MHZ) {
+                  speed = GPIO_OSPEED_10MHZ;
+                  setSpeed(speed, "10MHz");
+              } else if (speed == GPIO_OSPEED_10MHZ) {
+                  speed = GPIO_OSPEED_50MHZ;
+                  setSpeed(speed, "50MHz");
+              } else {
+                  speed = GPIO_OSPEED_2MHZ;
+                  setSpeed(speed, " 2MHz");
+              }
+              cnt = 0;
+          }
+          gpio_toggle(GPIOA, GPIO_PIN_3);
+      }
+  }
+#+end_src
+
+* LED点灯
+
+Longan上有一个三色LED, RGB三个管脚分别连接GPIO的C13, A1, A2口.
+{{{image(80)}}}
+[[./gpio/led.png]]
+
+这边LED阳极接的3.3V, GPIO是在阴极, 所以低电平才能亮灯.  介个在示例的注
+释里也写清楚了:
+#+begin_src cpp
+  void longan_led_on() {
+      /*
+       ,* LED is hardwired with 3.3V on the anode, we control the cathode
+       ,* (negative side) so we need to use reversed logic: bit clear is on.
+       ,*/
+      GPIO_BC(LED_GPIO_PORT) = LED_PIN;
+  }
+#+end_src
+
+* Auto Reset
+
+用的是 =stm32flash= 刷的程序, 协议是 [[https://www.st.com/resource/en/application_note/CD00264342-.pdf][USART protocol used in the STM32
+bootloader]].  默认的 baud rate 是 57600, 感觉比 115200 不容易出错得多.
+在 PlatformIO 的某个项目目录下, 一般酱就行了:
+#+begin_src bash
+  stm32flash -w .pio/build/sipeed-longan-nano/firmware.bin -g 0x0 /dev/ttyUSB0
+#+end_src
+弄个简单的 alias, 直接在项目目录下执行就行了:
+#+begin_src text
+  alias longan-flash='stm32flash -w .pio/build/sipeed-longan-nano/firmware.bin -g 0x0 /dev/ttyUSB0'
+#+end_src
+
+1. A8 (BOOT0) high
+2. RST (RESET) low
+3. RST high
+4. A8 low
+
+
+这个...感觉太难了, 呜呜
+
+* Footnotes
+
+[fn:1] [[http://fastbitlab.com/gpio-output-speed-register-applicability/][GPIO output speed register and its applicability]]

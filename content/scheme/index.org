@@ -1,0 +1,48 @@
+#+title: Scheme
+
+* Tutorial
+- [[http://www.shido.info/lisp/idx_scm_e.html][Yet Another Scheme Tutorial]]
+
+* Add advice
+
+Something like =add-function= and =add-advice= in ELisp.
+
+Assuming we have an already defined function =f= whose code we do not
+know, and some other functions (for example, =main=) already uses =f=:
+#+begin_src scheme
+  (define (f)
+    ;; do something
+    'done)
+
+  (define (main)
+    (format #t "(main) called\n")
+    (f))
+#+end_src
+Evaluating =(main)= produces the following output:
+#+begin_src text
+  (main) called
+#+end_src
+
+If, however, we want to be notified when =f= is called, then we record
+the original =f= with =g=, then set =f= by wrapping a lambda round =g=
+that does notification:
+#+begin_src scheme
+  (let ([g f])
+    (set! f
+          (lambda ()
+            (display "(f) called")
+            (newline)
+            (g))))
+
+  (main)
+#+end_src
+Now, when we evaluate =(main)=, a nofitication of =f= is displayed:
+#+begin_src text
+  (main) called
+  (f) called
+#+end_src
+
+* SXML
+
+- [[https://www.gnu.org/software/guile/manual/html_node/SXML.html][SXML - Guile manual]]
+- [[https://www.w3schools.com/xml/xpath_syntax.asp][XPath Syntax]]

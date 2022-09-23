@@ -1,0 +1,204 @@
+#+title: Ch5 --- Large and Fast: Exploiting Memory Hierarchy
+
+* The Principle of Locality
+
+*This principle of locality* states that programs access a relatively
+small portion of their address space at any instant of time.  There
+are two different types of locality:
+- *Temporal locality* (locality in time): if a data location is
+  referenced, it will tend to be *referenced again soon*.
+- *Spatial locality* (locality in space): if a data location is
+  referenced, *data locations with nearby addresses* will tend to be
+  referenced soon.
+
+* Memory Hierarchy
+
+*memory hierarchy*: A structure that uses _multiple levels of
+memories_; as the distance from the processor increases, the size of
+the memories and the access time both increase.
+
+** The Upper and Lower Level
+
+Every pair of levels in the memory hierarchy can be thought of as
+having _an upper and lower level_.  Within each level, the unit of
+information that is present or not is called a *block* or a *line*.
+Usually we transfer an entire block when we copy something between
+levels.
+
+*block*, *line*: The minimum unit of information that can be either
+present or not present in a cache.
+
+If the data requested by the processor appear in some block in the
+upper level, this is called a *hit*.  If the data are not found in the
+upper level, the request is called a *miss*.
+- *hit rate*: The fraction of memory accesses found in a level of the
+  memory hierarchy.
+- *miss rate*: The fraction of memory accesses not found in a level of
+  the memory hierarchy.
+
+*hit time*: The time required to access a level of the memory
+hierarchy, including the time needed to _determine whether the access
+is a hit or a miss_.
+
+*miss penalty*: The time required to fetch a block into a level of the
+memory hierarchy from the lower level, including the time to access
+the block, transmit it from one level to the other, insert it in the
+level that experienced the miss, and then pass the block to the
+requestor.
+
+The reliance on memory hierarchies to achieve performance has meant
+that programmers, who used to be able to think of memory as a flat,
+random access storage device, now need to understand that memory is a
+hierarchy to get good performance.
+
+In most systems, the memory is a true hierarchy, meaning that data
+cannot be present in level $i$ unless they are also present in level
+$i + 1$.
+
+* Memory Technologies
+
+Main memory is implemented from /DRAM/ (dynamic random access memory),
+while levels closer to the processor (caches) use /SRAM/ (static
+random access memory).  DRAM is less costly per bit than SRAM,
+although it is substantially slower.  The third technology is /flash
+memory/.  This nonvolatile memory is the secondary memory in Personal
+Mobile Devices.  The fourth technology, used to implement the largest
+and slowest level in the hierarchy in servers, is /magnetic disk/.
+
+** SRAM
+
+SRAMs don't need to refresh and so the access time is very close to
+the cycle time.  In a SRAM, as long as power is applied, the value can
+be kept indefinitely.
+
+** DRAM
+
+In a dynamic RAM (DRAM), the value kept in a cell is stored as a
+charge in a capacitor.  As DRAMs store the charge on a capacitor, it
+*cannot be kept indefinitely* and must *periodically be refreshed*.
+That is why this memory structure is called /dynamic/, in contrast to
+the static storage in an SRAM cell.
+
+To refresh the cell, we merely read its contents and write it back.
+The charge can be kept for several milliseconds.  If every bit had to
+be read out of the DRAM and then written back individually, we would
+constantly be refreshing the DRAM, leaving no time for accessing it.
+Fortunately, DRAMs use a two-level decoding structure, and this allows
+us to *refresh an entire row* (which _shares a word line_) with a read
+cycle followed immediately by a write cycle.
+
+... TODO
+
+** Flash Memory
+
+Flash memory is a type of electrically erasable programmable read-only
+memory (EEPROM).  Unlike disks and DRAM, but like other EEPROM
+technologies, *writes can wear out flash memory bits*.  To cope with
+such limits, most flash products include a controller to *spread the
+writes* by remapping blocks that have been written many times to less
+trodden blocks.  This technique is called /wear leveling/.  With wear
+leveling, personal mobile devices are very unlikely to exceed the
+write limits in the flash.  Such wear leveling lowers the potential
+performance of flash, but it is needed unless higher-level software
+monitors block wear.  Flash controllers that perform wear leveling can
+also *improve yield* by _mapping out memory cells that were
+manufactured incorrectly_.
+
+** Disk Memory
+
+Each disk surface is divided into concentric circles, called *tracks*.
+There are typically tens of thousands of tracks per surface.  Each
+track is in turn divided into *sectors* that contain the information;
+each track may have thousands of sectors.  Sectors are typically 512
+to 4096 bytes in size.  The sequence recorded on the magnetic media is
+a sector number, a gap, the information for that sector including
+error correction code, a gap, the sector number of the next sector,
+and so on.  The disk heads for each surface are connected together and
+move in conjunction, so that every head is over the same track of
+every surface.  The term *cylinder* is used to refer to all the tracks
+under the heads at a given point on all surfaces.
+
+* The Basics of Caches
+
+The simplest way to assign a location in the cache for each word in
+memory is to assign the cache location _based on the address of the
+word in memory_.  This cache structure is called *direct mapped*,
+since each memory location is mapped directly to exactly one location
+in the cache.
+
+*direct-mapped cache*: A cache structure in which each memory location
+is mapped to exactly one location in the cache.
+
+The *tags* contain the *address information* required to _identify
+whether a word in the cache corresponds to the requested word_.  The
+tag needs just to contain the upper portion of the address,
+corresponding to the bits that are not used as an index into the
+cache.
+
+*tag*: A field in a table used for a memory hierarchy that contains
+the address information required to identify whether the associated
+block in the hierarchy corresponds to a requested word.
+
+*valid bit*: A field in the tables of a memory hierarchy that
+indicates that the associated block in the hierarchy contains valid
+data.
+
+{{{image(60)}}}
+#+caption: Cache fields, including index, valid bit, and tag.
+[[./ch5/cache-fields.png]]
+
+We know where to look in the cache for each possible address: the
+low-order bits of an address can be used to find the unique *cache
+entry* to which the address could map.  The figure below shows how a
+referenced address is divided into
+- A /tag field/, which is used to compare with the value of the tag
+  field of the cache
+- A /cache index/, which is used to select the block
+
+The *index* of a cache block, together with the *tag* contents of that
+block, *uniquely specifies the memory address* of the word contained
+in the cache block.  Because the index field is used as an address to
+reference the cache, and because an n-bit field has $2^n$ values, the
+total number of *entries* in a direct-mapped cache must be a power
+of 2.  Since *words are aligned to multiples of four bytes*, the
+_least significant two bits_ of every address _specify a byte within a
+word_.  Hence, if the words are aligned in memory, the least
+significant two bits can be ignored when selecting a word in the
+block.  For this chapter, we'll assume that data are aligned in
+memory, and discuss how to handle unaligned cache accesses in an
+Elaboration.
+
+{{{image(80)}}}
+[[./ch5/cache-addressing.png]]
+
+*Cache size*: the total number of blocks within a cache.  A cache with
+$n$ bits of index has $2^n$ blocks.
+
+The total number of bits needed for a cache is a function of the
+*cache size* and the *address size*, because the cache includes both
+the storage for the data and the tags.  The size of the block above
+was one word (4 bytes), but normally it is several.  For the following
+situation:
+- 64-bit addresses
+- A direct-mapped cache
+- The *cache size* is $2^n$ blocks, so $n$ bits are used for the index
+- The *block size* is $2^m$ *words* ($2^{m+2}$ bytes), so $m$ bits are
+  used for the word within the block, and two bits are used for the
+  byte part of the address
+
+The address is divided into 4 parts:
+- tag ($64 - (n + m + 2)$ bits)
+- block index ($n$ bits): used to determine which block is used in a
+  direct-mapped cache
+- word index ($m$ bits): in the data portion of the block, used to
+  determine which word is selected
+- byte index (2 bits): in the word portion of the data portion of the
+  block, used to determine which byte is selected
+
+The total number of bits in a direct-mapped cache is
+\[2^n \times (\text{block size} + \text{tag size} + \text{valid field size})\]
+
+Since the block size is $2^m$ words ($2^{m+2}$ bytes or $2^{m+5}$
+bits), and we need 1 bit for the valid field, the number of bits in
+such a cache is
+\[ 2^n \times \left(2^{m+5} + (64 - n - m - 2) + 1 \right) \]

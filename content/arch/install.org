@@ -1,0 +1,68 @@
+#+title: Arch Linux 安装小记
+
+* Using Serial Console
+
+** While Installing
+
+Add =-nographic= to disable graphic when using QEMU.
+
+According to [[https://wiki.archlinux.org/title/working_with_the_serial_console#Installing_Arch_Linux_using_the_serial_console][Installing Arch Linux using the serial console]] from the
+Arch Wiki
+- When the boot menu appears, select the first one "Arch Linux install
+  medium (x86_64, BIOS)" and press =Tap= to edit kernel parameter.
+- Append =console=ttyS0,115200= and press =Enter=.
+- Login as =root= and start the installation as usual.
+
+Note that while appending to the kernel parameters, the cursor may look
+rather weird, like this
+{{{image(100)}}}
+[[./install/kernel-parameter.png]]
+This is because the kernel parameters are too long to fit in a single
+line.  The cursor is now pointing to the right of the last character
+(=g=).  Just type a space as separation and input the parameter as
+usual.  The cursor will show the characters as you type.
+
+** TODO Normal Boot
+
+* Installation
+
+** Configure Keymap
+
+*** Get Keycode
+While in console, use =showkey= to show scancodes[fn:1].
+#+begin_src bash
+  showkey --scancodes
+#+end_src
+By default, the command stops automatically when there is no input for
+10 seconds.
+
+*** Creating Custom Keymap
+Create custom keymap =thebesttv.map= by modifying the =us= keymap,
+replacing capslock (keycode 58) with control
+#+begin_src bash
+  gunzip -c /usr/share/kbd/keymaps/i386/qwerty/us.map.gz | \
+      `# use two Alt keys, treat AltGr as Alt` \
+      sed 's/linux-with-alt-and-altgr/linux-with-two-alt-keys/' | \
+      `# map CapsLock to Control` \
+      sed 's/^keycode  58 = Caps_Lock/keycode  58 = Control/' | \
+      sudo tee /usr/share/kbd/keymaps/thebesttv.map > /dev/null
+#+end_src
+
+*** Persistently Set Keymap
+Use =localectl= to set the keymap persistently.  By default, this sets
+the keymap for both the console *and X11*, but the =--no-convert= option
+*prevents* =localectl= from automatically changing the Xorg keymap to
+the nearest match.
+#+begin_src bash
+  localectl set-keymap --no-convert thebesttv
+#+end_src
+
+This, of course, will not be remembered when installing.  After the
+installation completes, repeat the whole process in the installed os.
+Note that the =localectl set-keymap= command will not work in a chrooted
+environment (e.g. =arch-chroot= during installation), so perform the
+command on the real machine.
+
+* Footnotes
+
+[fn:1] [[https://wiki.archlinux.org/title/Keyboard_input#Using_showkey][Using showkey]]

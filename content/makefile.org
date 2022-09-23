@@ -1,0 +1,9 @@
+#+title: Makefile notes
+
+* Set the default target
+
+From [[https://stackoverflow.com/q/2057689/11938767][this]] stack overflow question.
+
+#+begin_src makefile
+  .DEFAULT_GOAL := mytarget
+#+end_src

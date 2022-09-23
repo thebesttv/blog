@@ -1,0 +1,14 @@
+#+title: AlexNet 笔记
+
+* Miscellaneous
+
+** Saturating vs. Non-saturating
+
+{{{image(60)}}}
+[[./alexnet/non-saturating-relu.png]]
+
+According to [[https://stats.stackexchange.com/a/174438][this]] Stack Exchange answer:
+#+begin_quote
+A saturating activation function squeezes the input.
+#+end_quote
+

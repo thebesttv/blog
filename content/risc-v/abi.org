@@ -1,0 +1,33 @@
+#+title: RISC-V ABI
+
+# usage: {{{fig(caption, name, [width])}}}
+#+macro: fig (eval (concat (format "#+caption: %1$s\n#+name: %2$s" $1 $2) (format "\n#+ATTR_HTML: :width %1$s%% :style margin-left: auto; margin-right: auto;" (if (string-empty-p $3) "100" $3))))
+
+- [[https://github.com/riscv-non-isa/riscv-elf-psabi-doc][A RISC-V ELF psABI Document]]
+- [[https://pdos.csail.mit.edu/6.828/2021/readings/riscv-calling.pdf][RISC-V calling convention]]
+
+* Register Usage
+
+{{{fig(RISC-V calling convention register usage, reg-usage, 80)}}}
+[[./abi/reg-usage.png]]
+
+#+begin_quote
+In the standard ABI, procedures should not modify the integer
+registers =tp= and =gp=, because signal handlers may rely upon their
+values.
+
+The presence of a frame pointer is optional.  If a frame pointer
+exists it must reside in =x8= (=s0=), the register remains callee-saved.
+#+end_quote
+
+* Frame Pointer vs Stack Pointer
+
+See [[https://stackoverflow.com/a/68655340/11938767][this]] excellent answer about RISC-V stack pointer.
+
+The stack pointer always points to the top (or bottom, if you prefer)
+of the stack.  The frame pointer always points to the frame.  Stack
+operations (e.g., push, pop, call) do not modify the frame (in a
+properly operating system) or the frame pointer (ever).
+
+
+* 

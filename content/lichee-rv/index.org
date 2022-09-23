@@ -1,0 +1,6 @@
+#+title: LicheeRV D1
+
+- [[https://andreas.welcomes-you.com/boot-sw-debian-risc-v-lichee-rv/#mcetoc_1ftmpkntlmpc][Building boot software and Debian from sources for a RISC-V board (Sipeed Lichee RV with D1 processor)]]
+  完整编译一个D1能跑的Debian, 烧录在SD卡上
+
+  作者 [[https://andreas.welcomes-you.com/][Andreas]] 还有其他的 D1 的post

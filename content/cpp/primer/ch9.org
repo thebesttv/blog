@@ -1,0 +1,362 @@
+#+title: Ch9 --- Sequential Containers
+
+* Overview of the Sequential Containers
+
+The sequential containers all provide _fast sequential access to their
+elements_.  However, these containers offer different *performance
+trade-offs* relative to
+- The costs to *add or delete* elements to the container
+- The costs to perform *nonsequential access* (i.e. random access) to
+  elements of the container
+
+{{{image(100)}}}
+[[./ch9/sequential.png]]
+
+The =list= and =forward_list= containers are designed to make it fast
+to add or remove an element _anywhere_ in the container.  In exchange,
+these types _do not support random access to elements_: We can access
+an element only by *iterating through the container*.  Moreover, the
+_memory overhead_ for these containers is often substantial, when
+compared to =vector=, =deque=, and =array=.
+
+A =deque= is a more complicated data structure.  Like =string= and
+=vector=, =deque= supports fast random access.  As with =string= and
+=vector=, adding or removing elements _in the middle of a =deque=_ is
+a (potentially) expensive operation.  However, adding or removing
+elements _at either end of the =deque= is a fast operation_,
+comparable to adding an element to a =list= or =forward_list=.
+
+A =forward_list= is intended to be _comparable to the best
+handwritten, singly linked list_.  Consequently, _=forward_list= does
+not have the =size= operation_ because storing or computing its size
+would entail overhead compared to a handwritten list.  For the other
+containers, =size= is guaranteed to be a fast, constant-time
+operation.
+
+From [[http://cplusplus.com/reference/forward_list/forward_list][cplusplus.com]]:
+#+begin_quote
+The =forward_list= class template has been designed _with efficiency
+in mind_: By design, it is as efficient as a simple handwritten
+C-style singly-linked list, and in fact is the only standard container
+to deliberately lack a =size= member function for efficiency
+considerations: due to its nature as a linked list, having a =size=
+member that takes constant time would require it to keep an internal
+counter for its size (as =list= does).  This would consume some extra
+storage and make insertion and removal operations slightly less
+efficient.  To obtain the size of a =forward_list= object, you can use
+the =distance= algorithm with its =begin= and =end=, which is an
+operation that takes linear time.
+#+end_quote
+
+#+begin_box
+For reasons we'll explain in /§ 13.6 Moving Objects/, the new library
+containers are dramatically faster than in previous releases.  The
+library containers almost certainly perform as well as (and usually
+better than) even the most carefully crafted alternatives.  Modern C++
+programs should use the library containers rather than more primitive
+structures like arrays.
+#+end_box
+
+* Container Library Overview
+
+{{{image(100)}}}
+[[./ch9/container-operations.png]]
+
+** Iterators
+
+*** Iterator Ranges
+
+The concept of an */iterator range/* is fundamental to the standard
+library.
+
+Two iterators, =begin= and =end=, form an iterator range, if
+- They refer to elements of, or /one past the end of/, _the same
+  container_, and
+- It is possible to reach =end= by _repeatedly incrementing =begin=_.
+  In other words, =end= must not precede =begin= (but =end= can be the
+  same as =begin=).
+
+** Container Type Members
+
+** =begin= and =end= Members
+
+** Defining and Initializing a Container
+
+{{{image(100)}}}
+[[./ch9/constructors.png]]
+
+*** Initializing a Container as a Copy of Another Container
+
+There are two ways to create a new container as a copy of another one:
+We can _directly copy the container_, or (excepting =array=) we can
+_copy a range of elements denoted by a pair of iterators_.
+- When we initialize a container as _a copy of another container_, the
+  container type and element type of both containers must be
+  *identical*.
+- When we pass _iterators_, there is no requirement that the container
+  types be +identical+.  Each element in the new container is
+  /initialized/ by the value of the corresponding element in the
+  range.  Moreover, the element types in the new and original
+  containers can differ as long as it is possible to _convert_ the
+  elements we're copying to the element type of the container we are
+  initializing:
+#+begin_src cpp
+  // each container has three elements, initialized from the given initializers
+  list<string> authors = {"Milton", "Shakespeare", "Austen"};
+  vector<const char*> articles = {"a", "an", "the"};
+  list<string>   list2(authors);    // ok: types match
+  deque<string>  authList(authors); // error: container types don't match
+  vector<string> words(articles);   // error: element types must match
+  // ok: converts const char* elements to string
+  forward_list<string> words(articles.begin(), articles.end());
+#+end_src
+
+*** Library =array=​s Have Fixed Size
+
+Just as the size of a built-in array is part of its type, the size of
+a library =array= is part of its type.  To use an =array= type we must
+specify _both the element type and the size_:
+#+begin_src cpp
+  array<int, 42> a1;           // array that holds 42 ints
+  array<string, 10> a2;        // array that holds 10 strings
+  array<int, 10>::size_type i; // array type includes element type and size
+  array<int>::size_type j;     // error: array<int> is not a type
+#+end_src
+
+The fixed-size nature of =array= also affects the behavior of the
+constructors that =array= does define.  Unlike the other containers, a
+default-constructed =array= is not empty: It has as many elements as
+its size.  These elements are _default initialized_ just as are
+elements in a built-in array.
+
+Although we cannot copy or assign objects of built-in array types,
+there is no such restriction on =array=.  As with any container, the
+initializer must have _the same type_ as the container we are
+creating.  _For =array=​s, the element type and the size must be the
+same, because the size of an array is part of its type._
+#+begin_src cpp
+  array<int, 10> digits = {0,1,2,3,4,5,6,7,8,9};
+  array<int, 10> copy = digits;   // ok: so long as array types match
+#+end_src
+
+** Assignment and =swap=
+
+{{{image(100)}}}
+[[./ch9/assignment.png]]
+
+Unlike built-in arrays, the library =array= type does allow
+assignment.  The left- and right-hand operands must have _the same
+type_ (including size):
+#+begin_src cpp
+  array<int, 10> a1 = {0,1,2,3,4,5,6,7,8,9};
+  array<int, 10> a2 = {0}; // elements all have value 0
+  a1 = a2;        // replaces elements in a1
+  a2 = {0};       // error: cannot assign to an array from a braced list
+#+end_src
+
+*** Using =assign= (Sequential Containers Only)
+
+The /assignment operator/ requires that the left-hand and right-hand
+operands have _the same type_.  The sequential containers (except
+=array=) also define a member named =assign= that lets us assign from
+_a different but compatible type_, or assign from _a subsequence of a
+container_.  For example, we can use =assign= to assign a range of
+=char*= values from a =vector= into a =list= of =string=:
+#+begin_src cpp
+  list<string> names;
+  vector<const char*> oldstyle;
+  names = oldstyle; // error: container types don't match
+  // ok: can convert from const char* to string
+  names.assign(oldstyle.cbegin(), oldstyle.cend());
+#+end_src
+
+*** Using =swap=
+
+The =swap= operation exchanges the contents of two containers of the
+same type.  _With the exception of =array=​s, swapping two containers
+is guaranteed to be fast_---the elements themselves are not swapped;
+_internal data structures are swapped_.  Excepting =array=, swap does
+not copy, delete, or insert any elements and is guaranteed to run in
+constant time.
+
+The fact that elements are not moved means that, with the exception of
+=string=, iterators, references, and pointers into the containers are
+*not invalidated*.  They refer to the same elements as they did before
+the swap.  However, after the =swap=, those elements are in _a
+different container_.  Differently from the containers, a call to
+=swap= on a =string= may invalidate iterators, references and
+pointers.
+
+** Container Size Operations
+
+** Relational Operators
+
+Every container type supports the equality operators (==== and =!==);
+all the containers except the unordered associative containers also
+support the relational operators (=>=, =>==, =<=, =<==).  The right-
+and left-hand operands must be _the same kind of container_ and must
+hold _elements of the same type_.
+
+* Sequential Container Operations
+
+** Adding Elements to a Sequential Container
+
+{{{image(100)}}}
+[[./ch9/add.png]]
+
+When we pass a pair of iterators, those iterators may not refer to the
+same container as the one to which we are adding elements.
+#+begin_src cpp
+  // run-time error: iterators denoting the range to copy from
+  // must not refer to the same container as the one we are changing
+  slist.insert(slist.begin(), slist.begin(), slist.end());
+#+end_src
+
+=insert= returns an iterator that points to the first of the newly
+inserted elements.  We can use the value returned by =insert= to
+repeatedly insert elements _at a specified position in the container_:
+#+begin_src cpp
+  list<string> lst;
+  auto iter = lst.begin();
+  while (cin >> word)
+      iter = lst.insert(iter, word); // same as calling push_front
+#+end_src
+
+The new standard introduced three new members---​=emplace_front=,
+=emplace=, and =emplace_back=---that *construct* rather than +copy+
+elements.
+
+When we call a push or insert member, we _pass objects of the element
+type_ and those objects are *copied* into the container.  When we call
+an emplace member, we _pass arguments to a *constructor* for the
+element type_.  The emplace members use those arguments to construct
+an element *directly in space managed by the container*.
+#+begin_src cpp
+  // construct a Sales_data object at the end of c
+  // uses the three-argument Sales_data constructor
+  c.emplace_back("978-0590353403", 25, 15.99);
+  // error: there is no version of push_back that takes three arguments
+  c.push_back("978-0590353403", 25, 15.99);
+  // ok: we create a temporary Sales_data object to pass to push_back
+  c.push_back(Sales_data("978-0590353403", 25, 15.99));
+
+  // iter refers to an element in c, which holds Sales_data elements
+  c.emplace_back(); // uses the Sales_data default constructor
+  c.emplace(iter, "999-999999999"); // uses Sales_data(string)
+  // uses the Sales_data constructor that takes an ISBN, a count, and a price
+  c.emplace_front("978-0590353403", 25, 15.99);
+#+end_src
+
+** Accessing Elements
+
+{{{image(100)}}}
+[[./ch9/access.png]]
+
+If we want to ensure that our index is valid, we can use the =at=
+member instead.  The =at= member acts like the subscript operator, but
+if the index is invalid, at throws an =out_of_range= exception:
+#+begin_src cpp
+  vector<string> svec; // empty vector
+  cout << svec[0];     // run-time error: there are no elements in svec!
+  cout << svec.at(0);  // throws an out_of_range exception
+#+end_src
+
+** Erasing Elements
+
+{{{image(100)}}}
+[[./ch9/erase.png]]
+
+The following loop erases the odd elements in a =list=:
+#+begin_src cpp
+  list<int> lst = {0,1,2,3,4,5,6,7,8,9};
+  auto it = lst.begin();
+  while (it != lst.end()) {
+      if (*it % 2)                // if the element is odd
+          it = lst.erase(it);     // erase this element
+      else
+          ++it;
+  }
+#+end_src
+
+** Specialized =forward_list= Operations
+
+{{{image(100)}}}
+[[./ch9/forward-list.png]]
+
+When we add or remove an element in =forward_list=, the element
+*before* the one we added or removed has a different successor.  To
+add or remove an element, _we need access to its predecessor_ in order
+to update that element's links.  Because these operations behave
+differently from the operations on the other containers,
+=forward_list= does not define =insert=, =emplace=, or =erase=.
+Instead it defines members named =insert_after=, =emplace_after=, and
+=erase_after=.  To support these operations, =forward_list= also
+defines =before_begin=, which returns an *off-the-beginning iterator*.
+This iterator lets us add or remove elements "after" the nonexistent
+element before the first one in the list.
+
+#+begin_src cpp
+  forward_list<int> l = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+  auto pre = l.before_begin();
+  auto cur = l.begin();
+  while (cur != l.end())
+      if (*cur % 2) {
+          cur = l.erase_after(pre);
+      } else {
+          pre = cur;
+          ++cur;
+      }
+#+end_src
+
+** Resizing a Container
+
+{{{image(100)}}}
+[[./ch9/resize.png]]
+
+** Container Operations May Invalidate Iterators 🧐
+
+Operations that add or remove elements from a container can invalidate
+pointers, references, or iterators to container elements.
+
+*** Avoid Storing the Iterator Returned from =end=
+
+Don't cache the iterator returned from =end()= in loops that insert or
+delete elements in a =deque=, =string=, or =vector=.
+
+#+begin_src cpp
+  // safer: recalculate end on each trip whenever the loop adds/erases elements
+  while (begin != v.end()) {
+      // do some processing
+      ++begin; // advance begin because we want to insert after this element
+      begin = v.insert(begin, 42); // insert the new value
+      ++begin;           // advance begin past the element we just added
+  }
+#+end_src
+
+* How a =vector= Grows
+
+When they have to get new memory, =vector= and =string=
+implementations typically _allocate capacity beyond what is
+immediately needed_.  The container holds this storage in reserve and
+uses it to allocate new elements as they are added.  In practice, a
+=vector= usually grows more efficiently than a =list= or a =deque=,
+even though the vector has to move all of its elements each time it
+reallocates memory.
+
+** Members to Manage Capacity
+
+{{{image(100)}}}
+[[./ch9/size-management.png]]
+
+** capacity and size
+
+Each =vector= implementation can choose its own allocation strategy.
+However, it must not allocate new memory until it is *forced* to do
+so.
+
+* Additional =string= Operations
+
+
+
+* Container Adaptors
+* Defined Terms

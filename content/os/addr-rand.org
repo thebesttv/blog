@@ -1,0 +1,22 @@
+#+title: Address Randomization
+
+[[https://stackoverflow.com/a/14868153][temporarily disable ASLR for a particular program]]
+
+#+begin_src bash
+  setarch `uname -m` -R ./program
+#+end_src
+
+In =/ostep-code/intro=:
+#+begin_src bash
+  $ gcc mem.c -o mem
+  $ setarch `uname -m` -R ./mem 0 & setarch `uname -m` -R ./mem 20 &
+  (2664) addr pointed to by p: 0x5555555592a0
+  (2667) addr pointed to by p: 0x5555555592a0
+  (2664) value of p: 1
+  (2667) value of p: 21
+  (2664) value of p: 2
+  (2667) value of p: 22
+  (2664) value of p: 3
+  (2667) value of p: 23
+#+end_src
+

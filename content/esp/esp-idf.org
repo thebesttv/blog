@@ -1,0 +1,31 @@
+#+title: ESP-IDF 配置小记
+
+用的是 Gitee 的镜像, 快一点
+
+- [[https://gitee.com/EspressifSystems/esp-idf][esp-idf]] Gitee 镜像
+- [[https://gitee.com/EspressifSystems/esp-gitee-tools][esp-gitee-tools]] 用于 submodule 的更新
+
+在home建一个文件夹 =esp/=, 之后都在 =esp= 内弄
+
+先把两个 repo clone 下来
+#+begin_src bash
+  git clone https://gitee.com/EspressifSystems/esp-idf.git
+  git clone https://gitee.com/EspressifSystems/esp-gitee-tools.git
+#+end_src
+
+在 =esp/esp-idf= 内, 跑 install.sh, 更新 submodule
+#+begin_src bash
+  cd esp-idf
+  ../esp-gitee-tools/install.sh esp32c3
+  ../esp-gitee-tools/submodule-update.sh
+#+end_src
+
+在 =.bash_aliases= 内加一点方便的 alias
+#+begin_src bash
+  alias get-idf='. $HOME/esp/esp-idf/export.sh'
+  alias idf-esp32c3='idf.py set-target esp32c3'
+  alias idf-menu='idf.py menuconfig'
+  alias idf-flash='idf.py -p /dev/tty*USB0 flash'
+  alias idf-monitor='idf.py -p /dev/tty*USB0 monitor'
+  alias idf-flash-monitor='idf.py -p /dev/tty*USB0 flash monitor'
+#+end_src

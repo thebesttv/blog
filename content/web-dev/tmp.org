@@ -1,0 +1,40 @@
+#+title: lala
+
+* Examples
+
+The HTML source
+#+name: eg-1
+#+begin_src org :results replace drawer :exports both :post wrap-html(text=*this*)
+  A <b>bold</b> statement.
+#+end_src
+
+Results in the output
+#+results: eg-1
+
+
+#+NAME: attr_wrap
+#+BEGIN_SRC sh :var data="" :var width="\\textwidth" :results output
+  echo "#+ATTR_LATEX: :width $width"
+  echo "$data"
+#+END_SRC
+
+#+HEADER: :file /tmp/it.png
+#+BEGIN_SRC dot :post attr_wrap(width="5cm", data=*this*) :results drawer
+  digraph{
+          a -> b;
+          b -> c;
+          c -> a;
+  }
+#+end_src
+
+#+RESULTS:
+:RESULTS:
+#+ATTR_LATEX :width 5cm
+[[file:/tmp/it.png]]
+:END:
+
+* Utils                                                           :noexport:
+#+name: wrap-html
+#+begin_src emacs-lisp :var text="" :results raw
+(concat "woqu\n#+begin_export html\n<div class=\"html-output\">\n" text "\n</div>\n#+end_export")
+#+end_src

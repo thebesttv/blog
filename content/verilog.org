@@ -1,0 +1,473 @@
+#+title: Verilog 笔记
+
+- [[https://youtu.be/PJGvZSlsLKs][Verilog HDL Basics]]
+
+* Important Notes
+
+=assign= connects LHS (sink) with RHS (source) _with some components_.
+For eaxmple, =assign out = a & b;= uses an AND gate to connect =out=
+with =a= and =b=.
+
+* Notes
+
+** Assignment
+
+Wires (and other signals) in Verilog are directional.  This means
+information flows in only one direction, from (usually one) /source/ to
+the /sinks/ (The source is also often called a *driver* that _drives a
+value onto a wire_).  In a Verilog "continuous assignment" (=assign
+left_side = right_side;=), the value of the signal on the right side is
+driven onto the wire on the left side.  The assignment is "continuous"
+because the assignment _continues all the time even if the right side's
+value changes_.  A continuous assignment is not a one-time event.
+
+A continuous assignment assigns the right side to the left side
+continuously, so any change to the RHS is immediately seen in the LHS.
+
+When you have multiple =assign= statements, the *order* in which they
+appear in the code *does not matter*
+
+Unlike a programming language, =assign= statements ("continuous
+assignments") describe *connections* between things, not the +action+ of
+copying a value from one thing to another.
+
+*port* input/output connections
+
+Thus, the assign statements are not creating wires.  Instead, they
+create connections between the wires that already exist.
+
+a wire cannot have more than one driver, and a wire that has no drivers
+will have an undefined value (often treated as 0 when synthesizing
+hardware).
+
+There are three types of assignments in Verilog:
+- Continuous assignments (assign x = y;).
+  Can only be used when not inside a procedure ("always block").
+- Procedural blocking assignment: (x = y;).
+  Can only be used inside a procedure.
+- Procedural non-blocking assignment: (x <= y;).
+  Can only be used inside a procedure.
+
+In a combinational always block, use blocking assignments.
+In a clocked always block, use non-blocking assignments.
+
+** Vector
+
+Vectors must be declared:
+#+begin_src verilog
+  // type [upper:lower] vector_name;
+  input wire [3:-2] z;   // 6-bit wire input (negative ranges are allowed)
+  wire [0:7] b;       // 8-bit wire where b[0] is the most-significant bit
+#+end_src
+The endianness (or, informally, "direction") of a vector is whether the
+the least significant bit has a lower index (little-endian, e.g., [3:0])
+or a higher index (big-endian, e.g., [0:3]).  In Verilog, once a vector
+is declared with a particular endianness, it must always be used the
+same way. e.g., writing vec[0:3] when vec is declared wire [3:0] vec; is
+illegal.  Being consistent with endianness is good practice, as weird
+bugs occur if vectors of different endianness are assigned or used
+together.
+
+** Procedures
+
+Procedures (always, initial, task, function) provide an alternative
+syntax for describing circuits.
+
+The syntax for code inside a procedural block is different from code
+that is outside.
+
+two types of =always=:
+- Combinational: =always @(*)=
+- Clocked: =always @(posedge clk)=
+
+The LHS of an =assign= statement must be a net type (e.g., =wire=),
+while the LHS of a procedural assignment (in an =always= block) must be
+a variable type (e.g., =reg=)
+
+** If
+
+#+begin_src verilog
+  module top
+    (
+     input       a,
+     input       b,
+     input       sel_b1,
+     input       sel_b2,
+     output wire out_assign,
+     output reg  out_always
+     );
+     assign out_assign = (sel_b1 && sel_b2) ? b : a;
+     always @(*) begin
+        if (sel_b1 && sel_b2) begin
+           out_always = b;
+        end
+        else begin
+           out_always = a;
+        end
+     end
+  endmodule
+#+end_src
+
+** Case
+
+#+begin_src verilog
+  always @(*) begin               // This is a combinational circuit
+     case (in)
+       1'b1: begin
+          out = 1'b1;             // begin-end if more than 1 statement
+       end
+       1'b0: out = 1'b0;
+       default: out = 1'bx;
+     endcase
+  end
+#+end_src
+
+** For loop
+优先编码器
+#+begin_src verilog
+  module top_module
+    (
+     input [3:0]      in,
+     output reg [1:0] pos
+     );
+
+     integer          i;
+     always @(*) begin
+        pos = 0;
+        for (i = 3; i >= 0; i = i-1)
+          if (in[i] == 1'b1) pos = i[1:0];
+     end
+  endmodule
+#+end_src
+
+将 in 每一位翻转
+#+begin_src verilog
+  module top_module
+    (
+     input [99:0]      in,
+     output reg [99:0] out
+     );
+
+     always @(*) begin
+        // $bits() is a system function that returns the width of a signal.
+        // $bits(out) is 100 because out is 100 bits wide.
+        for (int i=0;i<$bits(out);i++)
+          out[i] = in[$bits(out)-i-1];
+     end
+  endmodule
+#+end_src
+
+数 in 里有几个 1
+#+begin_src verilog
+  module top_module(
+                    input [254:0] in,
+                    ou tput [7:0] out );
+     always @(*) begin
+        out = 8'd0;
+        for (int i = 0; i < $bits(in); i = i+1)
+          out = out + {7'b0, in[i]};
+     end
+  endmodule
+#+end_src
+
+** Casez
+
+=z= (or =?=) means don't care
+
+The first match is chosen
+
+#+begin_src verilog
+  module top_module
+    (
+     input [7:0]      in,
+     output reg [2:0] pos
+     );
+
+     always @(*) begin
+        casez (in)
+          8'bzzzz_zzz1: pos = 3'd0;
+          8'bzzzz_zz10: pos = 3'd1;
+          8'bzzzz_z100: pos = 3'd2;
+          8'bzzzz_1000: pos = 3'd3;
+          8'bzzz1_0000: pos = 3'd4;
+          8'bzz10_0000: pos = 3'd5;
+          8'bz100_0000: pos = 3'd6;
+          8'b1000_0000: pos = 3'd7;
+          default: pos = 3'd0;
+        endcase // casez (in)
+     end // always @ (*)
+  endmodule
+#+end_src
+
+** Generate
+
+https://hdlbits.01xz.net/wiki/Adder100i
+用100个全加器实现 ripple-adder
+#+begin_src verilog
+  module top_module
+    (
+     input [99:0]  a, b,
+     input         cin,
+     output [99:0] cout,
+     ou tput [99:0] sum );
+
+     generate
+        genvar     i;
+        for (i = 0; i < $bits(sum); i = i+1)
+          begin: my
+             adder adder_i(.a(a[i]), .b(b[i]), .cin(i==0 ? cin : cout[i-1]),
+                           .cout(cout[i]), .s(sum[i]));
+          end
+     endgenerate
+  endmodule
+
+  module adder(
+               input a, b, cin,
+               outpu t cout, s );
+     assign {cout, s} = a + b + cin;
+  endmodule
+#+end_src
+
+这回是BCD码加法
+#+begin_src verilog
+  module top_module
+    (
+     input [399:0]  a, b,
+     input          cin,
+     output         cout,
+     output [399:0] sum
+     );
+
+     wire           carry[$bits(sum)/4];
+     assign cout = carry[$bits(carry)-1];
+     generate
+        genvar      i;
+        for (i = 0; i < $bits(sum); i = i+4)
+          begin: my
+             bcd_fadd bcd_i(.a(a[i+3:i]), .b(b[i+3:i]),
+                            .cin(i==0 ? cin : carry[i/4-1]),
+                            .cout(carry[i/4]), .sum(sum[i+3:i]));
+          end
+     endgenerate
+
+  endmodule
+#+end_src
+
+** Vector as index
+
+#+begin_src verilog
+  module mux256to1
+    (
+     input [255:0] in,
+     input [7:0]   sel,
+     output        out
+     );
+     // Select one bit from vector in[].
+     // The bit being selected can be variable.
+     assign out = in[sel];
+  endmodule
+#+end_src
+
+*** Bit slicing
+[[https://stackoverflow.com/a/41486966/11938767][Verilog 2001 syntax]]
+#+begin_src verilog
+  // sel=1时, 选择 in[7:4]
+  module mux256to1v4
+    (
+     input [1023:0] in,
+     input [7:0]    sel,
+     output [3:0]   out
+     );
+     assign out = in[sel*4 +:4];
+  endmodule
+#+end_src
+
+** Detecting signed overflow
+
+#+begin_src verilog
+  module top_module
+    (
+     input [7:0]  a,
+     input [7:0]  b,
+     output [7:0] s,
+     output       overflow
+     );
+     // [1] 正+正=负 / 负+负=正
+     assign s = a + b;
+     assign overflow = (a[7] == b[7]) && (a[7] != s[7]);
+     // [2] 扩展符号位
+     // wire [8:0] full;
+     // assign full = {a[7], a} + {b[7], b};
+     // assign s = full[7:0];
+     // assign overflow = full[8] != full[7];
+  endmodule
+#+end_src
+
+** Sequential
+
+- [[https://www.nandland.com/articles/blocking-nonblocking-verilog.html][Blocking vs. Nonblocking in Verilog]]
+- [[https://www.chipverify.com/verilog/verilog-blocking-non-blocking-statements][Verilog Blockign & Non-Blocking]] 很棒的一篇文章
+- [[https://www.hdlworks.com/hdl_corner/verilog_ref/items/SensitivityList.htm][Sensitivity list]] =or= 或 逗号 都可以
+
+*** D-FlipFlop
+#+begin_src verilog
+  module top_module
+    (
+     input      clk,             // Clocks are used in sequential circuits
+     input      d,
+     output reg q );
+     // Use a clocked always block
+     //   copy d to q at every positive edge of clk
+     //   Clocked always blocks should use non-blocking assignments
+     always @(posedge clk) begin
+        q <= d;
+     end
+  endmodule
+#+end_src
+
+*** Edge detection
+- https://hdlbits.01xz.net/wiki/Edgedetect
+- https://hdlbits.01xz.net/wiki/Edgedetect2
+- https://hdlbits.01xz.net/wiki/edgecapture
+- https://hdlbits.01xz.net/wiki/Dualedge
+
+* Verilog
+
+*Synthesis*: Translating HDL to a *circuit* and then optimize the
+represented circuit.
+
+*Behavior Modeling*: A component is described by its input/output
+response.  Describes only the functionality of the circuit, not the
+structure.  Relies on synthesis tools to create the correct circuit
+logic.
+- *RTL (Register Transfer Level)*: A type of behavioral modeling.
+  Hardware is implied or inferred.  Synthesizable.
+
+*RTL Synthesis*: Translating a RTL model of hardware into an optimized
+technology specific gate level implementation.
+
+*Structural Modeling*: A component is described by interconnecting
+lower-level components/primitives.  Specifies both the funcitonality
+and structure of the circuit.
+
+* Modules
+
+#+begin_src verilog
+  module module_name(port_list);
+     port declarations;
+     data type declarations;
+     circuit functionality;
+     timing specifications;
+  endmodule
+#+end_src
+
+** Port
+
+#+begin_src verilog
+  // <port_type <port_name>;
+  input [7:0]   ina, inb;
+  input         clk, aclr;
+  output [15:0] out;
+#+end_src
+
+types
+- =input=
+- =output=
+- =inout=: bidirectional
+
+Two styles
+#+begin_src verilog
+  // Verilog-1995
+  module top_module ( zero );
+     output zero;
+     // ...
+  endmodule
+
+  // Verilog-2001
+  module top_module ( output zero );
+     // ...
+  endmodule
+#+end_src
+
+* Data Types
+
+** Net
+
+- needs to becontinuiously driven
+
+- =wire=
+- =tri=: a tri-state node
+- =supply0=, =supply1= logic0/1
+
+** Variable
+
+- elements that store data
+- \to flip-flop, register ...
+
+- =reg=: unsigned variable of any bit size
+- =integer=: signed 32-bit variable
+
+* Number
+
+- =_= used for readability
+- =x= unknown
+- =z= high impendence
+
+* Assignments
+
+** Continous Assignment
+
+combinatorial logic
+
+** Procedural Assignment
+
+- =initial=
+- =always=
+
+-----
+
+Input and output declarations actually declare a wire unless otherwise
+specified.  Writing =input wire a= is the same as =input a=.  Thus,
+the assign statements are not +creating wires+, they are creating the
+*connections* between the wires that already exist.
+
+Note: One thing that is common to =if-else= and =case= statement is
+that, if you _don't cover all the cases_ (don't have 'else' in If-else
+or 'default' in Case), and you are trying to write a combinational
+statement, the synthesis tool will *infer Latch*.
+
+Verilog provides two ways to model the combinational logic and only
+one way to model sequential logic.
+- Combinational elements can be modeled using =assign= and =always=
+  statements.
+- Sequential elements can be modeled using *only* =always= statement.
+- There is a third block, which is used in test benches only: it is
+  called /Initial statement/.
+
+
+An initial block, as the name suggests, is executed only once when
+simulation starts.  This is useful in writing test benches.  If we
+have multiple initial blocks, then all of them are executed at the
+beginning of simulation.
+
+An =always= block should have a *sensitive list* or a *delay*
+associated with it.
+
+One important note about always block: it cannot drive wire data type,
+but can drive reg and integer data types.
+
+in the case of combinational logic we had === for assignment, and for
+the sequential block we had the =<== operator.  Well, === is blocking
+assignment and =<== is nonblocking assignment. === executes code
+sequentially inside a begin / end, whereas nonblocking =<== executes
+in parallel.
+
+We can have an always block *without sensitive list*, in this case we
+need to have a *delay* as shown in the code below.
+#+begin_src verilog
+  always begin
+     #5  clk = ~clk;
+  end
+#+end_src
+=#5= in front of the statement *delays* its execution by 5 time units.
+

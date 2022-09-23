@@ -1,0 +1,306 @@
+#+title: LFS 小记
+
+Different variables/options specified while building & installing
+- [[https://www.gnu.org/prep/standards/html_node/DESTDIR.html#DESTDIR][=DESTDIR=: Support for Staged Installs]]
+- [[https://www.gnu.org/prep/standards/html_node/Directory-Variables.html][Variables for Installation Directories]]
+
+- [[https://askubuntu.com/q/891835][What does --prefix do exactly when used in ./configure?]]
+
+
+#+begin_quote
+One important reason for this project's existence is to help you learn
+how a Linux system works from the inside out.  Building an LFS system
+helps demonstrate *what makes Linux tick*, and *how things work together
+and depend on each other*.  One of the best things that this learning
+experience can provide is _the ability to customize a Linux system to
+suit your own unique needs_.
+#+end_quote
+
+* Some Knowledge
+
+#+begin_quote
+The usual directories for system-wide binaries on modern Linux
+distributions are =/usr/bin=, =/usr/X11R6/bin=, and =/usr/local/bin=.
+The preferred directory for new packages is =/usr/local/bin=, as this
+will keep separate binaries not part of the original Linux installation.
+
+After the make creates the binaries, you may wish to strip them.  The
+strip command removes the symbolic debugging information from the
+binaries, and reduces their size, often drastically.  This also disables
+debugging, of course.
+#+end_quote
+
+** Verify Integrity
+
+*** Checksum
+
+#+begin_src bash
+  # checksum a single file
+  sha256sum file-to-check
+  # checksum using a file containing multiple (file name, checksum) pairs
+  sha256sum -c checksums-file
+#+end_src
+
+*** GPG
+
+#+begin_src bash
+  # needed only once for each key, ie each "publisher"
+  gpg --import {public-key}
+  # verify a particular file using its signature
+  gpg --verify {signature-file-name}
+#+end_src
+
+** Unpacking
+
+For modern GNU =tar=:
+#+begin_src bash
+  # extract
+  tar --extract --file filename
+  tar xf filename
+  # list file
+  tar --list --file filename
+  tar tf filename
+#+end_src
+
+* Chapter 2. Preparing the Host System
+
+#+begin_src text
+  2.8G Jul 19 17:07 2022-07-19_16-01-38.qcow2 # the base image
+  196M Jul 21 09:14 2022-07-20_16-28-32.qcow2 # added bashrc... and needed packages
+   11G Jul 22 22:00 2022-07-21_09-14-18.qcow2 # completed chapter 7.14
+  196K Jul 22 22:00 2022-07-22_22-00-29.qcow2
+#+end_src
+
+If needed, add more disk space to img
+#+begin_src bash
+  qemu-img resize imgs/2022-07-21_09-14-18.qcow2 +50G
+#+end_src
+
+Boot with ArchISO image to create a new partition for LFS.
+The 100G =/dev/vda3= is used.
+#+begin_src text
+  Device     Boot     Start       End   Sectors  Size Id Type
+  /dev/vda1            2048 100663295 100661248   48G 83 Linux
+  /dev/vda2       100663296 104857599   4194304    2G 82 Linux swap / Solaris
+  /dev/vda3       104857600 314572799 209715200  100G 83 Linux
+#+end_src
+Format it to ext4
+#+begin_src bash
+  mkfs.ext4 /dev/vda3
+#+end_src
+
+Set the =LFS= bash variable
+#+begin_src bash
+  echo 'export LFS=/mnt/lfs' >> /root/.bash_profile
+  echo 'export LFS=/mnt/lfs' >> /home/thebesttv/.bash_profile
+#+end_src
+
+* Chapter 3. Packages and Patches
+
+Download the complete tarball from one of the [[https://www.linuxfromscratch.org/mirrors.html#files][mirror sites]] to
+=$LFS/sources=
+#+begin_src bash
+  wget https://mirrors.ustc.edu.cn/lfs/lfs-packages/lfs-packages-11.1.tar
+#+end_src
+
+=pushd= 和 =popd= 是个好传统
+
+* Chapter 4. Final Preparations
+
+To setup a clean environment
+#+begin_src bash
+  # do not load this file when using shell
+  mv /etc/bash.bashrc /etc/bash.bashrc.NOUSE
+
+  cat > ~/.bash_profile << "EOF"
+  exec env -i HOME=$HOME \
+              TERM=$TERM \
+              PS1='\[\e[0;1;32m\]\u@\h:\[\e[1;94m\]\w\[\e[0m\]$ ' \
+              /bin/bash
+  EOF
+
+  cat > ~/.bashrc << "EOF"
+  set +h
+  umask 022
+  LFS=/mnt/lfs
+  LC_ALL=POSIX
+  LFS_TGT=$(uname -m)-lfs-linux-gnu
+  PATH=/usr/bin
+  if [ ! -L /bin ]; then PATH=/bin:$PATH; fi
+  PATH=$LFS/tools/bin:$PATH
+  CONFIG_SITE=$LFS/usr/share/config.site
+  export LFS LC_ALL LFS_TGT PATH CONFIG_SITE
+  EOF
+#+end_src
+the =env -i= sets up an *empty* environtment.
+
+* Chapter 5. Compiling a Cross-Toolchain
+
+** binutils
+
+#+begin_src bash
+  ../configure --prefix=$LFS/tools \
+               --with-sysroot=$LFS \
+               --target=$LFS_TGT   \
+               --disable-nls       \
+               --disable-werror
+#+end_src
+
+The meaning of the configure options:
+#+begin_src text
+  --prefix=$LFS/tools
+
+      This tells the configure script to prepare to install the binutils programs
+      in the $LFS/tools directory.
+
+  --with-sysroot=$LFS
+
+      For cross compilation, this tells the build system to look in $LFS for the
+      target system libraries as needed.
+
+  --target=$LFS_TGT
+
+      Because the machine description in the LFS_TGT variable is slightly
+      different than the value returned by the config.guess script, this switch
+      will tell the configure script to adjust binutil's build system for building
+      a cross linker.
+
+  --disable-nls
+
+      This disables internationalization as i18n is not needed for the temporary
+      tools.
+
+  --disable-werror
+
+      This prevents the build from stopping in the event that there are warnings
+      from the host's compiler.
+#+end_src
+
+** gcc
+
+#+begin_src bash
+  ../configure                  \
+      --target=$LFS_TGT         \
+      --prefix=$LFS/tools       \
+      --with-glibc-version=2.35 \
+      --with-sysroot=$LFS       \
+      --with-newlib             \
+      --without-headers         \
+      --enable-initfini-array   \
+      --disable-nls             \
+      --disable-shared          \
+      --disable-multilib        \
+      --disable-decimal-float   \
+      --disable-threads         \
+      --disable-libatomic       \
+      --disable-libgomp         \
+      --disable-libquadmath     \
+      --disable-libssp          \
+      --disable-libvtv          \
+      --disable-libstdcxx       \
+      --enable-languages=c,c++
+#+end_src
+
+The meaning of the configure options:
+#+begin_src text
+  --with-glibc-version=2.35
+
+      This option specifies the version of glibc which will be used on the target.
+      It is not relevant to the libc of the host distro because everything
+      compiled by pass1 gcc will run in the chroot environment, which is isolated
+      from libc of the host distro.
+
+  --with-newlib
+
+      Since a working C library is not yet available, this ensures that the
+      inhibit_libc constant is defined when building libgcc. This prevents the
+      compiling of any code that requires libc support.
+
+  --without-headers
+
+      When creating a complete cross-compiler, GCC requires standard headers
+      compatible with the target system. For our purposes these headers will not
+      be needed. This switch prevents GCC from looking for them.
+
+  --enable-initfini-array
+
+      This switch forces the use of some internal data structures that are needed
+      but cannot be detected when building a cross compiler.
+
+  --disable-shared
+
+      This switch forces GCC to link its internal libraries statically. We need
+      this because the shared libraries require glibc, which is not yet installed
+      on the target system.
+
+  --disable-multilib
+
+      On x86_64, LFS does not support a multilib configuration. This switch is
+      harmless for x86.
+
+  --disable-decimal-float, --disable-threads, --disable-libatomic,
+  --disable-libgomp, --disable-libquadmath, --disable-libssp, --disable-libvtv,
+  --disable-libstdcxx
+
+      These switches disable support for the decimal floating point extension,
+      threading, libatomic, libgomp, libquadmath, libssp, libvtv, and the C++
+      standard library respectively. These features will fail to compile when
+      building a cross-compiler and are not necessary for the task of
+      cross-compiling the temporary libc.
+
+  --enable-languages=c,c++
+
+      This option ensures that only the C and C++ compilers are built. These are
+      the only languages needed now.
+#+end_src
+
+** glibc
+
+#+begin_src bash
+  make DESTDIR=$LFS install
+#+end_src
+
+  The meaning of the make install option:
+#+begin_src text
+  DESTDIR=$LFS
+
+      The DESTDIR make variable is used by almost all packages to define the
+      location where the package should be installed. If it is not set, it
+      defaults to the root (/) directory. Here we specify that the package be
+      installed in $LFS , which will become the root after Section 7.4, “Entering
+      the Chroot Environment”.
+#+end_src
+
+* Chapter 6. Cross Compiling Temporary Tools
+
+** M4
+
+#+begin_src bash
+  ./configure --prefix=/usr   \
+              --host=$LFS_TGT \
+              --build=$(build-aux/config.guess)
+#+end_src
+
+The 3 options used affect the produced =Makefile=: =--prefix=/usr=
+#+begin_src bash
+  prefix = /usr
+#+end_src
+=--host=$LFS_TGT=
+#+begin_src bash
+  $ grep $LFS_TGT Makefile
+  host_triplet = x86_64-lfs-linux-gnu
+  AR = x86_64-lfs-linux-gnu-ar
+  CC = x86_64-lfs-linux-gnu-gcc
+  CPP = x86_64-lfs-linux-gnu-gcc -E
+  RANLIB = x86_64-lfs-linux-gnu-ranlib
+  STRIP = x86_64-lfs-linux-gnu-strip
+  host = x86_64-lfs-linux-gnu
+  host_alias = x86_64-lfs-linux-gnu
+#+end_src
+=--build=$(build-aux/config.guess)=
+#+begin_src bash
+  $ grep $(../build-aux/config.guess) Makefile
+  build_triplet = x86_64-pc-linux-gnu
+  build = x86_64-pc-linux-gnu
+  build_alias = x86_64-pc-linux-gnu
+#+end_src

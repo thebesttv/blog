@@ -1,0 +1,3 @@
+#+title: Ch6 --- 移动指令的实现
+
+这章添加了 HILO 寄存器 =hilo_reg=

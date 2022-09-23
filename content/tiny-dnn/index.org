@@ -1,0 +1,42 @@
+#+title: tiny-dnn 笔记
+
+
+* =util=
+
+** =util.h=
+
+*** 大端小端
+
+***** 判断大小端
+
+#+begin_src cpp
+  inline bool is_little_endian() {
+      int x = 1;                  // 小端: LSB (0x01) 在 x 的低地址
+      return *reinterpret_cast<char *>(&x) != 0;
+  }
+#+end_src
+
+Stack Overflow 上[[https://stackoverflow.com/a/1001373/11938767][这个]]回答用 =union= 代替了 cast 的操作:
+#+begin_src cpp
+  bool is_big_endian(void) {
+      union {
+          uint32_t i;
+          char c[4];
+      } bint = {0x01020304};
+
+      return bint.c[0] == 1;      // 大端: MSB (0x01) 在低地址
+  }
+#+end_src
+
+***** 大小端转换
+
+把变量当成 =char= 数组, 在 =std::reverse= 就行啦
+
+#+begin_src cpp
+  template <typename T>
+  T *reverse_endian(T *p) {
+      std::reverse(reinterpret_cast<char *>(p),
+                   reinterpret_cast<char *>(p) + sizeof(T));
+      return p;
+  }
+#+end_src

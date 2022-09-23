@@ -1,0 +1,28 @@
+#+title: Linux memory management
+
+* =free=
+
+#+begin_src bash
+  $ free -h
+                 total        used        free      shared  buff/cache   available
+  Mem:           7.5Gi       3.2Gi       665Mi       691Mi       3.6Gi       3.3Gi
+  Swap:          4.0Gi       264Mi       3.7Gi
+#+end_src
+
+[[http://xahlee.info/linux/linux_free_memory.html][Xah Lee's explanation of =free=]]:
+#+begin_quote
+Cache is *disk data in RAM*.  Linux uses RAM as cache for file data
+(from hard-disk).  (Because RAM's IO speed is a thousand times faster
+than hard disk, so Operating System will load disk data to RAM as
+cache)
+
+Swap is the disk space used for virtual memory purposes.  Linux uses
+non-volatile storage device (example: hard-disk, flash-memory) as
+virtual memory.  The virtual memory on hard-disk is called swap space.
+Virtual memory means the perm storage is used as temp space for RAM.
+So, when your RAM is full, the Operating System can off-load parts of
+it currently not used data to disk, therefore free up memory for
+application that needs it.
+#+end_quote
+
+- [[https://haydenjames.io/free-vs-available-memory-in-linux/][Free vs. Available Memory in Linux]]

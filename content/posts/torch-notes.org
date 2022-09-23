@@ -1,0 +1,34 @@
+#+title: Torch notes
+
+* =stack()= vs =cat()=
+
+From this [[https://stackoverflow.com/questions/54307225/whats-the-difference-between-torch-stack-and-torch-cat-functions/54307331#54307331][stackoverflow question]]:
+#+begin_quote
+- =torch.stack=: Concatenates a sequence of tensors along a *new* dimension.
+- =torch.cat=: Concatenates the sequence in the *given* dimension.
+
+So if =A= and =B= are of shape =(3, 4)=, =torch.cat([A, B], dim=0)=
+will be of shape =(6, 4)= and =torch.stack([A, B], dim=0)= will be of
+shape =(2, 3, 4)=.
+#+end_quote
+
+Example:
+#+begin_src python
+  x = torch.rand(3, 4)
+  y = (x, x)
+  torch.cat(y, dim=0)             # (6, 4)
+  torch.cat(y, dim=1)             # (3, 8)
+  torch.stack(y, dim=0)           # (2, 3, 4)
+  torch.stack(y, dim=1)           # (3, 2, 4)
+  torch.stack(y, dim=2)           # (3, 4, 2)
+  torch.stack(y, dim=-1)          # (3, 4, 2)
+  torch.stack(y, dim=-2)          # (3, 2, 4)
+#+end_src
+
+Here, the negative numbers -1 & -2 mean to go backwards through the
+dimensions.
+[fn::https://stackoverflow.com/questions/59702785/what-does-dim-1-or-2-mean-in-torch-sum]
+
+* Footnotes
+
+

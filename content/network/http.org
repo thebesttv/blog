@@ -1,0 +1,89 @@
+#+title: HTTP Protocol
+
+- =curl=, [[https://everything.curl.dev/][Everything curl]]
+- =nc= netcat
+
+A Web page (or document) consists of *objects* (a file, such as a HTML file, a
+JPEG image, or a video clip).  Most Web pages consist of a *base HTML file* and
+several objects referenced by their URLs within the base file.
+
+A URL consists of a /protocol/ name, a /hostname/ of the server, and a /file
+path/ for the object.  For example
+#+begin_src text
+    http://thebesttv.xyz/blog/content/network/http.org
+    └──┘   └───────────┘└────────────────────────────┘
+  protocol    hostname            file path
+
+  - protocol:  http
+  - hostname:  thebesttv.xyz
+  - file path: /blog/content/network/http.org
+#+end_src
+
+Web browsers implement the /client/ side of HTTP.  Web servers, the /server/
+side of HTTP, house Web objects, each addressable by a URL.
+
+#+begin_quote
+HTTP has nothing to do with how a Web page is interpreted by a client.  The
+HTTP specifications ([RFC 1945] and [RFC 2616]) define only the communication
+protocol between the client HTTP program and the server HTTP program.
+#+end_quote
+
+* State Information
+
+HTTP is a *stateless protocol* where the server maintains no information about
+clients.
+
+* Persistent vs Non-Persistent Connections
+
+In *persistent connections*, each request/response pair (for objects on the
+same server) is sent over the same TCP connection; while in *non-persistent
+connections*, the request/response pair of different objects are sent over
+separate TCP connections.
+
+* Message Format
+
+Each line is followed by CRLF (="\r\n"=).
+
+** Request Message
+
+- a *request line* with three fields: method, URL and HTTP version
+  - method
+    - =GET=: request an object (identified by URL)
+    - =POST=: 
+    - =HEAD=, =PUT=, =DELETE=, ...
+- zero or more *header lines*
+- a blank line
+- a possibly empty *entity body*
+
+#+begin_src text
+  GET / HTTP/1.1
+  Host: thebesttv.xyz
+  User-Agent: curl/7.82.0
+  Accept: */*
+  <blank line>
+#+end_src
+
+** Response Message
+
+- a *status line*
+- zero or more *header lines*
+- a blank line
+- a possibly empty *entity body*
+
+#+begin_src text
+  HTTP/1.1 200 OK
+  Server: simple-httpd (Emacs 27.2)
+  Date: Thu, 14 Apr 2022 08:00:21 GMT
+  Connection: keep-alive
+  Content-Type: text/html; charset=utf-8
+  Content-Length: 710
+
+  <pre>You are coming from host: thebesttv.xyz.
+  Available sites:
+    <a href="/">/</a>                 Describe sites under EServer.
+    <a href="/blog">/blog</a>             This is thebesttv's blog.
+    <a href="/buffer">/buffer</a>           Emacs buffer list.
+    <a href="/favicon.ico">/favicon.ico</a>      Favorite icon of this site.
+    <a href="/slide">/slide</a>            Present a list of reveal.js slides.
+  ...
+#+end_src

@@ -1,0 +1,11 @@
+#+title: Fork
+
+- [[https://en.wikipedia.org/wiki/Fork_(system_call)][fork - Wiki]]
+- [[https://en.wikipedia.org/wiki/Copy-on-write][copy-on-write - Wiki]] 我愿称之为 lazy copy
+  #+begin_quote
+  If a resource is *duplicated but not modified*, it is not necessary
+  to create a new resource; the resource can be *shared* between the
+  copy and the original.  Modifications must still create a copy,
+  hence the technique: the copy operation is *deferred* until the
+  first write.
+  #+end_quote

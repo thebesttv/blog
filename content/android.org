@@ -1,0 +1,22 @@
+#+title: Android 小记
+
+模拟器 genymotion, 搭配 fiddler everywhere 可以抓https的包, 不过并没有成功
+
+- [[https://www.exandroid.dev/2021/03/21/capture-all-android-network-traffic/][Capture all android network traffic]]
+- [[https://www.telerik.com/forums/not-possible-to-capture-https-traffic-from-android-emulators][Not possible to capture https traffic from Android emulators]]
+- [[https://wiki.archlinux.org/title/User:Grawity/Adding_a_trusted_CA_certificate][User:Grawity/Adding a trusted CA certificate]]
+
+* 安卓开发
+
+Maven 镜像
+- [[https://developer.aliyun.com/mvn/guide][阿里云云效 Maven]]
+  #+begin_src text
+    buildscript {
+        repositories {
+            maven { url 'https://maven.aliyun.com/repository/public/' }
+            maven { url 'https://maven.aliyun.com/repository/google/' }
+            mavenLocal()
+            mavenCentral()
+        }
+    }
+  #+end_src

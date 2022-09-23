@@ -1,0 +1,19 @@
+#+title: float_t 与 double_t
+#+options: ^:{}
+
+[[https://stackoverflow.com/q/5390011/11938767][这个]] Stacks Overflow 问题
+
+在 [[https://books.google.com/books?id=4Mfe4sAMFUYC&lpg=PT258&ots=tSNQYpM4ti&dq=c%20float_t&pg=PT258#v=onepage&q=c%20float_t&f=false][C in a Nutshell]] 中讲了 =float_t= 与 =double_t= 的作用:
+#+begin_quote
+The types =float_t= and =double_t=:
+
+The header =math.h= defines the two types =float_t= and =double_t=.
+These types represent the floating-point precision used *internally*
+by the given implementation in evaluating arithmetic expressions of
+the types =float= and =double=.  (If you use operands of the type
+=float_t= or =double_t= in your programs, they will not need to be
+converted before arithmetic operations, as =float= and =double= may.)
+The value of the macro =FLT_EVAL_METHOD=, defined in the header
+=float.h=, indicates which basic types correspond to =float_t= and
+=double_t=.
+#+end_quote

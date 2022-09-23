@@ -1,0 +1,70 @@
+#+title: Longan Nano 笔记
+
+* Platform IO
+
+目前的话, 大概有两套工具链, 一套是 GigaDevice 的, 一套是 Nuclei 的.
+
+** 平台
+
+*** GigaDevice
+
+#+begin_src text
+  [env:sipeed-longan-nano]
+  platform = gd32v
+  framework = gd32vf103-sdk
+  board = sipeed-longan-nano
+#+end_src
+- [[https://docs.platformio.org/en/latest/platforms/gd32v.html][Platform: GigaDevice GD32V]]
+- [[https://docs.platformio.org/en/latest/frameworks/gd32vf103-sdk.html][Framework: GigaDevice GD32V SDK]]
+- [[https://docs.platformio.org/en/latest/boards/gd32v/sipeed-longan-nano.html][Board: Sipeed Longan Nano]]
+
+*** Nuclei
+
+#+begin_src text
+  [env:gd32vf103c_longan_nano]
+  platform = nuclei
+  framework = nuclei-sdk
+  board = gd32vf103c_longan_nano
+#+end_src
+- [[https://docs.platformio.org/en/latest/platforms/nuclei.html][Platform: Nuclei]]
+- [[https://docs.platformio.org/en/latest/frameworks/nuclei-sdk.html][Framework: Nuclei SDK]]
+- [[https://docs.platformio.org/en/latest/boards/nuclei/gd32vf103c_longan_nano.html][Board: Sipeed Longan Nano]]
+
+
+** 下载
+
+*** 串口ISP
+
+#+begin_src text
+  upload_protocol = serial
+#+end_src
+
+开发板按住 =BOOT= 键, 再按 =RESET= 键重启开发板后再松开 =BOOT= 键, 进
+入下载模式.
+
+*** USB DFU
+
+#+begin_src text
+  upload_protocol = dfu
+#+end_src
+
+开发板按住 =BOOT= 键, 再按 =RESET= 键重启开发板后再松开 =BOOT= 键, 进
+入下载模式.
+
+* 内存
+
+?
+Flash 用来存代码
+SDRAM 用来存数据
+
+* 各种问题
+
+** =printf= 的换行
+
+UART中:
+#+begin_src cpp
+  printf("\n");                   // 单独一个换行  -> \r\n
+  printf("abc\n");                // 字符+换行    -> abc, 被吞了
+  printf("abc\n\n");              // 字符+两个换行 -> abc\r\n
+  printf("%d\n", 1);              // 1\r\n
+#+end_src

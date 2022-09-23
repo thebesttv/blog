@@ -1,0 +1,42 @@
+#+title: Rime config
+
+- [[https://github.com/rime/home/wiki][Rime Wiki]]
+- [[https://jiz4oh.com/2020/10/how-to-use-rime/][Rime 输入法指北]]
+
+#+begin_src text
+  patch:
+      "menu/page_size": 7
+      schema_list:
+        - schema: luna_pinyin_simp      # 朙月拼音
+        - schema: double_pinyin_flypy   # 小鹤双拼
+#+end_src
+
+此时是繁体, 但可以按 =<f4>=, 选择 "漢字 \to 汉字".
+
+* 配置文件
+
+在 =~/.local/share/fcitx5/rime=, 我们叫它 =USER_DIR=.
+
+** 用户字典
+
+=pacman= 安装 =librime= 后有三个可执行文件:
+- =rime_deployer=
+- =rime_dict_manager=
+- =rime_patch=
+
+** =rime_dict_manager=
+
+=rime_dict_manager= 用来 xxx, 使用前要关闭Fcitx5, 并且要在 =USER_DIR=
+下使用.  PS. 结束后再打开Fcitx5时,需要重启Emacs才能在其中正常使用.
+
+#+begin_src text
+  $ rime_dict_manager
+  options:
+          -l|--list
+          -s|--sync
+          -b|--backup dict_name
+          -r|--restore xxx.userdb.txt
+          -e|--export dict_name export.txt
+          -i|--import dict_name import.txt
+#+end_src
+

@@ -1,0 +1,8 @@
+#+title: URI
+
+- [[https://en.wikipedia.org/wiki/Uniform_Resource_Identifier][Uniform Resource Identifier]]
+- [[https://en.wikipedia.org/wiki/URL][Uniform Resource Locator]]
+
+A URN may be compared to a person's name, while a URL may be compared to their
+street address.  In other words, a URN identifies an item and a URL provides a
+method for finding it.

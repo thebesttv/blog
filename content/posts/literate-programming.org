@@ -1,0 +1,10 @@
+#+title: About Literate Programming
+
+听说了 Literate Programming，就在这里先记录下：
+- [[https://www.reddit.com/r/compsci/comments/1zrujz/literate_programming_why_hasnt_it_caught_on/][Literate Programming: Why hasn't it caught on?]] 里的一个[[https://www.reddit.com/r/compsci/comments/1zrujz/literate_programming_why_hasnt_it_caught_on/cfwkhf6?utm_source=share&utm_medium=web2x&context=3][回答]]
+- [[https://www.reddit.com/r/programming/comments/73hqm/does_literate_programming_help_you_in_what_way/][Does Literate Programming help you? In what way?]] 里的又一个[[https://www.reddit.com/r/programming/comments/73hqm/does_literate_programming_help_you_in_what_way/c05lpks?utm_source=share&utm_medium=web2x&context=3][回答]]，和
+  上面的观点不太一样
+- [[https://www.reddit.com/r/AskComputerScience/comments/1bqm5r/does_anyone_use_literate_programming_what_are/][Does anyone use Literate Programming? What are peoples experiences
+  with it?]]
+- [[https://gigamonkeys.com/code-reading/][CODE IS NOT LITERATURE]]
+

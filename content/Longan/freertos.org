@@ -1,0 +1,7 @@
+#+title: Longan Nano 上跑 FreeRTOS
+
+TODO
+
+- [[http://goingbacktoelectronic.blogspot.com/2021/04/longan-nano-arduino-freertos.html][Longan Nano, gcc, gdb, Arduino, FreeRTOS]]
+- [[https://github.com/Johnathan-Burns/FreeRTOS-KB][FreeRTOS-KB]] A FreeRTOS-based keyboard mod based on the Sipeed Longan
+  Nano for the IBM Model M

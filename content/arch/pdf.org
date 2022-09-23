@@ -1,0 +1,23 @@
+#+title: PDF Handling Cheatsheet
+
+
+* Compress
+
+#+begin_src bash
+  gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dPDFSETTINGS=/ebook \
+     -dNOPAUSE -dQUIET -dBATCH -sOutputFile=output.pdf input.pdf
+#+end_src
+
+* Merge
+
+#+begin_src bash
+  gs -dBATCH -dNOPAUSE -q -sDEVICE=pdfwrite -sOutputFile=merged.pdf *.pdf
+#+end_src
+
+* Resize
+
+#+begin_src bash
+  pdfjam --outfile out.pdf --paper a4paper in.pdf
+#+end_src
+注意, =pdfjam= 生成的 PDF 会丢失 annocation !!!
+也就是说不能处理带签名的文件.

@@ -1,0 +1,31 @@
+#+title: NLP 作业
+
+- [[https://github.com/EdCo95/scientific-paper-summarisation][Automatic Summarisation of Scientific Papers]] python 2.7
+- [[https://github.com/csinva/gpt2-paper-title-generator][Generating paper titles (and more!) with GPT-2 trained on data scraped from arXiv.]]
+- [[https://github.com/mdhvn/abstract-generator][An automatic abstract generator for research papers and technical reports.]]
+- [[https://github.com/codysmithd/ARAG][Academic Report Abstract Generator (NLP Fall 2015 Final Project)]]
+- [[https://github.com/jananiarunachalam/Research-Paper-Summarization][Text Summarization for Research Papers]]
+
+
+
+- [[https://openai.com/blog/summarizing-books/][Summarizing Books with Human Feedback - OpenAI]]
+
+datasets
+- [[https://www.cs.cmu.edu/~dbamman/booksummaries.html][CMU Book Summary Dataset]] This dataset contains plot summaries for
+  16,559 books extracted from Wikipedia, along with aligned metadata
+  from Freebase, including book author, title, and genre.
+- [[https://github.com/salesforce/booksum][BOOKSUM: A Collection of Datasets for Long-form Narrative Summarization]]
+
+
+* 作业
+
+- 动机，实验，结果，评价指标
+- 解决一个真实的任务
+- 讲一个故事
+- 评价指标 (perplexity 困惑度)
+- 代码用白底黑字
+
+
+神经网络 vs n-gram
+
+找一个翻译的问题?

@@ -1,0 +1,76 @@
+#+title: Ch1
+
+There are three main steps involved when you pass some text to a pipeline:
+- The text is *preprocessed* into a format the model can understand.
+- The preprocessed inputs are *passed to the model*.
+- The *predictions* of the model are post-processed, so you can make
+  sense of them.
+
+
+Broadly, transformer models can be grouped into three categories:
+- GPT-like (also called auto-regressive Transformer models)
+- BERT-like (also called auto-encoding Transformer models)
+- BART/T5-like (also called sequence-to-sequence Transformer models)
+
+
+With NLP problems, the pretrained model will have some kind of
+*statistical understanding* of the language you are using for your
+task.
+
+* The Transformer architecture
+
+encoder-decoder transformer
+
+transformer is based on the attention mechanism
+
+
+| Model           | Examples                                   | Tasks                                                                            |
+|-----------------+--------------------------------------------+----------------------------------------------------------------------------------|
+| Encoder         | ALBERT, BERT, DistilBERT, ELECTRA, RoBERTa | Sentence classification, named entity recognition, extractive question answering |
+| Decoder         | CTRL, GPT, GPT-2, Transformer XL           | Text generation                                                                  |
+| Encoder-decoder | BART, T5, Marian, mBART                    | Summarization, translation, generative question answering                        |
+
+* Tokenizer
+
+#+begin_src python
+  from transformers import AutoTokenizer
+
+  tokenizer = AutoTokenizer.from_pretrained("bert-base-cased")
+
+  sequence = "Using a Transformer network is simple"
+  tokens = tokenizer.tokenize(sequence)
+
+  print(tokens)
+  # ['Using', 'a', 'Trans', '##former', 'network', 'is', 'simple']
+#+end_src
+
+#+begin_src python
+  tokenizer.tokenize("condolences")
+  # ['con', '##do', '##len', '##ces']
+#+end_src
+
+#+begin_src python
+  tok = tokenizer.tokenize("I’ve been waiting for a HuggingFace course my whole life.")
+  print(tok)
+  # ['I', '’', 've', 'been', 'waiting', 'for', 'a', 'Hu', '##gging', '##F', '##ace', 'course', 'my', 'whole', 'life', '.']
+
+  ids = tokenizer.convert_tokens_to_ids(tok)
+  print(ids)
+  # [146, 787, 1396, 1151, 2613, 1111, 170, 20164, 10932, 2271, 7954, 1736, 1139, 2006, 1297, 119]
+
+  res = tokenizer.decode(ids)
+  print(res)
+  # I ’ ve been waiting for a HuggingFace course my whole life.
+#+end_src
+
+#+begin_src python
+  tok = tokenizer.tokenize("thebesttv")
+  # ['the', '##bes', '##tt', '##v']
+
+  ids = tokenizer.convert_tokens_to_ids(tok)
+  # [1103, 12866, 3069, 1964]
+
+  res = tokenizer.decode(ids)
+  # thebesttv
+#+end_src
+

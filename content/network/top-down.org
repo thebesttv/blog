@@ -1,0 +1,29 @@
+#+title: A not-so-short summary on each chapter of Computer Networking A Top-Down Approach, 8th
+
+* Computer Networks and the Internet
+
+** What Is the Internet?
+
+*hosts* (or *end systems*)
+
+In terms of the hardware & software components that make up the Interent ...
+
+In terms of an infrastructure for providing services to distributed
+applications ...
+
+it takes two (or more) communicating entities running the same protocol in
+order to accomplish a task.
+
+** The Network Edge
+
+** The Network Core
+
+** Delay, Loss, and Throughput in Packet-Switched Networks
+
+** Protocol Layers and Their Service Models
+
+** Networks Under Attack
+
+** History of Computer Networking and the Internet
+
+** Summary

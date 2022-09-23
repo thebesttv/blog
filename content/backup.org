@@ -1,0 +1,9 @@
+#+title: 如何备份
+
+home目录下单个文件夹
+- 课程资料
+- 一些配置
+- 一些坑
+
+- [[https://missing.csail.mit.edu/2019/backups/][Missing Semester - Backups]]
+- [[https://www.zhihu.com/question/265575756/answer/2453558786][计算机系学生应该怎样正确管理自己的电脑？ - yqzliking的回答 - 知乎]]

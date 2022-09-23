@@ -1,0 +1,465 @@
+#+title: HTML 笔记
+
+These are my notes along the way of learning HTML (and maybe CSS).
+This is meant mainly for easy review in the future, and is basically a
+collection of important points taken from the [[https://developer.mozilla.org/en-US/docs/Learn][Learn web development]]
+article series from MDN learning area.
+
+* Elements
+
+HTML consists of a series of *elements*.  Example of an HTML element:
+
+[[https://developer.mozilla.org/en-US/docs/Learn/HTML/Introduction_to_HTML/Getting_started/grumpy-cat-small.png]]
+
+The anatomy of our element is:
+
+- The *opening* tag: This consists of the *name* of the element (in
+  this example, =p= for paragraph), wrapped in opening and closing
+  angle brackets.
+
+- The *content*: This is the content of the element.
+
+- The *closing* tag: This is the same as the opening tag, except that
+  it includes a forward slash before the element name.  This marks
+  where the element ends. Failing to include a closing tag is a common
+  beginner error that can produce peculiar results.
+
+
+The element is the opening tag, followed by content, followed by the
+closing tag.
+
+** Block versus inline elements
+
+There are two important categories of elements to know in HTML:
+block-level elements and inline elements.
+
+- Block-level elements form a visible block on a page. A block-level
+  element appears on a *new line* following the content that precedes
+  it. Any content that *follows* a block-level element also appears on
+  a new line. Block-level elements are usually *structural elements*
+  on the page. For example, a block-level element might represent
+  headings, paragraphs, lists, navigation menus, or footers. A
+  block-level element wouldn't be nested inside an inline element, but
+  it might be nested inside another block-level element.
+
+- Inline elements are contained *within block-level elements*, and
+  surround only small parts of the document’s content (not entire
+  paragraphs or groupings of content). An inline element will not
+  cause a new line to appear in the document. It is typically used
+  with text, for example an =<a>= element creates a hyperlink, and
+  elements such as =<em>= or =<strong>= create emphasis.
+
+
+* Entity Reference
+
+=<=, =>=, ="=, ='=, =&= are special characters in HTML.  We use entity
+references to show them exactly in docuemnts.
+
+Entity references are special codes that represent characters.  Each
+character reference starts with an ampersand (=&=), and ends with a
+semicolon (=;=).
+
+Here are some of them.  In a UTF-8 encoded HTML, they are all that are
+needed.  For a full list, see [[https://en.wikipedia.org/wiki/List_of_XML_and_HTML_character_entity_references][List of XML and HTML character entity
+references]]
+
+
+| Literal character | Character reference equivalent |
+|-------------------+--------------------------------|
+| =<=               | =&lt;=                         |
+| =>=               | =&gt;=                         |
+| ="=               | =&quot;=                       |
+| ='=               | =&apos;=                       |
+| =&=               | =&amp;=                        |
+
+* =<head>=
+
+The head of an HTML document is the part that is *not displayed* in the
+web browser when the page is loaded.
+
+** =<meta>= -- metadata
+
+- character set: ~charset="utf-8"~
+- =name= & =content=
+  - =name= specifies the *type* of meta element -- what type of
+    information it contains.
+  - =content= specifies the actual meta content.
+
+    #+begin_src html
+      <meta name="author" content="Chris Mills">
+      <meta name="description" content="The MDN Web Docs Learning Area aims to provide
+      complete beginners to the Web with all they need to know to get
+      started with developing web sites and applications.">
+    #+end_src
+
+
+** CSS & JS
+- The =<link>= element should always go inside the head of your
+  document. This takes two attributes, ~rel="stylesheet"~, which
+  indicates that it is the document's stylesheet, and =href=, which
+  contains the path to the stylesheet file:
+  #+begin_src html
+    <link rel="stylesheet" href="my-css-file.css">
+  #+end_src
+
+- The =<script>= element should also go into the head, and should
+  include a =src= attribute containing the path to the JavaScript you
+  want to load, and =defer=, which basically instructs the browser to
+  load the JavaScript after the page has finished parsing the
+  HTML. This is useful as it makes sure that the HTML is all loaded
+  before the JavaScript runs, so that you don't get errors resulting
+  from JavaScript trying to access an HTML element that doesn't exist
+  on the page yet.
+  #+begin_src html
+    <script src="my-js-file.js" defer></script>
+  #+end_src
+
+** Language
+
+#+begin_src html
+  <html lang="en-US">
+    <head></head>
+    <body>
+      <p>Japanese example: <span lang="ja">ご飯が熱い。</span>.</p>
+    </body>
+  </html>
+#+end_src
+
+* Text
+
+HTML markup gives text *structure* & *meaning*.
+
+- Preferably, you should use a single =<h1>= per page—this is the top
+  level heading, and all others sit below this in the hierarchy.
+
+- Make sure you use the headings in the correct order in the
+  hierarchy. Don't use =<h3>= elements to represent subheadings,
+  followed by =<h2>= elements to represent sub-subheadings—that
+  doesn't make sense and will lead to weird results.
+
+- Of the six heading levels available, you should aim to use no more
+  than three per page, unless you feel it is necessary. Documents with
+  many levels (i.e., a deep heading hierarchy) become unwieldy and
+  difficult to navigate. On such occasions, it is advisable to spread
+  the content over multiple pages if possible.
+
+** Presentation & Semantics
+
+- =<em>=: When we want to add emphasis in spoken language, we stress
+  certain words, subtly altering the meaning of what we are
+  saying. Similarly, in written language we tend to stress words by
+  putting them in italics.
+- =<strong>=: To emphasize important words, we tend to stress them in
+  spoken language and bold them in written language.
+
+- =<i>= is used to convey a meaning traditionally conveyed by italic:
+  foreign words, taxonomic designation, technical terms, a thought...
+- =<b>= is used to convey a meaning traditionally conveyed by bold:
+  key words, product names, lead sentence...
+- =<u>= is used to convey a meaning traditionally conveyed by
+  underline: proper name, misspelling...
+
+  #+begin_src html
+    <!-- scientific names -->
+    <p>
+      The Ruby-throated Hummingbird (<i>Archilochus colubris</i>)
+      is the most common hummingbird in Eastern North America.
+    </p>
+
+    <!-- foreign words -->
+    <p>
+      The menu was a sea of exotic words like <i lang="uk-latn">vatrushka</i>,
+      <i lang="id">nasi goreng</i> and <i lang="fr">soupe à l'oignon</i>.
+    </p>
+
+    <!-- a known misspelling -->
+    <p>
+      Someday I'll learn how to <u style="text-decoration-line: underline; text-decoration-style: wavy;">spel</u> better.
+    </p>
+
+    <!-- Highlight keywords in a set of instructions -->
+    <ol>
+      <li>
+        <b>Slice</b> two pieces of bread off the loaf.
+      </li>
+      <li>
+        <b>Insert</b> a tomato slice and a leaf of
+        lettuce between the slices of bread.
+      </li>
+    </ol>
+  #+end_src
+
+  #+begin_export html
+  <!-- scientific names -->
+  <p>
+    The Ruby-throated Hummingbird (<i>Archilochus colubris</i>)
+    is the most common hummingbird in Eastern North America.
+  </p>
+
+  <!-- foreign words -->
+  <p>
+    The menu was a sea of exotic words like <i lang="uk-latn">vatrushka</i>,
+    <i lang="id">nasi goreng</i> and <i lang="fr">soupe à l'oignon</i>.
+  </p>
+
+  <!-- a known misspelling -->
+  <p>
+    Someday I'll learn how to <u style="text-decoration-line: underline; text-decoration-style: wavy;">spel</u> better.
+  </p>
+
+  <!-- Highlight keywords in a set of instructions -->
+  <ol>
+    <li>
+      <b>Slice</b> two pieces of bread off the loaf.
+    </li>
+    <li>
+      <b>Insert</b> a tomato slice and a leaf of
+      lettuce between the slices of bread.
+    </li>
+  </ol>
+  #+end_export
+
+** =dl= -- Description lists
+Description lists use a different wrapper than the other list types --
+=<dl>=:
+- each term is wrapped in a =<dt>= (description term) element
+- each description is wrapped in a =<dd>= (description definition) element.
+
+Note that it is permitted to have a single term with multiple
+descriptions.
+
+#+begin_src html
+  <dl>
+    <!-- single definition -->
+    <dt>soliloquy</dt>
+    <dd>In drama, where a character speaks to themselves, representing their inner thoughts or feelings and in the process relaying them to the audience (but not to other characters.)</dd>
+    <!-- multiple definitions -->
+    <dt>aside</dt>
+    <dd>In drama, where a character shares a comment only with the audience for humorous or dramatic effect. This is usually a feeling, thought, or piece of additional background information.</dd>
+    <dd>In writing, a section of content that is related to the current topic, but doesn't fit directly into the main flow of content so is presented nearby (often in a box off to the side.)</dd>
+  </dl>
+#+end_src
+
+#+begin_export html
+<dl>
+  <!-- single definition -->
+  <dt>soliloquy</dt>
+  <dd>In drama, where a character speaks to themselves, representing their inner thoughts or feelings and in the process relaying them to the audience (but not to other characters.)</dd>
+  <!-- multiple definitions -->
+  <dt>aside</dt>
+  <dd>In drama, where a character shares a comment only with the audience for humorous or dramatic effect. This is usually a feeling, thought, or piece of additional background information.</dd>
+  <dd>In writing, a section of content that is related to the current topic, but doesn't fit directly into the main flow of content so is presented nearby (often in a box off to the side.)</dd>
+</dl>
+#+end_export
+
+** Quotations
+
+*** Blockquotes
+
+Wrap a block element inside =blockquote=.
+
+#+begin_src html
+  <p>Here below is a blockquote...</p>
+  <blockquote cite="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/blockquote">
+    <p>The <strong>HTML <code>&lt;blockquote&gt;</code> Element</strong> (or <em>HTML Block
+    Quotation Element</em>) indicates that the enclosed text is an extended quotation.</p>
+  </blockquote>
+#+end_src
+
+#+begin_export html
+<p>Here below is a blockquote...</p>
+<blockquote cite="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/blockquote">
+  <p>The <strong>HTML <code>&lt;blockquote&gt;</code> Element</strong> (or <em>HTML Block
+  Quotation Element</em>) indicates that the enclosed text is an extended quotation.</p>
+</blockquote>
+#+end_export
+
+*** Inline quotations
+
+#+begin_src html
+  <p>The quote element — <code>&lt;q&gt;</code> — is <q cite="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/q">intended
+  for short quotations that don't require paragraph breaks.</q></p>
+#+end_src
+
+#+begin_export html
+<p>The quote element — <code>&lt;q&gt;</code> — is <q cite="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/q">intended
+for short quotations that don't require paragraph breaks.</q></p>
+#+end_export
+
+*** Citations
+The content of the =cite= attribute sounds useful, but unfortunately
+browsers, screenreaders, etc. don't really do much with it. There is
+no way to get the browser to display the contents of cite, without
+writing your own solution using JavaScript or CSS. If you want to make
+the source of the quotation available on the page you need to make it
+available in the text via a link or some other appropriate way.
+
+There is a =<cite>= /element/, but this is meant to contain the title
+of the resource being quoted, e.g. the name of the book. There is no
+reason, however, why you couldn't *link the text inside =<cite>= to
+the quote source* in some way:
+
+#+begin_src html
+  <p>According to the <a href="/en-US/docs/Web/HTML/Element/blockquote">
+  <cite>MDN blockquote page</cite></a>:
+  </p>
+
+  <blockquote cite="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/blockquote">
+    <p>The <strong>HTML <code>&lt;blockquote&gt;</code> Element</strong> (or <em>HTML Block
+    Quotation Element</em>) indicates that the enclosed text is an extended quotation.</p>
+  </blockquote>
+
+  <p>The quote element — <code>&lt;q&gt;</code> — is <q cite="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/q">intended
+  for short quotations that don't require paragraph breaks.</q> -- <a href="/en-US/docs/Web/HTML/Element/q">
+  <cite>MDN q page</cite></a>.</p>
+#+end_src
+
+#+begin_export html
+<p>According to the <a href="/en-US/docs/Web/HTML/Element/blockquote">
+<cite>MDN blockquote page</cite></a>:
+</p>
+
+<blockquote cite="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/blockquote">
+  <p>The <strong>HTML <code>&lt;blockquote&gt;</code> Element</strong> (or <em>HTML Block
+  Quotation Element</em>) indicates that the enclosed text is an extended quotation.</p>
+</blockquote>
+
+<p>The quote element — <code>&lt;q&gt;</code> — is <q cite="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/q">intended
+for short quotations that don't require paragraph breaks.</q> -- <a href="/en-US/docs/Web/HTML/Element/q">
+<cite>MDN q page</cite></a>.</p>
+#+end_export
+
+
+** Abbreviations
+
+#+begin_src html
+  <p>We use <abbr title="Hypertext Markup Language">HTML</abbr> to structure our web documents.</p>
+  <p>I think <abbr title="Reverend">Rev.</abbr> Green did it in the kitchen with the chainsaw.</p>
+#+end_src
+
+#+begin_export html
+<p>We use <abbr title="Hypertext Markup Language">HTML</abbr> to structure our web documents.</p>
+<p>I think <abbr title="Reverend">Rev.</abbr> Green did it in the kitchen with the chainsaw.</p>
+#+end_export
+
+** Superscript and subscript
+
+#+begin_src html
+  <p>My birthday is on the 25<sup>th</sup> of May 2001.</p>
+  <p>C<sub>8</sub>H<sub>10</sub>N<sub>4</sub>O<sub>2</sub></p>
+  <p>If x<sup>2</sup> is 9, x must equal 3 or -3.</p>
+#+end_src
+
+#+begin_export html
+<p>My birthday is on the 25<sup>th</sup> of May 2001.</p>
+<p>C<sub>8</sub>H<sub>10</sub>N<sub>4</sub>O<sub>2</sub></p>
+<p>If x<sup>2</sup> is 9, x must equal 3 or -3.</p>
+#+end_export
+
+** Representing computer code
+
+- =<code>=: For marking up generic pieces of computer code.
+- =<pre>=: For retaining whitespace (generally code blocks) — if you
+  use indentation or excess whitespace inside your text, browsers will
+  ignore it and you will not see it on your rendered page. If you wrap
+  the text in =<pre></pre>= tags however, your whitespace will be
+  rendered identically to how you see it in your text editor.
+- =<var>=: For specifically marking up variable names.
+- =<kbd>=: For marking up keyboard (and other types of) input entered
+  into the computer.
+- =<samp>=: For marking up the output of a computer program.
+
+#+begin_src html
+  <pre><code>var para = document.querySelector('p');
+
+  para.onclick = function() {
+    alert('Owww, stop poking me!');
+  }</code></pre>
+
+  <p>You shouldn't use presentational elements like <code>&lt;font&gt;</code> and <code>&lt;center&gt;</code>.</p>
+
+  <p>In the above JavaScript example, <var>para</var> represents a paragraph element.</p>
+
+  <p>Select all the text with <kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + <kbd>A</kbd>.</p>
+
+  <pre>$ <kbd>ping mozilla.org</kbd>
+  <samp>PING mozilla.org (63.245.215.20): 56 data bytes
+  64 bytes from 63.245.215.20: icmp_seq=0 ttl=40 time=158.233 ms</samp></pre>
+#+end_src
+
+#+begin_export html
+<pre><code>var para = document.querySelector('p');
+
+para.onclick = function() {
+  alert('Owww, stop poking me!');
+}</code></pre>
+
+<p>You shouldn't use presentational elements like <code>&lt;font&gt;</code> and <code>&lt;center&gt;</code>.</p>
+
+<p>In the above JavaScript example, <var>para</var> represents a paragraph element.</p>
+
+<p>Select all the text with <kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + <kbd>A</kbd>.</p>
+
+<pre>$ <kbd>ping mozilla.org</kbd>
+<samp>PING mozilla.org (63.245.215.20): 56 data bytes
+64 bytes from 63.245.215.20: icmp_seq=0 ttl=40 time=158.233 ms</samp></pre>
+#+end_export
+
+* =<a>=
+
+** Document fragments
+
+Assign an =id= attribute to the element you want to link to.
+
+#+begin_src html
+  <h2 id="Mailing_address">Mailing address</h2>
+#+end_src
+
+Link to it in the current page:
+
+#+begin_src html
+  <a href="#Mailing_address"> ... </a>
+#+end_src
+
+In a different page:
+
+#+begin_src html
+  <a href="contacts.html#Mailing_address"
+#+end_src
+
+** Absolute & Relative URL
+
+* Document & website structure
+
+- header: =<header>=.
+- navigation bar: =<nav>=.
+- main content: =<main>=, with various content subsections represented
+  by =<article>=, =<section>=, and =<div>= elements.
+- sidebar: =<aside>=; often placed inside =<main>=.
+- footer: =<footer>=.
+
+-----
+
+- =<main>= is for content unique to this page. Use =<main>= only once
+  per page, and put it directly inside =<body>=. Ideally this
+  shouldn't be nested within other elements.
+- =<article>= encloses a block of related content that makes sense on
+  its own without the rest of the page (e.g., a single blog post).
+- =<section>= is similar to =<article>=, but it is more for grouping
+  together a single part of the page that constitutes one single piece
+  of functionality (e.g., a mini map, or a set of article headlines
+  and summaries), or a theme. It's considered best practice to begin
+  each section with a heading; also note that you can break
+  =<article>=s up into different =<section>=s, or =<section>=s up into
+  different =<article>=s, depending on the context.
+- =<aside>= contains content that is not directly related to the main
+  content but can provide additional information indirectly related to
+  it (glossary entries, author biography, related links, etc.).
+- =<header>= represents a group of introductory content. If it is a
+  child of =<body>= it defines the global header of a webpage, but if
+  it's a child of an =<article>= or =<section>= it defines a specific
+  header for that section (try not to confuse this with titles and
+  headings).
+- =<nav>= contains the main navigation functionality for the
+  page. Secondary links, etc., would not go in the navigation.
+- =<footer>= represents a group of end content for a page.

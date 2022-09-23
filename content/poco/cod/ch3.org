@@ -1,0 +1,241 @@
+#+title: Ch3 --- Arithmetic for Computers
+
+* Addition & Subtraction
+
+** Overflow
+
+*** Signed Overflow
+
+When adding operands with different signs, as in $c = a + b$ ($a\ge0$,
+$b\lt0$), overflow cannot occur, as the sum must be less than the
+positive operand ($c \lt a$) and no smaller than the negative operand
+($c \ge b$).
+
+When subtracting operands with the same sign, since $c = a - b = a +
+(-b)$, we are essentially adding operands with different signs.
+Suppose
+- $b=0$, then $c=a$, no overflow possible.
+- $b=-2^{n-1}$, then we cannot assume $c = a + (-b)$ as $-b$ will
+  overflow.  However, now we have $c = 2^{n-1} + a$ where $a\lt0$,
+  this means $0\le c \lt 2^{n-1}$, which is the proper range of 2's
+  complement positive number, so no overflow.
+- $b\ne0$ and $b\ne-2^{n-1}$, then $-b$ will not overflow, and it will
+  have a different sign than $b$ (and $a$), therefore no overflow as
+  well.
+
+In other situations, overflow may occur
+#+caption: Overflow conditions for addition & subtraction
+| Operation |   a    |   b    | Overflow |
+|-----------+--------+--------+----------|
+|    <c>    |  <c>   |  <c>   |   <c>    |
+|  $a + b$  | $\ge0$ | $\ge0$ |  $\lt0$  |
+|  $a + b$  | $\lt0$ | $\lt0$ |  $\ge0$  |
+|  $a - b$  | $\ge0$ | $\lt0$ |  $\lt0$  |
+|  $a - b$  | $\lt0$ | $\ge0$ |  $\ge0$  |
+
+*** Unsigned Overflow
+
+Unsigned integers are commonly used for memory addresses where
+overflows are ignored.
+
+Addition has overflowed if the sum is less then either of the addends,
+whereas subtraction has overflowed if the difference [差] is greater
+than the minuend [被减数].
+
+* Multiplication
+
+\[\text{Multiplicand} \times \text{Multiplier} = \text{Product}\]
+
+#+begin_src text
+  Multiplicand       1000
+    Multiplier  X    1001
+                ---------
+                     1000
+                    0000
+                   0000
+                + 1000
+                ---------
+       Product    1001000
+#+end_src
+
+Ignoring the sign bits, the product of an $n$​-bit multiplicand and
+$m$​-bit multiplier is $n+m$ bits long.
+
+{{{image(80)}}}
+[[./ch3/multiplication.png]]
+
+#+begin_quote
+Let's assume that the multiplier is in the 64-bit Multiplier register
+and that the 128-bit Product register is initialized to 0.  From the
+paper-and-pencil example above, it’s clear that we will need to *move
+the multiplicand left one digit each step*, as it may be added to the
+intermediate products.  Over 64 steps, a 64-bit multiplicand would
+move 64 bits to the left.  Hence, we need a *128-bit Multiplicand
+register*, initialized with _the 64-bit multiplicand in the right half
+and zero in the left half_.  This register is then shifted left 1 bit
+each step to align the multiplicand with the sum being accumulated in
+the 128-bit Product register.
+#+end_quote
+
+{{{image(80)}}}
+[[./ch3/multiplication-algorithm.png]]
+
+The refined version holds both the product and multiplier in the
+product register.  Initially, the multiplier takes 64 bits on the
+right half and the product on the left half is initialized to 0.  Each
+time, the product register shifts right, and depending on the LSB of
+multiplier, the result of addition is saved to product register.
+However, since the addition always adds to the upper half of the
+product, it's essentially 64-bit multiplicand + 64-bit upper half of
+the product, so the result could be 65-bit.  That's why we need the
+product register to be 129 bits long.
+
+{{{image(80)}}}
+[[./ch3/multiplication-refined.png]]
+
+* Division
+
+\[\begin{align*}
+\text{Dividend} {}\div \text{Divisor} &= \text{Quotient}
+\,{\cdot}{\cdot}{\cdot}{\cdot}{\cdot}{\cdot}\, \text{Remainder} \\
+\text{Dividend} &= \text{Divisor} \times \text{Quotient} + \text{Remainder}
+\end{align*}\]
+
+#+begin_export html
+<pre class="src src-text">
+                  1001  Quotient
+             +--------
+Divisor  1000) 1001010  Dividend
+              -1000<span style="color:grey">000</span>
+              --------
+                  1010
+                 -1000
+              --------
+                    10  Remainder
+</pre>
+#+end_export
+
+A rule on the result of division: the sign of the quotient is like
+that of a product in multiplication---positive if both the dividend
+and divisor has the same sign and nevative otherwise.  The absolute
+value of the quotiend should remain unchanged despite the signs of the
+dividend and divisor.  The remainder is then calculated according to
+$\text{Dividend} = \text{Divisor} \times \text{Quotient} +
+\text{Remainder}$.  Example:
+| Dividend | Divisor | Quotiend | Remainder |
+|   <c>    |   <c>   |   <c>    |    <c>    |
+|   $+7$   |  $+2$   |   $+3$   |   $+1$    |
+|   $+7$   |  $-2$   |   $-3$   |   $+1$    |
+|   $-7$   |  $+2$   |   $-3$   |   $-1$    |
+|   $-7$   |  $-2$   |   $+3$   |   $-1$    |
+
+{{{image(80)}}}
+[[./ch3/division.png]]
+{{{image(80)}}}
+[[./ch3/division-algorithm.png]]
+{{{image(80)}}}
+[[./ch3/division-refined.png]]
+
+* Floating Point
+
+*Normalized*: a number in floating-point notation that has no leading
+0s.
+
+*Floating point*: computer arithmetic that represents numbers in which
+the binary point is not fixed.
+
+\[1.xxxxxxxxx_\text{two} \times 2^{yyyy}\]
+
+A designer of a floating-point representation must find a compromise
+between the size of the /fraction/ and the size of the /exponent/,
+because a fixed word size means you must take a bit from one to add a
+bit to the other.  This tradeoff is between /precision/ and /range/:
+increasing the size of the *fraction* enhances the *precision* of the
+fraction, while increasing the size of the *exponent* increases the
+*range* of numbers that can be represented.
+
+In general, floating-point numbers are of the form
+\[ (-1)^S \times F \times 2^E \]
+
+For floating-point:
+- *overflow*: a *positive* exponent becomes too large to fit in the
+  exponent field.
+- *underflow*: a *negative* exponent becomes too large to fit in the
+  exponent field.
+
+
+** IEEE 754 Floating-Point Standard
+
+The IEEE Standard for Floating-Point Arithmetic (IEEE 754) is a
+technical standard for floating-point arithmetic established in 1985
+by the Institute of Electrical and Electronics Engineers (IEEE).  The
+standard defines:
+- /arithmetic formats/: sets of binary and decimal floating-point
+  data, which consist of finite numbers (including signed zeros and
+  subnormal numbers), infinities, and special "not a number" values
+  (NaNs)
+- /interchange formats/: encodings (bit strings) that may be used to
+  exchange floating-point data in an efficient and compact form
+- /rounding rules/: properties to be satisfied when rounding numbers
+  during arithmetic and conversions
+- /operations/: arithmetic and other operations (such as trigonometric
+  functions) on arithmetic formats
+- /exception handling/: indications of exceptional conditions (such as
+  division by zero, overflow, etc.)
+
+A floating-point format is specified by:
+- a base (also called /radix/) $b$, which is either 2 (binary) or 10
+  (decimal) in IEEE 754;
+- a precision $p$;
+- an *exponent range* from $e_\text{min}$ to $e_\text{max}$, with
+  $\color{red}{e_\text{min} = 1 − e_\text{max}}$ for all IEEE 754
+  formats.
+
+A format comprises:
+
+- Finite numbers, which can be described by three integers: a sign $s$
+  (0 or 1), a significand (or coefficient) $c$ having no more than $p$
+  digits when written in base $b$ (i.e., an *integer* in the range $0
+  \sim b^p - 1$), and an exponent $q$ such that $e_\text{min} \le q +
+  p - 1 \le e_\text{max}$.  The numerical value of such a finite
+  number is $(-1)^s \times c \times b^q$.  Moreover, there are two
+  zero values, called signed zeros: the sign bit specifies whether a
+  zero is $+0$ (positive zero) or $-0$ (negative zero).
+- Two infinities: $+\infty$ and $-\infty$.
+- Two kinds of NaN (Not-a-Number): a quiet NaN (qNaN) and a signaling
+  NaN (sNaN).
+
+
+
+-----
+
+{{{image(100)}}}
+#+caption: Single Precision
+[[./ch3/single-precision.png]]
+
+{{{image(100)}}}
+#+caption: Double Precision
+[[./ch3/double-precision.png]]
+
+In single precision, /s/ is the sign of the floating-point number (1
+meaning negative), /exponent/ is the value of the 8-bit exponent field
+(including the *sign* of the exponent), and /fraction/ is the 23-bit
+number.  To pack even more bits into the number, IEEE 754 makes the
+*leading 1 bit of normalized binary numbers implicit*. Hence, the
+number is actually 24 bits long in single precision (implied 1 and a
+23-bit fraction), and 53 bits long in double precision (1 + 52).  To
+be precise, we use the term /significand/ to represent the 24- or
+53-bit number that is 1 plus the fraction, and /fraction/ when we mean
+the 23- or 52-bit number.  We have
+\[ \text{Significand} = 1.0 + \text{Fraction} \]
+
+#+caption: IEEE 754 Encoding of Single Precision Numbers
+|  Exponent  | Fraction |          Meaning          |
+|    <c>     |   <c>    |            <c>            |
+|     0      |    0     |             0             |
+|     0      | Nonzero  |  \pm denormalized number  |
+| $1\sim254$ | Anything | \pm floating-point number |
+|    255     |    0     |        \pm infinty        |
+|    255     | Nonzero  |    NaN (Not a Number)     |
+
+To ease comparision, the ... TODO

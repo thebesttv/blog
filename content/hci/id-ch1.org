@@ -1,0 +1,23 @@
+#+title: Ch1 -- What is Interaction Design?
+
+Interaction Design (ID) means:
+#+begin_quote
+Designing interactive products to support the way people *communicate*
+and *interact* in their everyday and working lives.
+
+Put another way, it's about creating user experiences that *enhance*
+and *augment* the way people work, communicate, and interact.
+#+end_quote
+
+* ID vs HCI
+
+#+begin_quote
+We see the main difference between interaction design (ID) and
+human-computer interaction (HCI) as one of *scope*.  Historically, HCI
+had a narrow focus on the design and usability of *computing systems*,
+while ID was seen as being _broader_, concerned with the theory,
+research, and practice of designing user experiences for *all manner
+of technologies, systems, and products*.  However, nowadays, HCI has
+greatly expanded in its scope (Churchill et al., 2013), so much so
+that it overlaps much more with ID.
+#+end_quote

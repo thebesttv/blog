@@ -1,0 +1,590 @@
+#+title: 树莓派ARM初体验
+
+* 前言
+
+开始之前最好先读读这些文章
+- [[https://www.raspberrypi.org/forums/viewtopic.php?f=91&t=83372&p=1225448#p1467093][The seven things that will instantly destroy your RPI]]: 主要还是针对
+  GPIO，几个注意事项：
+  - [[color:red][*don't* short the 3V3 output to the 5V input]] [fn:1]
+  - [[color:red][*don't* apply 5V to a GPIO]]---the GPIO pins on RPI can only accept
+    a maximum of *3.3V* (same as output).
+  - be careful, but not paranoid, with *static electricity*
+  - *don't* draw large currents from a GPIO
+  - *don't* fiddle with things connected to the GPIO while the PI is ON
+  - *don't* short the underside of the PI by placing the PI on a
+    conductive surface
+- [[https://www.raspberrypi.org/forums/viewtopic.php?f=91&t=83372][28 Common Pitfalls for Beginners]]: 树莓派日常使用中的一系列问题和注意
+  事项，上面那篇就是其一。
+- [[https://pinout.xyz/][Raspberry Pi Pinout]]: The RPI GPIO pinout guide.
+- [[https://thinkingeek.com/arm-assembler-raspberry-pi/][ARM assembler in Raspberry Pi]]: 详细的树莓派 ARM 汇编介绍（大概看到第
+  10 章就好了）
+- [[https://azeria-labs.com/writing-arm-assembly-part-1/][Introduction to ARM assembly basics]]: 也是一篇 ARM 汇编介绍（虽然没咋
+  看）
+
+
+* ARM 简介
+
+ARM ISA 特点：
+- 大多数指令可以​*条件执行*​(conditional execution)
+- 大小端均可 (BI-endian)
+
+#+begin_details ARM & Thumb
+From [[https://stackoverflow.com/a/10638621][What is the ARM Thumb Instruction set?]]:
+#+begin_quote
+The ARM processor has 2 instruction sets, the traditional ARM set,
+where the instructions are all 32-bit long, and the more condensed
+Thumb set, where most common instructions are 16-bit long (and some
+are 32-bit long). Which instruction set to run can be chosen by the
+developer, and only one set can be active (i.e. once the processor is
+switched to Thumb mode, all instructions will be decoded as using the
+Thumb instead of ARM).
+#+end_quote
+#+end_details
+
+** 寄存器
+
+ARM中可见的有16个32位寄存器 =r0-r15=​，还有一个重要的 Current Program
+Status Register (=cpsr=)。
+
+#+begin_details 其实 ARM 共有31个通用寄存器
+ARM has 31 general-purpose 32-bit registers. At any one time, 16 of
+these registers are visible. The other registers are used to *speed up
+exception processing*. All the register specifiers in ARM instructions
+can address any of the 16 visible registers.
+
+The main bank of 16 registers is used by all unprivileged code. These
+are the User mode registers. User mode is different from all other
+modes as it is unprivileged, which means:
+- User mode can only switch to another processor mode by generating an
+  exception. The SWI instruction provides this facility from program
+  control.
+- Memory systems and coprocessors might allow User mode less access to
+  memory and coprocessor functionality than a privileged mode.
+#+end_details
+
+*** =r0-r15=
+
+|   Name   |            Alias             |
+|   <c>    |             <c>              |
+| =r0-r3=  |    parameter/return value    |
+| =r4-r10= |                              |
+|  =r11=   |     =fp= (frame pointer)     |
+|  =r12=   | =ip= (intra procedural call) |
+|  =r13=   |     =sp= (stack pointer)     |
+|  =r14=   |     =lr= (link register)     |
+|  =r15=   |    =pc= (program counter)    |
+
+- =sp=: 搭配 =PUSH= 和 =POP= 命令
+- =lr=: 用来保存函数调用的返回地址。This register holds the address of
+  the next instruction after a Branch and Link (=BL= or =BLX=)
+  instruction, which is the instruction used to make a subroutine
+  call.
+- =pc=: It can be used in most instructions as a pointer to the
+  instruction which is *two instructions after* the instruction being
+  executed (when executing instruction at address N, pc is N+8 due to
+  pipelining fetch-decode-execute).
+
+  =pc= is a general-purpose register, and therefore arithmetic/logic
+  instructions can write their results directly to =pc=.  This allows
+  easy implementation of a variety of jump instructions.
+
+*** =cpsr=
+
+Current Program Status Register (=cpsr=) contains four condition code
+flags called N (negative), Z (zero), C (carry) and V (overflow) that
+are usually read by branch instructions.
+
+=CMP=, =CMN=, =TST= and =TEQ= always update the condition code flags.
+The remaining instructions update the flags if an =S= is appended to
+the instruction mnemonic (which sets the S bit in the instruction).
+
+** 指令
+
+Almost all ARM instructions can be conditionally executed.  They
+contain a 4-bit condition field.  One value of this field specifies
+that the instruction is executed unconditionally.  They can
+- tests for equality and non-equality
+- tests for <, <=, >, and >= inequalities, in both signed and unsigned
+  arithmetic
+
+| Mnemonic extension | Meaning                      |
+|        <c>         | <l>                          |
+|         EQ         | equal                        |
+|         NE         | Not equal                    |
+|         MI         | Minus/negative               |
+|         PL         | Plus/positive or zero        |
+|         HI         | Unsigned higher              |
+|         LS         | Unsigned lower or same       |
+|         GE         | Signed greater than or equal |
+|         LT         | Signed less than             |
+|         GT         | Signed greater than          |
+|         LE         | Signed less than or equal    |
+|         AL         | Always (default)             |
+
+
+语法
+- ={field}= 表示 field 可选，如 =B{L}= 代表 =B= 或 =BL=
+- ={<cond>}= 表示 condition 可选，​=cond= 有 =eq=, =ne= 等
+
+
+*** Branch instructions
+
+#+begin_src text
+  B{L}{<cond>}   <target_address>
+  B{L}X{<cond>}  <Rm>
+#+end_src
+=B= (Branch), =BL= (Branch and Link), =BX= (Branch and Exchange) and
+=BLX= (Branch with Link and Exchange) cause a branch to a target
+address, and provide both conditional and unconditional changes to
+program flow.  =BX= and =BLX= uses address from a register.  =BL= and
+=BLX= stores a return address in the link register, =r14= (also known
+as =lr=).
+
+*** Data-processing instructions
+
+Most data-processing instructions take two source operands, though
+Move and Move Not take only one.
+
+The arithmetic/logic instructions perform an arithmetic or logical
+operation on *up to two source operands*, and write the result to a
+*destination register*.  They can also *optionally* update the
+condition code flags in =cpsr= (Negative, Zero, Carry and oVerflow),
+based on the result.
+
+The compare and test instructions *only* update the condition
+flags---they *do not write the result to a register*, but always
+updates =cpsr=.
+
+{{{image(100)}}}
+#+caption: List of data-processing instructions
+[[./ch1-rpi-arm/arithmetic-logic.png]]
+
+Of the two source operands:
+- one is always a register
+- the other is called a /shifter operand/ and has two basic forms:
+  - an immediate value
+  - a register value, optionally shifted
+
+Syntax for the data-processing instructions:
+#+begin_src text
+  <opcode1>{<cond>}{S}  <Rd>,  <shifter_operand>
+  <opcode1> := MOV | MVN
+
+  <opcode2>{<cond>}  <Rn>,  <shifter_operand>
+  <opcode2> := CMP | CMN | TST | TEQ
+
+  <opcode3>{<cond>}{S}  <Rd>,  <Rn>,  <shifter_operand>
+  <opcode3> := ADD | SUB | RSB | ADC | SBC | RSC | AND | BIC | EOR | ORR
+#+end_src
+
+where
+- =S= signifies that the instruction *updates =cpsr=*.
+- =Rd= is the destination register.
+- =Rn= is the first source operand register.
+- =shifter_operand= is the second source operand.
+
+Syntex for the =shifter_operand=:
+#+begin_src text
+  shifter_operand := #<immediate>            |
+                     <Rm>                    |
+                     <Rm>, <op> #<shift_imm> |
+                     <Rm>, <op> <Rs>
+  op := LSL | LSR | ASR | ROR
+#+end_src
+
+The =shifter_operand= specifies the second source operand, it can be
+- an immediate value, e.g. =MOV r0, #0= moves zero to =r0=, and =ADD
+  r3, r3, #1= increments =r3= by 1.
+- a register, e.g. =ADD r4, r3, r2= means =r4 = r3 + r2=.
+- a *shifted* register: the shift amount can be either an *immediate
+  value* or the value of *another register*.  Every arithmetic/logic
+  instruction can therefore perform an arithmetic/logic operation and
+  a shift operation.  As a result, ARM does not have dedicated shift
+  instructions.  The shift operation =op= can be
+  - =LSL=: logical shift left
+  - =LSR=: logical shift right
+  - =ASR=: arithmetic shift right
+  - =ROR=: rotate right
+
+*** Load & store instructions
+
+Load Register instructions can load a 64-bit doubleword, a 32-bit
+word, a 16-bit halfword, or an 8-bit byte from memory into a register
+or registers. Byte and halfword loads can be automatically
+zero-extended or sign-extended as they are loaded.
+
+Store Register instructions can store a 64-bit doubleword, a 32-bit
+word, a 16-bit halfword, or an 8-bit byte from a register or registers
+to memory.
+
+Load and Store Register instructions have three primary *addressing
+modes*, all of which use a *base register* and an *offset* specified
+by the instruction.  The base register can be any one of the
+general-purpose registers (including the =pc=, which allows
+=pc=-relative addressing for position-independent code).  The offset
+takes one of three formats:
+- *Immediate*: The offset is an unsigned number that can be added to
+  or subtracted from the base register.  Immediate offset addressing
+  is useful for accessing data elements that are a fixed distance from
+  the start of the data object, such as structure fields, stack
+  offsets and input/output registers.
+- *Register*: The offset is a general-purpose register (not =pc=),
+  that can be added to or subtracted from the base register.  Register
+  offsets are useful for accessing arrays or blocks of data.
+- *Scaled register*: The offset is a general-purpose register (not
+  =PC=) *shifted by an immediate value*, then added to or subtracted
+  from the base register.  The same shift operations used for
+  data-processing instructions can be used (Logical Shift Left,
+  Logical Shift Right, Arithmetic Shift Right and Rotate Right), but
+  Logical Shift Left is the most useful as it allows an array indexed
+  to be scaled by the size of each array element.
+
+As well as the three types of offset, the offset and base register are
+used *in three different ways* to form the memory address.  The
+addressing modes are described as follows:
+- In *offset addressing*, the base register and offset are added or
+  subtracted to form the memory address.
+- In *pre-indexed addressing*, the base register and offset are added
+  or subtracted to form the memory address as well.  But as a side
+  effect, *the base register is then updated with this new address*,
+  to allow automatic indexing through an array or memory block.
+- In *post-indexed addressing*, the value of *the base register alone*
+  is used as the memory address.  The base register and offset are
+  added or subtracted and this value is stored back in the base
+  register, to allow automatic indexing through an array or memory
+  block.
+
+Here, the /offset addressing/ is non-updating, while the /pre-/ and
+/post-indexed addrssing/ is updating.  The latter two differ on when
+the updating is performed.
+
+The two load and store instructions:
+- LDR (load to register) loads a word from a memory address.
+- STR (store from register) stores a word from a register to memory.
+
+For load and store *word* or *unsigned byte*:
+#+begin_src text
+  LDR{<cond>}{B}  <Rd>,  <addressing_mode>
+  STR{<cond>}{B}  <Rd>,  <addressing_mode>
+
+  addressing_mode :=
+    // offset addressing
+    [<Rn>, #+/-<offset_12>]                |
+    [<Rn>, +/-<Rm>]                        |
+    [<Rn>, +/-<Rm>, <shift> #<shift_imm>]  |
+    // pre-indexed addressing
+    [<Rn>, #+/-<offset_12>]!               |
+    [<Rn>, +/-<Rm>]!                       |
+    [<Rn>, +/-<Rm>, <shift> #<shift_imm>]! |
+    // post-indexed addressing
+    [<Rn>], #+/-<offset_12>                |
+    [<Rn>], +/-<Rm>                        |
+    [<Rn>], +/-<Rm>, <shift> #<shift_imm>
+#+end_src
+
+For load and store (signed or unsigned) halfword, load signed byte, or
+load and store doubleword instructions, the third format (scaled
+register format) is not available:
+#+begin_src text
+  LDR|STR{<cond>}H|SH|SB|D  <Rd>,  <addressing_mode>
+
+  addressing_mode :=
+    // offset addressing
+    [<Rn>, #+/-<offset_8>]                 |
+    [<Rn>, +/-<Rm>]                        |
+    // pre-indexed addressing
+    [<Rn>, #+/-<offset_8>]!                |
+    [<Rn>, +/-<Rm>]!                       |
+    // post-indexed addressing
+    [<Rn>], #+/-<offset_8>                 |
+    [<Rn>], +/-<Rm>
+#+end_src
+
+
+** Assembler Directive
+
+TODO
+
+.global
+
+.balign
+
+.word
+
+* GPIO
+
+GPIO Pins are Peripherals.
+Peripherals are Controlled by Special Memory Locations.
+"Peripheral Registers"
+
+Peripheral registers
+are mapped into address space
+
+Memory-Mapped IO (MMIO)
+
+MMIO space is above physical memory
+
+|    Address    |   Name    | Description             | Read/Write |
+|      <c>      |    <c>    | <l>                     |    <c>     |
+| =0x2020 0000= | =GPFSEL0= | GPIO Function Select 0  |    R/W     |
+| =0x2020 0004= | =GPFSEL1= | GPIO Function Select 1  |    R/W     |
+| =0x2020 0008= | =GPFSEL2= | GPIO Function Select 2  |    R/W     |
+| =0x2020 000C= | =GPFSEL3= | GPIO Function Select 3  |    R/W     |
+| =0x2020 0010= | =GPFSEL4= | GPIO Function Select 4  |    R/W     |
+| =0x2020 0014= | =GPFSEL5= | GPIO Function Select 5  |    R/W     |
+| =0x2020 0018= |     -     | Reserved                |     -      |
+| =0x2020 001C= | =GPSET0=  | GPIO Pin Output Set 0   |     W      |
+| =0x2020 0020= | =GPSET1=  | GPIO Pin Output Set 1   |     W      |
+| =0x2020 0024= |     -     | Reserved                |     -      |
+| =0x2020 0028= | =GPCLR0=  | GPIO Pin Output Clear 0 |     W      |
+| =0x2020 002C= | =GPCLR1=  | GPIO Pin Output Clear 1 |     W      |
+| =0x2020 0030= |     -     | Reserved                |     -      |
+| =0x2020 0034= | =GPLEV0=  | GPIO Pin Level 0        |     R      |
+| =0x2020 0038= | =GPLEV1=  | GPIO Pin Level 1        |     R      |
+
+** GPIO Function Select Registers (=GPFSELn=)
+
+The function select registers are used to define the operation of the
+GPIO pins.  Each of the 54 GPIO pins has at least two alternative
+functions.  The =FSEL{n}= field determines the functionality of the
+n-th GPIO pin.  All unused alternative function lines are tied to
+ground and will output a "0" if selected.  All pins reset to normal
+GPIO input operation (000).
+
+Each GPIO pin corresponds to a 3 bit =FSEL= field.  Since a register
+has 32 bits, it can hold the =FSEL= field of 10 pins (=FSEL0...9=),
+the highest 2 bits effectiely useless.  To hold 54 GPIO pins, 6
+registers are used (=GPFSEL0..5=).  In each:
+| Bit(s) | Field Name | Description       | Type |
+|  <c>   |    <c>     | <l>               | <c>  |
+| 31-30  |     -      | Reserved          |  R   |
+| 29-27  |  =FSEL9=   | Function Select 9 | R/W  |
+| 26-24  |  =FSEL8=   | Function Select 8 | R/W  |
+| 23-21  |  =FSEL7=   | Function Select 7 | R/W  |
+| 20-18  |  =FSEL6=   | Function Select 6 | R/W  |
+| 17-15  |  =FSEL5=   | Function Select 5 | R/W  |
+| 14-12  |  =FSEL4=   | Function Select 4 | R/W  |
+|  11-9  |  =FSEL3=   | Function Select 3 | R/W  |
+|  8-6   |  =FSEL2=   | Function Select 2 | R/W  |
+|  5-3   |  =FSEL1=   | Function Select 1 | R/W  |
+|  2-0   |  =FSEL0=   | Function Select 0 | R/W  |
+
+As for the 3-bit =FSEL= field:
+| Value | Description                 |
+|  <c>  | <l>                         |
+|  000  | input                       |
+|  001  | output                      |
+|  100  | alternate function 0 (ALT0) |
+|  101  | alternate function 1 (ALT1) |
+|  110  | alternate function 2 (ALT2) |
+|  111  | alternate function 3 (ALT3) |
+|  011  | alternate function 4 (ALT4) |
+|  010  | alternate function 5 (ALT5) |
+
+#+begin_details Alternative Function
+Every GPIO pin can carry an alternate function.  Up to 6 alternate
+function are available but not every pin has that many alternate
+functions.
+#+end_details
+
+** GPIO Pin Output Set Registers (=GPSETn=)
+
+The output set registers are used to set a GPIO pin.  The =SET{n}=
+field defines the respective GPIO pin to set, *writing a "0" to the
+field has no effect*.  If the GPIO pin is being used as in input (by
+default) then the value in the =SET{n}= field is *ignored*.  However,
+if the pin is subsequently defined as an output, then the bit will be
+set according to *the last set/clear operation*.  Separating the set
+and clear functions removes the need for read-modify-write operations.
+
+Each bit represents one pin, so 2 registers are used:
+- Bit 0--31 of =GPSET0= controls GPIO 0--31.
+- Bit 0--21 of =GPSET1= controls GPIO 32--53.
+
+** GPIO Pin Output Clear Registers (=GPCLRn=)
+
+The output clear registers are used to clear a GPIO pin.  The =CLR{n}=
+field defines the respective GPIO pin to clear, writing a "0" to the
+field has no effect.  If the GPIO pin is being used as in input (by
+default) then the value in the =CLR{n}= field is ignored.  However, if
+the pin is subsequently defined as an output then the bit will be set
+according to the last set/clear operation.  Separating the set and
+clear functions removes the need for read-modify-write operations.
+
+Similarly, each bit in =GPCLR0= and =GPCLR1= controls GPIO 0--53.
+
+** GPIO Pin Level Registers (=GPLEVn=)
+
+The pin level registers return the actual value of the pin.  The
+=LEV{n}= field gives the value of the respective GPIO pin, 1 means
+HIGH and 0 means LOW.  The =GPLEV= registers are readonly.
+
+* 点亮一个小灯
+
+选择 GPIO 20 作为输出，控制 =GPFSEL2= 和 =GPSET0= 将其改为输出模式并置1。
+
+#+begin_src asm
+          // turn on LED connected to GPIO 20
+
+          // set r0 to base address 0x2020 0000
+          mov r0, #0x20           // r0 = 0x0000 0020
+          lsl r1, r0, #24         // r1 = 0x2000 0000
+          lsl r2, r0, #16         // r2 = 0x0020 0000
+          orr r0, r1, r2          // r0 = 0x2020 0000
+
+          // configure GPIO 20 for output
+          // set GPFSEL2 (0x2020 0008) to 1
+          mov r1, #1              // output mode
+          str r1, [r0, #0x08]     // set 0x2020 0008 to 1
+
+          // set GPIO 20 to 1
+          // set bit 20 of GPSET0 (0x2020 001C) to 1
+          mov r1, #1
+          lsl r1, r1, #20         // r1 = 1 << 20
+          str r1, [r0, #0x1C]     // set 0x2020 001C to 1 << 20
+
+          // loop forever
+  loop:   b loop
+#+end_src
+
+然后酱就行啦
+#+begin_src bash
+  $ arm-none-eabi-as on.s -o on.o
+  $ arm-none-eabi-objcopy on.o -O binary on.bin
+  $ rpi-run.py on.bin
+#+end_src
+
+* 闪烁
+
+用 =GPCLR0= 将输出变为低电平，再加上循环就行啦。
+
+#+begin_src asm
+          .equ DELAY, 0x3F0000
+
+          // configure GPIO 20 for output
+          ldr r0, FSEL2
+          mov r1, #1
+          str r1, [r0]
+
+          mov r1, #(1<<20)        // r1 = 1 << 20
+  loop:
+          // set GPIO 20 high
+          ldr r0, SET0
+          str r1, [r0]
+
+          // delay
+          mov r2, #DELAY
+  wait1:  subs r2, #1     // the s suffix changes cpsr
+          bne wait1
+
+          // set GPIO 20 low
+          ldr r0, CLR0
+          str r1, [r0]
+
+          // delay
+          mov r2, #DELAY
+  wait2:  subs r2, #1
+          bne wait2
+
+          b loop
+
+  FSEL0: .word 0x20200000
+  FSEL1: .word 0x20200004
+  FSEL2: .word 0x20200008
+  SET0:  .word 0x2020001C
+  SET1:  .word 0x20200020
+  CLR0:  .word 0x20200028
+  CLR1:  .word 0x2020002C
+#+end_src
+
+* 加上开关
+
+选择 GPIO 10 作为输入，从 =GPLEV0= 读取输入。很神奇的是，高电位对应的
+是0，按下开关，低电位对应的才是1。这个大概就是 active low 叭。
+
+#+begin_src asm
+          // configure GPIO 10 for input
+          ldr r0, FSEL1
+          mov r1, #0
+          str r1, [r0]
+
+          // configure GPIO 20 for output
+          ldr r0, FSEL2
+          mov r1, #1
+          str r1, [r0]
+
+          // r2 = 1 << 10
+          mov r2, #(1<<10)
+          // r3 = 1 << 20
+          mov r3, #(1<<20)
+
+  loop:   // read GPIO 10
+          ldr r0, LEV0
+          ldr r1, [r0]
+          tst r1, r2
+          beq off // when the button is pressed (goes LOW), turn off LED
+
+          // set GPIO 20 high
+  on:     ldr r0, SET0
+          str r3, [r0]
+          b loop
+
+          // set GPIO 20 low
+  off:    ldr r0, CLR0
+          str r3, [r0]
+          b loop
+
+  FSEL0: .word 0x20200000
+  FSEL1: .word 0x20200004
+  FSEL2: .word 0x20200008
+  SET0:  .word 0x2020001C
+  SET1:  .word 0x20200020
+  CLR0:  .word 0x20200028
+  CLR1:  .word 0x2020002C
+  LEV0:  .word 0x20200034
+  LEV1:  .word 0x20200038
+#+end_src
+
+* 流水灯
+
+把 GPIO 0...7 连上灯，然后开个循环，每次先把 GPIO clear，再 set 成循环
+变量就行啦。
+
+#+begin_src asm
+          .equ DELAY, 0x2F0000
+
+          // configure GPIO 0..7 for input
+          ldr r0, FSEL0
+          ldr r1, STATE
+          str r1, [r0]
+
+          mov r0, #0
+          mov r1, #255
+          ldr r2, SET0
+          ldr r3, CLR0
+  loop:
+          str r1, [r3]    // clear all
+          str r0, [r2]    // set to r0
+          add r0, r0, #1
+
+          mov r4, #DELAY
+  wait:   subs r4, #1
+          bne wait
+
+          b loop
+
+  STATE:  .word 011111111
+  FSEL0:  .word 0x20200000
+  FSEL1:  .word 0x20200004
+  FSEL2:  .word 0x20200008
+  SET0:   .word 0x2020001C
+  SET1:   .word 0x20200020
+  CLR0:   .word 0x20200028
+  CLR1:   .word 0x2020002C
+  LEV0:   .word 0x20200034
+  LEV1:   .word 0x20200038
+#+end_src
+
+* Footnotes
+
+[fn:1] 诶呀诶呀 [[https://github.com/alhassy/org-special-block-extras][=org-special-block-extras=]] 好好用呀～

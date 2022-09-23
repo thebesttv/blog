@@ -1,0 +1,19 @@
+#+title: Docker
+
+{{{pkg(docker)}}}
+
+* Problems
+
+** Permission error with socket
+
+Error:
+#+begin_src text
+  Server:
+  ERROR: Got permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get "http://%2Fvar%2Frun%2Fdocker.sock/v1.24/info": dial unix /var/run/docker.sock: connect: permission denied
+#+end_src
+
+[[https://www.digitalocean.com/community/questions/how-to-fix-docker-got-permission-denied-while-trying-to-connect-to-the-docker-daemon-socket][How to fix docker: Got permission denied while trying to connect to the Docker daemon socket]]
+
+#+begin_src bash
+  sudo chmod 666 /var/run/docker.sock
+#+end_src

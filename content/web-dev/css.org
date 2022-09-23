@@ -1,0 +1,384 @@
+#+title: CSS 笔记
+
+These are my notes along the way of learning CSS.  This is meant
+mainly for easy review in the future, and is basically a collection of
+important points taken from the [[https://web.dev/learn/css/][Learn CSS]] course at [[https://web.dev/learn/css/][web.dev]].
+
+* About CSS
+
+** "CSS is weird"
+
+#+begin_quote
+CSS works a bit differently to most programming
+languages and design tools you'll come across. Why does it work the
+way it does? In the following video, Miriam Suzanne provides a useful
+explanation of why CSS works like it does, and why it has evolved like
+it has:
+#+end_quote
+
+#+begin_export html
+<iframe width="560"
+        height="315"
+        src="https://www.youtube-nocookie.com/embed/aHUtMbJw8iA"
+        title="YouTube video player"
+        frameborder="0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowfullscreen>
+</iframe>
+#+end_export
+
+* Box Model
+
+#+begin_quote
+Everything displayed by CSS is a box.
+#+end_quote
+
+** Content and sizing
+*** Extrinsic & intrinsic sizing
+
+Prefix: /ex/- = outside; /in/- = inner.
+
+- extrinsic /adj./ :: Originating from or on the *outside*; external.
+- intrinsic /adj./ :: Of or relating to the essential nature of a
+  thing; *inherent*.
+
+
+With extrinsic sizing, the box has a fixed size, so the content has to
+fit in the box (or overflow).  However, with intrinsic sizing, the box
+instead fits the size of the content.  *You* gain more control with
+extrinsic sizing and the *content* has more control with intrinsic
+sizing.
+
+When the box is using extrinsic sizing, there's a *limit* of how much
+content you can add before it overflows out of the box's bounds.  One
+way to prevent this overflow is to allow the box to be intrinsically
+sized by either _unsetting the width_, or in this case, setting the
+width to be =min-content=. The =min-content= keyword tells the box to
+only be as wide as the intrinsic minimum width of its content (the
+word "awesome").
+
+
+** The areas of the box model
+
+Boxes are made up of distinct box model /areas/ that all do a specific
+job.
+
+#+attr_html: :width 100%
+[[https://web-dev.imgix.net/image/VbAJIREinuYvovrBzzvEyZOpw5w1/ECuEOJEGnudhXW5JEFih.svg]]
+
+The four main areas of the box model: content box, padding box, border
+box and margin box.
+
+You start with content box, which is the area that the content lives
+in. As you learned before: this content can control the size of its
+parent, so is usually the most variably sized area.
+
+The padding box surrounds the content box and is the space created by
+the =padding= property. Because padding is inside the box, the
+background of the box will be visible in the space that it creates. If
+our box has overflow rules set, such as =overflow: auto= or =overflow:
+scroll=, the scrollbars will occupy this space too.
+
+The border box surrounds the padding box and its space is occupied by
+the =border= value. The border box is the bounds of your box and the
+border edge is the limit of what you can visually see. The =border=
+property is used to visually frame an element.
+
+The final area, the margin box, is the space around your box, defined
+by the =margin= rule on your box. Properties such as =outline= and
+=box-shadow= occupy this space too because they are painted on top, so
+they don't affect the size of our box. You could have an
+=outline-width= of =200px= on our box and everything inside and
+including the border box would be exactly the same size.
+
+*** A useful analogy:
+#+attr_html: :width 100%
+[[https://web-dev.imgix.net/image/VbAJIREinuYvovrBzzvEyZOpw5w1/FBaaJXdnuSkvOx1nB0CB.jpg]]
+
+In this diagram, you have three photo frames, mounted to a wall, next
+to each other. The diagram has labels that associate elements of the
+frame with the box model.
+
+To break this analogy down:
+
+- The content box is the artwork.
+- The padding box is the white matte, between the frame and the artwork.
+- The border box is the the frame, providing a literal border for the artwork.
+- The margin box is the space between each frame.
+- The shadow occupies _the same space as the margin box_.
+
+
+
+
+-----
+
+
+
+* Selectors
+
+** Simple selectors
+
+*** Universal selector
+
+A universal selector—also known as a wildcard—matches any element.
+
+#+begin_src css
+  ,* {
+      color: hotpink;
+  }
+#+end_src
+
+*** Type selector
+
+A type selector matches a HTML element directly.
+
+#+begin_src css
+  section {
+      padding: 2em;
+  }
+#+end_src
+
+*** Class selector
+
+A HTML element can have one or more items defined in their class
+attribute. The class selector matches any element that has that class
+applied to it.
+
+#+begin_src html
+  <div class="my-class"></div>
+  <button class="my-class"></button>
+  <p class="my-class"></p>
+#+end_src
+
+Any element that has the class applied to it will get colored red:
+
+#+begin_src css
+  .my-class {
+      color: red;
+  }
+#+end_src
+
+*** ID selector
+
+An HTML element with an =id= attribute should be the only element on a
+page with that ID value.
+
+#+begin_src html
+  <div id="rad"></div>
+#+end_src
+
+#+begin_src css
+  #rad {
+      border: 1px solid blue;
+  }
+#+end_src
+
+*** Attribute selector
+
+You can look for elements that (1) have a certain HTML _attribute_, or
+(2) have a certain _value_ for an HTML attribute, using the attribute
+selector. Instruct CSS to look for attributes by wrapping the selector
+with square brackets (=[ ]=). You can use case-sensitive attribute
+selectors by adding an =s= operator to your attribute selector.
+
+#+begin_src css
+  /* <div data-type="primary"></div> */
+  [data-type='primary'] {
+      color: red;
+  }
+
+  /* <div data-type="primary"></div> */
+  /* <div data-type="secondary"></div> */
+  [data-type] {
+      color: red;
+  }
+
+  /* case sensitive */
+  [data-type='primary' s] {
+      color: red;
+  }
+#+end_src
+
+#+begin_src css
+  /* A href that contains “example.com” */
+  [href*='example.com'] {
+      color: red;
+  }
+
+  /* A href that starts with https */
+  [href^='https'] {
+      color: green;
+  }
+
+  /* A href that ends with .com */
+  [href$='.com'] {
+      color: blue;
+  }
+#+end_src
+
+** Pseudo-classes and pseudo-elements
+
+*** Pseudo-classes
+
+HTML elements find themselves in various states, either because they
+are interacted with, or one of their child elements is in a certain
+state.  For example, an HTML element could be hovered with the mouse
+pointer by a user or a child element could also be hovered by the
+user. For those situations, use the =:hover= pseudo-class.
+
+#+begin_src css
+  /* Our link is hovered */
+  a:hover {
+      outline: 1px dotted green;
+  }
+
+  /* Sets all even paragraphs to have a different background */
+  p:nth-child(even) {
+      background: floralwhite;
+  }
+#+end_src
+
+*** Pseudo-element
+
+Pseudo-elements differ from pseudo-classes because instead of
+responding to the platform state, they act as if they are _inserting a
+new element with CSS_.  Pseudo-elements are also syntactically
+different from pseudo-classes, because instead of using a single colon
+(=:=), we use a double colon (=::=).
+
+#+begin_src css
+  .my-element::before {
+      content: 'Prefix - ';
+  }
+
+  /* Your list will now either have red dots, or red numbers */
+  li::marker {
+      color: red;
+  }
+
+  /* You can also use ::selection to style the content that
+  has been highlighted by a user. */
+  ::selection {
+      background: black;
+      color: white;
+  }
+#+end_src
+
+* How CSS is structured
+
+** Applying CSS to HTML
+
+Three methods of applying CSS to a document: with
+- an external stylesheet
+  #+begin_src html
+    <link rel="stylesheet" href="styles/style.css">
+  #+end_src
+- an internal stylesheet
+  #+begin_src html
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <title>My CSS experiment</title>
+        <style>
+          h1 {
+            color: blue;
+            background-color: yellow;
+            border: 1px solid black;
+          }
+
+          p {
+            color: red;
+          }
+        </style>
+      </head>
+      <body>
+        <h1>Hello World!</h1>
+        <p>This is my first CSS example</p>
+      </body>
+    </html>
+  #+end_src
+- inline styles
+
+  Inline styles are CSS declarations that affect a *single* HTML
+  element, contained within a =style= attribute.
+  #+begin_src html
+    <h1 style="color: blue;background-color: yellow;border: 1px solid black;">
+      Hello World!
+    </h1>
+    <p style="color:red;">
+      This is my first CSS example
+    </p>
+  #+end_src
+
+  *Avoid using CSS in this way, when possible*.  It is the opposite of
+  a best practice.  Inline CSS mixes (CSS) presentational code with
+  HTML and content, making everything more difficult to read and
+  understand.  *Separating code and content* makes maintenance easier
+  for all who work on the website.
+
+** Selectors
+
+[[https://web-dev.imgix.net/image/VbAJIREinuYvovrBzzvEyZOpw5w1/hFR4OOwyH5zWc5XUIcyu.svg]]
+
+Each CSS rule _starts with a selector_ — or _a list of selectors_ — in
+order to tell the browser which element or elements the rules should
+apply to.
+
+#+begin_src css
+  h1
+  a:link
+  .manythings
+  #onething
+  ,*
+  .box p
+  .box p:first-child
+  h1, h2, .intro
+#+end_src
+
+** Cascade & Specificity
+
+More than one rule could apply to an element.
+
+The CSS language has rules to control which selector is /stronger/ in
+the event of a conflict. These rules are called *cascade* and
+*specificity*.
+
+The cascade rule: later styles replace conflicting styles that appear
+earlier in the stylesheet.  So in the below example, paragraph will be
+blue.
+
+#+begin_src css
+  p {
+    color: red;
+  }
+
+  p {
+    color: blue;
+  }
+#+end_src
+
+** Properties and values
+
+- Properties :: These are human-readable identifiers that indicate
+  which stylistic features you want to modify. For example,
+  =font-size=, =width=, =background-color=.
+- Values :: Each property is assigned a value. This value indicates
+  how to style the property.
+
+When a property is paired with a value, this pairing is called a /CSS
+declaration/.  CSS declarations are found within /CSS Declaration
+Blocks/.  CSS declaration blocks are paired with /selectors/ to
+produce /CSS rulesets/ (or /CSS rules/).
+
+#+begin_src css
+  h1 {
+      color: blue;
+      background-color: yellow;
+  }
+#+end_src
+
+Here, =color= & =background-color= are properties; =blue= & =yellow=
+are values.  The paring =color: blue;= is a CSS declaration.  The part
+inside braces ={...}= is the CSS declaration block. =h1= is a CSS
+selector.

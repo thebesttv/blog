@@ -1,0 +1,5 @@
+#+title: ESP
+
+- [[https://esphome.github.io/esp-web-tools/][ESP Web Tools]]: User friendly tools to manage ESP8266 and ESP32 devices in the
+  browser
+

@@ -1,0 +1,3 @@
+#+title: The Scheme Programming Language, 4th
+
+The book is available in [[https://www.scheme.com/tspl4/][HTML format]].

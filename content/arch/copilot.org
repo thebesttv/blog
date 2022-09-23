@@ -1,0 +1,6 @@
+#+title: Copilot 体验
+
+需要先装 keyring
+#+begin_src bash
+  sudo pacman -S gnome-keyring libsecret
+#+end_src

@@ -1,0 +1,4 @@
+#+title: Register Window
+
+- [[https://projects.cerias.purdue.edu/stackghost/stackghost.ps][StackGhost: Hardware Facilitated Stack Protection]] Section 2.2.1
+  Register Windows

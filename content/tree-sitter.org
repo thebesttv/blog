@@ -1,0 +1,15 @@
+#+title: Tree-Sitter
+
+- [[https://www.thestrangeloop.com/2018/tree-sitter---a-new-parsing-system-for-programming-tools.html][Tree-Sitter - A New Parsing System For Programming Tools]]
+
+Using regex for code highlighting is not enouth.
+
+* LR-Parsing \to GLR-Parsing
+
+- one pass --- does not backtrack
+- when encountering ambiguity, forks into multiple paths
+
+* Incremental Parsing
+
+- reuse the old (unchanged) nodes of AST
+- only re-parse some nodes

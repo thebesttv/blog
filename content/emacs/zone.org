@@ -1,0 +1,7 @@
+#+title: zone.el
+
+* 彩虹猫 - [[https://depp.brause.cc/zone-nyan/][zone-nyan.el]]
+  [[https://emacsninja.com/posts/zoning-out-with-nyan-cat.html][Zoning Out With Nyan Cat]]
+
+  #+CAPTION: Nyan cat in Emacs!
+  [[https://depp.brause.cc/zone-nyan/img/screencast.gif]]

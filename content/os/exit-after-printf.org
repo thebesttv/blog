@@ -1,0 +1,131 @@
+#+title: printf后立即exit
+
+又是一个和 output buffer 有关的问题.  起因是这篇文章说 Hello World 里
+有 bug[fn:1].
+
+输出重定向到 =/dev/full= 时, =puts= 会输出到 bffer 里面, 返回值正常.
+如果这时直接 =return= 的话无法检查到错误.  再用 =fflush(stdout)= 清
+buffer 并且检查返回值, 这样才能检查到错误.
+
+用 =puts= 输出 Hello World, 并查看返回值
+#+begin_src c
+  // ex1.c
+  #include <stdio.h>
+  #include <stdlib.h>
+
+  const char *str = "Hello World!";
+
+  int main(void) {
+    int rc = puts(str);
+    if (rc == EOF) {
+      perror("puts");
+      exit(1);
+    } else {
+      printf("rc: %d\n", rc);
+    }
+
+    return 0;
+  }
+#+end_src
+
+输出到console是莫得问题
+#+begin_src bash
+  $ gcc ex1.c
+  $ ./a.out
+  Hello World!
+  rc: 13
+  $ echo $?
+  0
+#+end_src
+
+但如果到 =/dev/full= 就会有问题了
+#+begin_src bash
+  $ ./a.out > /dev/full
+  rc: 13
+  $ echo $?
+  0
+#+end_src
+
+如果用 syscall =write= 的话莫得问题
+
+#+begin_src c
+  // ex2.c
+  #include <stdio.h>
+  #include <stdlib.h>
+  #include <unistd.h>
+  #include <string.h>
+
+  const char *str = "Hello World!\n";
+
+  int main(void) {
+    int rc = write(1, str, strlen(str));
+    if (rc == EOF) {
+      perror("write");
+      exit(1);
+    } else {
+      fprintf(stderr, "rc: %d\n", rc);
+    }
+
+    return 0;
+  }
+#+end_src
+
+#+begin_src bash
+  $ gcc ex2.c
+  $ ./a.out
+  Hello World!
+  rc: 13
+  $ echo $?
+  0
+  $ ./a.out > /dev/full
+  write: No space left on device
+  $ echo $?
+  1
+#+end_src
+
+=puts= 加上 =fflush= 才会没有问题
+
+#+begin_src c
+  // ex3.c
+  #include <stdio.h>
+  #include <stdlib.h>
+
+  const char *str = "Hello World!";
+
+  int main(void) {
+    int rc = puts(str);
+    if (rc == EOF) {
+      perror("ERROR");
+      exit(1);
+    } else {
+      fprintf(stderr, "rc: %d\n", rc);
+    }
+
+    rc = fflush(stdout);
+    if (rc == EOF) {
+      perror("ERROR");
+      exit(1);
+    }
+
+    return 0;
+  }
+#+end_src
+
+#+begin_src bash
+  $ gcc ex3.c
+  $ ./a.out
+  Hello World!
+  rc: 13
+  $ echo $?
+  0
+  $ ./a.out > /dev/full
+  rc: 13
+  ERROR: No space left on device
+  $ echo $?
+  1
+#+end_src
+
+
+* Footnotes
+
+[fn:1] https://blog.sunfishcode.online/bugs-in-hello-world/

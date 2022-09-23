@@ -1,0 +1,9 @@
+#+title: 波士顿房价预测
+
+线性回归, 分别用三种公式梯度下降, 当损失函数 $J \bigl( \vec{\theta}
+\bigr)$ 不再下降时停止更新.
+
+- [[http://archive.ics.uci.edu/ml/machine-learning-databases/housing/housing.data][数据集]], [[http://archive.ics.uci.edu/ml/machine-learning-databases/housing/housing.names][注解]].  数据集中共有506行数据, 400个用于训练, 106个用于测试.
+  每行14列, 前13个为feature, 最后一个为label.
+- [[https://towardsdatascience.com/things-you-didnt-know-about-the-boston-housing-dataset-2e87a6f960e8][What You Didn't Know About the Boston Housing Dataset]]
+- Kaggle 上的 Boston Housing [[https://www.kaggle.com/c/boston-housing][比赛]]

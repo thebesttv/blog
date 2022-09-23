@@ -1,0 +1,42 @@
+#+title: All About Keyboard
+
+
+[[https://wiki.archlinux.org/title/Linux_console/Keyboard_configuration][Linux console/Keyboard configuration - ArchWiki]]
+[[http://kbd-project.org/#documentation][KBD – Linux keyboard tools.]]
+[[https://github.com/legionus/kbd][legionus/kbd: Mirror of https://git.kernel.org/pub/scm/linux/kernel/git/legion/kbd.git]]
+[[https://www.kernel.org/doc/html/latest/input/devices/atarikbd.html#][4. Intelligent Keyboard (ikbd) Protocol — The Linux Kernel documentation]]
+[[http://www.madore.org/~david/linux/linux-old.html][Concerning linux]]
+[[https://unix.stackexchange.com/questions/16530/what-is-raw-keyboard-mode][linux - What is raw keyboard mode? - Unix &amp; Linux Stack Exchange]]
+[[https://johnvidler.co.uk/linux-journal/LJ/014/1080.html][The Linux keyboard driver]]
+[[https://wiki.archlinux.org/title/map_scancodes_to_keycodes][Map scancodes to keycodes - ArchWiki]]
+[[https://www.win.tue.nl/~aeb/linux/kbd/scancodes-1.html][Keyboard scancodes: Keyboard scancodes]]
+[[https://unix.stackexchange.com/questions/450307/how-keyboards-drivers-work-on-linux][How keyboard&#39;s drivers work on linux - Unix &amp; Linux Stack Exchange]]
+[[https://tldp.org/HOWTO/Keyboard-and-Console-HOWTO.html#toc5][The Linux keyboard and console HOWTO]]
+
+
+man
+- localectl
+- keymaps(5)
+- kbd_mode(1)
+
+Two different systems control keyboard input in Linux.  The kernel
+manages console keyboard input, and in X it's managed by =xkb=, X
+Keyboard.  =xkb= controls keymapping, keyboard models, and layouts.
+
+* Console
+
+See the =kbd= package.
+
+- the keyboard produces *scancodes*
+- the scancodes are assembled into *keycodes*
+- the keycodes are converted to tty input characters using the kernel
+  keymaps
+
+** Keymap
+
+- use =showkey --scancodes= to get scancode used for keymaps
+
+* X
+
+- [[https://web.archive.org/web/20160423224052/https://www.linux.com/learn/hacking-your-linux-keyboard-xkb][Hacking Your Linux Keyboard with xkb]]
+

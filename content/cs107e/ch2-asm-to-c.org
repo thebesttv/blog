@@ -1,0 +1,86 @@
+#+title: 从汇编到C
+
+
+- [[https://stackoverflow.com/questions/20315448/gnu-as-changing-output-file-format][GNU as: changing output file format]]
+
+  =as= can only generate ELF output, but you can convert an ELF binary
+  to another format using =objcopy=
+
+* =-ffreestanding=
+
+- [[https://stackoverflow.com/questions/17692428/what-is-ffreestanding-option-in-gcc][What is -ffreestanding option in gcc?]]
+- [[https://gcc.gnu.org/onlinedocs/gcc/Standards.html][Language Standards Supported by GCC]]
+
+
+* =-nostdlib=
+
+* Peripheral registers
+
+These registers are mapped into the address space of the processor
+(memory-mapped IO).  They may behave differently than ordinary memory.
+For example: Writing a 1 bit into SET register sets output to 1;
+writing a 0 bit into SET register has no effect.  Writing a 1 bit into
+CLR sets the output to 0; writing a 0 bit into CLR has no effect.
+Neither SET or CLR can be read.  To read the current value, access the
+LEV (level) register.
+
+What can happen when compiler makes assumptions reasonable for
+ordinary memory that *don't hold* for these oddball registers?
+
+The compiler sees in code where each variable is read/written.  Rather
+than execute each access literally, may streamline into an equivalent
+sequence that accomplishes same result.  Neat!
+
+But, if variable may be read/written externally (by another process,
+by peripheral), these optimizations can be invalid!
+
+Tagging a variable with volatile qualifier tells compiler that it
+cannot remove, coalesce, cache, or reorder accesses to this variable.
+Generated assembly must faithfully perform each access of the variable
+exactly as given in the C code.
+
+
+#+begin_src c
+  struct gpio {
+    unsigned int fsel[6];
+    unsigned int reservedA;
+    unsigned int set[2];
+    unsigned int reservedB;
+    unsigned int clr[2];
+    unsigned int reservedC;
+    unsigned int lev[2];
+  };
+
+  volatile struct gpio *gpio = (struct gpio *)0x20200000;
+#+end_src
+
+* Application Binary Interface (ABI)
+
+ABI specifies how code interoperates:
+- Mechanism for call/return
+- How parameters passed
+- How return value communicated
+- Use of registers (ownership/preservation)
+- Stack management (up/down, alignment)
+
+arm-none-eabi stands for:
+- *ARM* architecture
+- *no* hosting OS
+- *e*​mbedded *ABI*
+
+Caller puts up to 4 arguments in r0,r1,r2,r3
+Call instruction is bl (branch and link)
+
+Callee puts return value in r0
+Return instruction is bx (branch exchange)
+
+Register ownership:
+- =r0-r3= are callee-owned registers
+  - Callee can freely use/modify these registers
+  - Caller cedes [放弃(权利)] to callee, has no expectation of
+    register contents after call
+- =r4-r13= are caller-owned registers
+  - Caller retains ownership, expects register contents to be same
+    after call as it was before call
+  - Callee cannot use/modify these registers unless takes steps to
+    preserve/restore values

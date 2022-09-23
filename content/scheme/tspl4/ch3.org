@@ -1,0 +1,306 @@
+#+title: Chapter 3. Going Further
+
+* define-syntax
+
+Syntactic extensions are defined with =define-syntax=.  =define-syntax
+is similar to =define=, except that it associates a *syntactic
+transformation procedure*, or /transformer/, with a keyword (such as
+=let=), rather than associating a value with a variable.  Here is how
+we might define =let= with =define-syntax=.
+#+begin_src scheme
+  (define-syntax let
+    (syntax-rules ()
+      [(_ ((x e) ...) b1 b2 ...)
+       ((lambda (x ...) b1 b2 ...) e ...)]))
+
+  (let ([a 1] [b 2])
+    (list (list a b) (list b a)))         ; ((1 2) (2 1))
+#+end_src
+
+#+begin_quote
+The identifier appearing after =define-syntax= is the name, or
+keyword, of the syntactic extension being defined, in this case =let=.
+The =syntax-rules= form is an expression that evaluates to a
+transformer.  The item following =syntax-rules= is a list of
+/auxiliary keywords/ and is nearly always =()=.  An example of an
+auxiliary keyword is the =else= of =cond=.  Following the list of
+auxiliary keywords is a sequence of one or more rules, or
+/pattern/template pairs/.  Only one rule appears in our definition of
+=let=.  The pattern part of a rule specifies _the form that the input
+must take_, and the template specifies to _what the input should be
+transformed_.
+
+The pattern should always be a structured expression whose first
+element is an underscore (=_=).  (The use of =_= is only a convention,
+but it is a good one to follow.)  If more than one rule is present,
+the appropriate one is chosen by matching the patterns, in order,
+against the input during expansion.  It is a syntax violation if none
+of the patterns match the input.
+
+Identifiers other than an underscore or ellipsis appearing within a
+pattern are /pattern variables/, unless they are listed as auxiliary
+keywords.  Pattern variables match any substructure and are bound to
+that substructure within the corresponding template.  The notation
+=pat ...= in the pattern allows for *zero or more* expressions
+matching the ellipsis prototype =pat= in the input.  Similarly, the
+notation =expr ...= in the *template* produces zero or more
+expressions from the ellipsis prototype =expr= in the output.  The
+number of =pat=​s in the input determines the number of =expr=​s in the
+output; in order for this to work, any ellipsis prototype in the
+template must contain at least one pattern variable from an ellipsis
+prototype in the pattern.
+
+The single rule in our definition of let should be fairly
+self-explanatory, but a few points are worth mentioning.  First, the
+syntax of =let= requires that the body contain *at least one form*;
+hence, we have specified =b1 b2 ...= instead of =b ...=, which might
+seem more natural.  On the other hand, =let= does not require that
+there be at least one variable/value pair, so we were able to use,
+simply, =(x e) ...=. Second, the pattern variables =x= and =e=, though
+together within the same prototype in the pattern, are separated in
+the template; *any sort of rearrangement or recombination is
+possible*.  Finally, the three pattern variables =x=, =e=, and =b2=
+that appear in ellipsis prototypes in the pattern also appear in
+ellipsis prototypes in the template.  This is not a coincidence; it is
+a requirement.  In general, if a pattern variable appears within an
+ellipsis prototype in the pattern, it cannot appear outside an
+ellipsis prototype in the template.
+#+end_quote
+
+Rules for =and=:
+- $(\text{and})$ evaluates to =#t=.
+- $(\text{and} \; e_1 \; e_2 \ldots e_n)$ evaluates to =#f= if any
+  $e_i$ is =#f=.  Only if none of $e_i$ is =#f= will the expression
+  evaluate to *the last expression $e_n$*.
+
+#+begin_src scheme
+  (and)                                   ; #t
+  (and 1)                                 ; 1
+  (and 1 2)                               ; 2
+  (and 1 #f 2)                            ; #f
+#+end_src
+
+It may be tempting to define =and= as:
+#+begin_src scheme
+  (define-syntax and
+    (syntax-rules ()
+      [(_) #t]                    ; empty -> #t
+      [(_ e1 e2 ...)              ; at least one argument, convert to `if'
+       (if e1 (and e2 ...) #f)]))
+
+  (and)                                   ; #t
+  (and 1)                                 ; #t
+#+end_src
+However, this definition fails the second test =(and 1)=.  This is
+because in the case of only one argument $e_1$, =and= should simply
+return the value of evaluating $e_1$.
+#+begin_src scheme
+  ;; incorrect version of `and'
+  (define-syntax and
+    (syntax-rules ()
+      [(_) #t]                ; empty -> #t
+      [(_ e) e]               ; only one argument, evaluate it as result
+      [(_ e1 e2 e3 ...)       ; at least two arguments, convert to `if'
+       (if e1 (and e2 e3 ...) #f)]))
+
+  (and)                                   ; #t
+  (and 1)                                 ; 1
+  (and 1 2)                               ; 2
+  (and 1 #f 2)                            ; #f
+#+end_src
+
+Rules for =or=:
+- $(\text{or})$ evaluates to =#f=.
+- $(\text{or} \; e_1 \; e_2 \ldots e_n)$ evaluates to the first $e_i$
+  that's not =#f=.  If all $e_i$ is =#f=, then return =#f=.
+#+begin_src scheme
+  (or)                                    ; #f
+  (or #f)                                 ; #f
+  (or 1 2)                                ; 1
+  (or #f #f #f 4)                         ; 4
+#+end_src
+
+In defining =or=, we need a temporary variable to hold the result of
+the current expression so we do not evaluate it twice.
+#+begin_src scheme
+  (define-syntax or
+    (syntax-rules ()
+      [(_) #f]
+      [(_ e) e]
+      [(_ e1 e2 e3 ...)
+       (let ([v e1])
+         (if v v (or e2 e3 ...)))]))
+
+  (or)                                    ; #f
+  (or #f)                                 ; #f
+  (or 1 2)                                ; 1
+  (or #f #f #f 4)                         ; 4
+#+end_src
+
+#+begin_quote
+Like variables bound by =lambda= or =let=, identifiers introduced by a
+template are *lexically scoped*, i.e., visible *only within
+expressions introduced by the template*.  Thus, even if one of the
+expressions =e2 e3 ...= contains a reference to =v=, the introduced
+binding for =v= does not "capture" those references.  This is
+typically accomplished via /automatic renaming/ of introduced
+identifiers.
+#+end_quote
+
+TODO
+#+begin_quote
+As with the simpler version of and given above, the simpler version of or below is incorrect.
+
+#+begin_src scheme
+(define-syntax or ; incorrect!
+  (syntax-rules ()
+    [(_) #f]
+    [(_ e1 e2 ...)
+     (let ([t e1])
+       (if t t (or e2 ...)))]))
+#+end_src
+
+The reason is more subtle, however, and is the subject of Exercise 3.2.6.
+#+end_quote
+
+Define =let*= as nested =let=:
+#+begin_src scheme
+  (define-syntax let*
+    (syntax-rules ()
+      [(_ () e1 e2 ...)
+       (let () e1 e2 ...)]                ; or (begin b1 b2 ...)
+      [(_ ([x1 v1] [x2 v2] ...) e1 e2 ...)
+       (let ([x1 v1])
+         (let* ([x2 v2] ...) e1 e2 ...))]))
+
+  (let* ([a 5]
+         [b (+ a a)]
+         [c (+ a b)])
+    (list a b c))                         ; (5 10 15)
+#+end_src
+
+Define =when= in terms of =if= and =begin=, and =unless= in terms of =when=:
+#+begin_src scheme
+  (define-syntax when
+    (syntax-rules ()
+      [(_ test e1 e2 ...)
+       (if test
+           (begin e1 e2 ...)
+           #f)]))
+
+  (define-syntax unless
+    (syntax-rules ()
+      [(_ test e1 e2 ...)
+       (when (not test) e1 e2 ...)]))
+
+  (let ([x 3])
+    (unless (= x 0) (set! x (+ x 1)))
+    (when (= x 4) (set! x (* x 2)))
+    x)                                    ; 8
+#+end_src
+
+* letrec & named let
+
+Since =let= is only a syntatic exteision to the =lambda= expression,
+you can't define a local recursive procedure directly:
+#+begin_src scheme
+  (let ([sum (lambda (l)
+               (if (null? l)
+                   0
+                   (+ (car l) (sum (cdr l)))))])
+    (sum '(1 2 3 4)))                     ; Error: Unbound variable: sum
+
+#+end_src
+This is because =sum= is only visible in the body of the =let=
+expression.  =sum= is not visible in the =lambda= expression.
+
+We can get around this problem by *passing the procedure =sum= to
+itself*:
+#+begin_src scheme
+  (let ([sum (lambda (sum l)
+               (if (null? l)
+                   0
+                   (+ (car l) (sum sum (cdr l)))))])
+    (sum sum '(1 2 3 4)))                 ; 10
+#+end_src
+
+As an alternative, we can use =letrec=:
+#+begin_src scheme
+  (letrec ((var exp) ...) b1 b2 ...)
+#+end_src
+It has the same syntax as =let=, but =var= is visible not only in the
+body, but also in =exp=.  =sum= can then be written as:
+#+begin_src scheme
+  (letrec ([sum (lambda (l)
+                  (if (null? l)
+                      0
+                      (+ (car l) (sum (cdr l)))))])
+    (sum '(1 2 3 4)))                     ; 10
+#+end_src
+
+#+begin_src scheme
+  (letrec ([e? (lambda (x)
+                 (or (= x 0)
+                     (o? (- x 1))))]
+           [o? (lambda (x)
+                 (and (not (= x 0))
+                      (e? (- x 1))))])
+    (list (e? 20) (o? 20)))               ; (#t #f)
+#+end_src
+
+#+begin_src scheme
+  (define (factorial n)
+    (let run ([i n])
+      (if (zero? i)
+          1
+          (* i (run (- i 1))))))
+  (factorial 5)                           ; 120
+
+  (define (factorial n)
+    (let iter ([i n] [prod 1])
+      (if (zero? i)
+          prod
+          (iter (- i 1) (* prod i)))))
+  (factorial 5)                           ; 120
+#+end_src
+
+#+begin_src scheme
+  (define (fibonacci n)
+    (let run ([n n])
+      (if (<= n 1)
+          n
+          (+ (run (- n 1))
+             (run (- n 2))))))
+  (fibonacci 20)                          ; 6765
+
+  ,trace (fibonacci 5)
+
+  (define (fibonacci n)
+    (let iter ([n n] [a 0] [b 1])
+      (if (zero? n)
+          a
+          (iter (- n 1) b (+ a b)))))
+  (fibonacci 20)                          ; 6765
+#+end_src
+
+Prime factor
+#+begin_src scheme
+  (define (factor n)
+    (let iter ([n n] [i 2])
+      (cond [(>= i n) (list n)]
+            [(integer? (/ n i)) (cons i (iter (/ n i) i))]
+            [else (iter n (+ i 1))])))
+
+  (factor 24)                             ; (2 2 2 3)
+  (factor 1025)                           ; (5 5 41)
+#+end_src
+
+Rewrite using =letrec=:
+#+begin_src scheme
+  (define (factor n)
+    (letrec ([iter (lambda (n i)
+                     (cond [(>= i n) (list n)]
+                           [(integer? (/ n i)) (cons i (iter (/ n i) i))]
+                           [else (iter n (+ i 1))]))])
+      (iter n 2)))
+#+end_src

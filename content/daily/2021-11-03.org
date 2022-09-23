@@ -1,0 +1,17 @@
+#+title: Abstraction & ISA
+
+Abstraction 真是好重要好重要的概念.
+
+感觉 Computer Organization 里最重要的一个概念就是ISA, 它是软硬件的中间
+层.  软件不必知道底层的硬件, 只需知道ISA就可以运行; 而硬件只需遵从某个
+ISA(如x86, risc-v), 不必考虑上层的软件.
+
+#+begin_quote
+The combination of the basic instruction set (the ISA) and the
+operating system interface is called the application binary interface
+(ABI).
+
+ABI --- The user portion of the instruction set plus the operating
+system interfaces used by application programmers.  Defines a standard
+for binary portability across computers.
+#+end_quote

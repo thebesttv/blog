@@ -1,0 +1,322 @@
+#+title: The Little Schemer
+
+* Preface
+
+#+begin_src scheme
+  (define (atom? x)
+    (and (not (pair? x))
+         (not (null? x))))
+#+end_src
+
+* Ch1
+
+- The Law of =car= :: The primitive =car= is defined only for
+  _*non-empty* lists_.
+- The Law of =cdr= :: The primitive =cdr= is defined only for
+  _*non-empty* lists_.  The =cdr= of any non-empty list is always
+  another list.
+- The Law of =cons= :: The primitive =cons= takes two arguments.  The
+  first argument can be any S-expression, but the second must be a
+  list.  The result is a list.
+- =()= :: the null (empty) list; use =(null? l)= to test.  The null
+  list is *not* an atom.
+- The Law of =null?= :: The primitive =null?= is defined only for lists.
+- The Law of =eq?= :: The primitive =eq?= takes two arguments.  Each
+  must be a _*non-numeric* atom_.
+
+* Ch2
+
+- lat :: a list of atoms
+
+#+begin_src scheme
+  (define (lat? l)
+    (cond ((null? l) #t)
+          ((atom? (car l)) (lat? (cdr l)))
+          (else #f)))
+
+  (define (member? a lat)
+    (cond ((null? lat) #f)
+          (else (or (eq? a (car lat))
+                    (member? a (cdr lat))))))
+
+  (define (member? a lat)
+    (cond ((null? lat) #f)
+          ((eq? a (car lat)) #t)
+          (else (member? a (cdr lat)))))
+#+end_src
+
+* Ch3
+
+- The Second Commandment :: Use =cons= to build lists.
+
+#+begin_quote
+The proof of the pudding is in the eating.
+#+end_quote
+Meaning: the real value of something can be judged only from practical
+experience or results and not from appearance or theory.
+
+#+begin_src scheme
+  ;;; makes a new lat with the first occurrence of a removed
+  (define (rember a lat)
+    (cond ((null? lat) (quote ()))
+          ((eq? a (car lat)) (cdr lat))
+          (else (cons (car lat)
+                      (rember a (cdr lat))))))
+
+  ;;; builds a list composed of the first S-expression of each internal
+  ;;; list
+  (define (firsts l)
+    (cond ((null? l) (quote ()))
+          (else (cons (car (car l))
+                      (firsts (cdr l))))))
+
+  ;;; builds a list with new inserted to the right of the first old
+  (define (insertR new old lat)
+    (cond ((null? lat) (quote ()))
+          ((eq? old (car lat)) (cons old
+                                     (cons new (cdr lat))))
+          (else (cons (car lat)
+                      (insertR new old (cdr lat))))))
+
+
+  ;;; builds a list with new inserted to the left of the first old
+  (define (insertL new old lat)
+    (cond ((null? lat) (quote ()))
+          ((eq? old (car lat)) (cons new
+                                     (cons old (cdr lat))))
+          (else (cons (car lat)
+                      (insertR new old (cdr lat))))))
+
+  ;;; replace the first old with new
+  (define (subst new old lat)
+    (cond ((null? lat) (quote ()))
+          ((eq? old (car lat)) (cons new (cdr lat)))
+          (else (cons (car lat)
+                      (subst new old (cdr lat))))))
+
+#+end_src
+
+* Ch4
+
+- tup :: short for tuple;  a list of numbers
+
+#+begin_src scheme
+  (define (add1 n) (+ n 1))
+
+  (define (sub1 n) (- n 1))
+
+  (define (zero? n) (= n 0))
+
+  (define (o+ n m)
+    (if (zero? m)
+        n
+        (o+ (add1 n) (sub1 m))))
+
+  (define (o- n m)
+    (if (zero? m)
+        n
+        (sub1 (o- n (sub1 m)))))
+
+  (define (addtup tup)
+    (if (null? tup)
+        0
+        (o+ (car tup) (addtup (cdr tup)))))
+
+  (define (o* n m)
+    (if (zero? m)
+        0
+        (o+ n (o* n (sub1 m)))))
+
+  (define (tup+ tup1 tup2)
+    (if (or (null? tup1) (null? tup2))
+        (or tup1 tup2)
+        (cons (o+ (car tup1) (car tup2))
+              (tup+ (cdr tup1) (cdr tup2)))))
+
+  (define (tup+ tup1 tup2)
+    (cond ((null? tup1) tup2)
+          ((null? tup2) tup1)
+          (else (cons (o+ (car tup1) (car tup2))
+                      (tup+ (cdr tup1) (cdr tup2))))))
+
+  (define (o> n m)
+    (cond ((zero? n) #f)
+          ((zero? m) #t)
+          (o> (sub1 n) (sub1 m))))
+
+  (define (o< n m)
+    (cond ((zero? m) #f)
+          ((zero? n) #t)
+          (o< (sub1 n) (sub1 m))))
+
+  (define (o= n m)
+    (cond ((zero? n) (zero? m))
+          ((zero? m) #f)
+          (o= (sub1 n) (sub1 m))))
+
+  (define (o= n m)
+    (cond ((o> n m) #f)
+          ((o< n m) #f)
+          (else #t)))
+
+  (define (expt n m)
+    (cond ((zero? m) 1)
+          (else (o* n (expt n (sub1 m))))))
+
+  (define (o/ n m)
+    (cond ((o< n m) 0)
+          (else (add1 (o/ (o- n m) m)))))
+
+  (define (length lat)
+    (cond ((null? lat) 0)
+          (else (add1 (length (cdr lat))))))
+
+  (define (pick n lat)
+    (cond ((zero? (sub1 n)) (car lat))
+          (else (pick (sub1 n) (cdr lat)))))
+
+  (define (rempick n lat)
+    (cond ((zero? (sub1 n)) (cdr lat))
+          (else (cons (car lat)
+                      (rempick (sub1 n) (cdr lat))))))
+
+  (define (no-nums lat)
+    (cond ((null? lat) (quote ()))
+          ((number? (car lat)) (no-nums (cdr lat)))
+          (else (cons (car lat)
+                      (no-nums (cdr lat))))))
+
+  (define (eqan? a b)
+    (cond ((and (number? a) (number? b))
+           (= a b))
+          ((or (number? a) (number? b))
+           #f)
+          (else (eq? a b))))
+
+  (define (occur a lat)
+    (cond ((null? lat) 0)
+          ((eq? a (car lat)) (add1 (occur a (cdr lat))))
+          (else (occur a (cdr lat)))))
+#+end_src
+
+* Ch5
+
+#+begin_src scheme
+  (define (rember* a l)
+    (cond ((null? l) '())
+          ((atom? (car l)) (if (eq? (car l) a)
+                               (rember* a (cdr l))
+                               (cons (car l)
+                                     (rember* a (cdr l)))))
+          (else (cons (rember* a (car l))
+                      (rember* a (cdr l))))))
+
+  (define (insertR* new old l)
+    (cond ((null? l) '())
+          ((atom? (car l)) (if (eq? (car l) old)
+                               (cons old
+                                     (cons new
+                                           (insertR* new old (cdr l))))
+                               (cons (car l)
+                                     (insertR* new old (cdr l)))))
+          (else (cons (insertR* new old (car l))
+                      (insertR* new old (cdr l))))))
+
+  (insertR* 'roast
+            'chuck
+            '((how much (wood))
+              could
+              ((a (wood) chuck))
+              (((chuck)))
+              (if (a) ((wood chuck)))
+              could chuck wood))
+
+  (define (occur* a l)
+    (cond ((null? l) 0)
+          ((atom? (car l)) (+ (if (eq? (car l) a)
+                                  1
+                                  0)
+                              (occur* a (cdr l))))
+          (else (+ (occur* a (car l))
+                   (occur* a (cdr l))))))
+
+  (occur* 'banana
+          '((banana)
+            (split ((((banana ice)))
+                    (cream (banana))
+                    sherbet))
+            (banana)
+            (bread)
+            (banana brandy)))
+
+  (define (subst* new old l)
+    (cond ((null? l) '())
+          ((atom? (car l)) (cons (if (eq? (car l) old)
+                                     new
+                                     (car l))
+                                 (subst* new old (cdr l))))
+          (else (cons (subst* new old (car l))
+                      (subst* new old (cdr l))))))
+
+  (subst* 'orange
+          'banana
+          '((banana)
+            (split ((((banana ice)))
+                    (cream (banana))
+                    sherbet))
+            (banana)
+            (bread)
+            (banana brandy)))
+
+  (define (insertL* new old l)
+    (cond ((null? l) '())
+          ((atom? (car l)) (if (eq? (car l) old)
+                               (cons new
+                                     (cons old
+                                           (insertL* new old (cdr l))))
+                               (cons (car l)
+                                     (insertL* new old (cdr l)))))
+          (else (cons (insertL* new old (car l))
+                      (insertL* new old (cdr l))))))
+
+  (define (member* a l)
+    (cond ((null? l) #f)
+          ((atom? (car l)) (or (eq? (car l) a)
+                               (member* a (cdr l))))
+          (else (or (member* a (car l))
+                    (member* a (cdr l))))))
+
+  (member* 'chips
+           '((potato) (chips ((with) fish) (chips))))
+
+  (define (leftmost l)
+    (cond ((atom? (car l)) (car l))
+          (else (leftmost (car l)))))
+
+  (define (eqlist? a b)
+    (cond ((and (null? a) (null? b)) #t)
+          ((or (null? a) (null? b)) #f)
+          ((and (atom? (car a))
+                (atom? (car b)))
+           (and (eqan? (car a) (car b))
+                (eqlist? (cdr a) (cdr b))))
+          ((or (atom? (car a))
+               (atom? (car b)))
+           #f)
+          (else (and (eqlist? (car a) (car b))
+                     (eqlist? (cdr a) (cdr b))))))
+
+  (define (equal? a b)
+    (cond ((and (atom? a) (atom? b))
+           (eqan? a b))
+          ((or (atom? a) (atom? b))
+           #f)
+          (else (eqlist? a b))))
+
+
+  (define (eqlist? a b)
+    (cond ((and (null? a) (null? b)) #t)
+          ((or (null? a) (null? b)) #f)
+          (else (and (equal? (car a) (car b))
+                     (equal? (cdr a) (cdr b))))))
+#+end_src

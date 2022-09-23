@@ -1,0 +1,197 @@
+#+title: DNS
+
+DNS tools
+- https://dnsdumpster.com/
+- https://github.com/giovanifss/Domain-Explorer-Tools
+
+- [[https://www.cloudflare.com/learning/dns/dns-records/dns-txt-record/][What is a DNS TXT record?]]
+- TODO [[https://www.cloudflare.com/learning/dns/what-is-recursive-dns/][What is recursive DNS?]]
+
+=dig=
+
+#+begin_src text
+  $ dig A mit.edu
+
+  ; <<>> DiG 9.18.1 <<>> A mit.edu
+  ;; global options: +cmd
+  ;; Got answer:
+  ;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 27083
+  ;; flags: qr rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+
+  ;; OPT PSEUDOSECTION:
+  ; EDNS: version: 0, flags:; udp: 512
+  ;; QUESTION SECTION:
+  ;mit.edu.                       IN      A
+
+  ;; ANSWER SECTION:
+  mit.edu.                30      IN      A       23.7.172.76
+
+  ;; Query time: 10 msec
+  ;; SERVER: 202.119.80.10#53(202.119.80.10) (UDP)
+  ;; WHEN: Sat Apr 16 20:55:10 CST 2022
+  ;; MSG SIZE  rcvd: 52
+#+end_src
+
+The IP can be confirmed with =whois=.
+
+#+begin_src text
+  $ dig @8.8.8.8 AAAA mit.edu
+
+  ; <<>> DiG 9.18.1 <<>> @8.8.8.8 AAAA mit.edu
+  ; (1 server found)
+  ;; global options: +cmd
+  ;; Got answer:
+  ;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 2852
+  ;; flags: qr rd ra; QUERY: 1, ANSWER: 2, AUTHORITY: 0, ADDITIONAL: 1
+
+  ;; OPT PSEUDOSECTION:
+  ; EDNS: version: 0, flags:; udp: 512
+  ;; QUESTION SECTION:
+  ;mit.edu.                       IN      AAAA
+
+  ;; ANSWER SECTION:
+  mit.edu.                20      IN      AAAA    2600:1417:9800:39a::255e
+  mit.edu.                20      IN      AAAA    2600:1417:9800:3b9::255e
+
+  ;; Query time: 103 msec
+  ;; SERVER: 8.8.8.8#53(8.8.8.8) (UDP)
+  ;; WHEN: Sat Apr 16 20:54:53 CST 2022
+  ;; MSG SIZE  rcvd: 92
+#+end_src
+
+* Perform an Iterative DNS by Hand
+
+[[https://www.iana.org/domains/root/servers][A list of root DNS servers]]
+
+Query the IP of root DNS =a.root-servers.net=
+#+begin_src text
+  $ dig +short A a.root-servers.net
+  198.41.0.4
+#+end_src
+
+Ask root DNS at =198.41.0.4= for the IP of =zhihu.com=
+#+begin_src text
+  $ dig @198.41.0.4 A zhihu.com
+
+  ; <<>> DiG 9.18.1 <<>> @198.41.0.4 A zhihu.com
+  ; (1 server found)
+  ;; global options: +cmd
+  ;; Got answer:
+  ;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 3624
+  ;; flags: qr rd; QUERY: 1, ANSWER: 0, AUTHORITY: 13, ADDITIONAL: 27
+  ;; WARNING: recursion requested but not available
+
+  ;; OPT PSEUDOSECTION:
+  ; EDNS: version: 0, flags:; udp: 1232
+  ; COOKIE: 97f6021d4e6e753358a1f572625ac16324656ddc7cec347b (good)
+  ;; QUESTION SECTION:
+  ;zhihu.com.                     IN      A
+
+  ;; AUTHORITY SECTION:
+  com.                    172800  IN      NS      d.gtld-servers.net.
+  com.                    172800  IN      NS      g.gtld-servers.net.
+  com.                    172800  IN      NS      m.gtld-servers.net.
+  com.                    172800  IN      NS      k.gtld-servers.net.
+  com.                    172800  IN      NS      h.gtld-servers.net.
+  com.                    172800  IN      NS      b.gtld-servers.net.
+  com.                    172800  IN      NS      e.gtld-servers.net.
+  com.                    172800  IN      NS      c.gtld-servers.net.
+  com.                    172800  IN      NS      f.gtld-servers.net.
+  com.                    172800  IN      NS      i.gtld-servers.net.
+  com.                    172800  IN      NS      l.gtld-servers.net.
+  com.                    172800  IN      NS      a.gtld-servers.net.
+  com.                    172800  IN      NS      j.gtld-servers.net.
+
+  ;; ADDITIONAL SECTION:
+  a.gtld-servers.net.     172800  IN      A       192.5.6.30
+  b.gtld-servers.net.     172800  IN      A       192.33.14.30
+  c.gtld-servers.net.     172800  IN      A       192.26.92.30
+  d.gtld-servers.net.     172800  IN      A       192.31.80.30
+  e.gtld-servers.net.     172800  IN      A       192.12.94.30
+  f.gtld-servers.net.     172800  IN      A       192.35.51.30
+  g.gtld-servers.net.     172800  IN      A       192.42.93.30
+  h.gtld-servers.net.     172800  IN      A       192.54.112.30
+  i.gtld-servers.net.     172800  IN      A       192.43.172.30
+  j.gtld-servers.net.     172800  IN      A       192.48.79.30
+  k.gtld-servers.net.     172800  IN      A       192.52.178.30
+  l.gtld-servers.net.     172800  IN      A       192.41.162.30
+  m.gtld-servers.net.     172800  IN      A       192.55.83.30
+  a.gtld-servers.net.     172800  IN      AAAA    2001:503:a83e::2:30
+  b.gtld-servers.net.     172800  IN      AAAA    2001:503:231d::2:30
+  c.gtld-servers.net.     172800  IN      AAAA    2001:503:83eb::30
+  d.gtld-servers.net.     172800  IN      AAAA    2001:500:856e::30
+  e.gtld-servers.net.     172800  IN      AAAA    2001:502:1ca1::30
+  f.gtld-servers.net.     172800  IN      AAAA    2001:503:d414::30
+  g.gtld-servers.net.     172800  IN      AAAA    2001:503:eea3::30
+  h.gtld-servers.net.     172800  IN      AAAA    2001:502:8cc::30
+  i.gtld-servers.net.     172800  IN      AAAA    2001:503:39c1::30
+  j.gtld-servers.net.     172800  IN      AAAA    2001:502:7094::30
+  k.gtld-servers.net.     172800  IN      AAAA    2001:503:d2d::30
+  l.gtld-servers.net.     172800  IN      AAAA    2001:500:d937::30
+  m.gtld-servers.net.     172800  IN      AAAA    2001:501:b1f9::30
+
+  ;; Query time: 36 msec
+  ;; SERVER: 198.41.0.4#53(198.41.0.4) (UDP)
+  ;; WHEN: Sat Apr 16 21:15:15 CST 2022
+  ;; MSG SIZE  rcvd: 862
+#+end_src
+
+The line =WARNING: recursion requested but not available= says this server does
+not support recursion, so select one server from the list of TLD servers in
+=AUTHORITY SECTION= and find its IP in =ADDITIONAL SECTION=.  Ask
+=a.gtld-servers.net= (IP 192.5.6.30) for the IP of =zhihu.com=.
+
+#+begin_src text
+  $ dig @192.5.6.30 A zhihu.com
+
+  ; <<>> DiG 9.18.1 <<>> @192.5.6.30 A zhihu.com
+  ; (1 server found)
+  ;; global options: +cmd
+  ;; Got answer:
+  ;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 39443
+  ;; flags: qr rd; QUERY: 1, ANSWER: 0, AUTHORITY: 2, ADDITIONAL: 20
+  ;; WARNING: recursion requested but not available
+
+  ;; OPT PSEUDOSECTION:
+  ; EDNS: version: 0, flags:; udp: 4096
+  ;; QUESTION SECTION:
+  ;zhihu.com.                     IN      A
+
+  ;; AUTHORITY SECTION:
+  zhihu.com.              172800  IN      NS      ns3.dnsv5.com.
+  zhihu.com.              172800  IN      NS      ns4.dnsv5.com.
+
+  ;; ADDITIONAL SECTION:
+  ns3.dnsv5.com.          172800  IN      A       162.14.18.188
+  ns3.dnsv5.com.          172800  IN      A       162.14.24.251
+  ns3.dnsv5.com.          172800  IN      A       162.14.25.251
+  ns3.dnsv5.com.          172800  IN      A       18.194.2.137
+  ns3.dnsv5.com.          172800  IN      A       183.192.201.94
+  ns3.dnsv5.com.          172800  IN      A       223.166.151.16
+  ns3.dnsv5.com.          172800  IN      AAAA    2402:4e00:1430:1102:0:9136:2b2b:ba61
+  ns3.dnsv5.com.          172800  IN      A       49.234.175.103
+  ns3.dnsv5.com.          172800  IN      A       52.77.238.92
+  ns3.dnsv5.com.          172800  IN      A       61.151.180.51
+  ns4.dnsv5.com.          172800  IN      A       101.226.220.12
+  ns4.dnsv5.com.          172800  IN      A       106.55.82.76
+  ns4.dnsv5.com.          172800  IN      A       162.14.24.248
+  ns4.dnsv5.com.          172800  IN      A       162.14.25.248
+  ns4.dnsv5.com.          172800  IN      A       183.192.164.119
+  ns4.dnsv5.com.          172800  IN      A       223.166.151.126
+  ns4.dnsv5.com.          172800  IN      AAAA    2402:4e00:1020:1264:0:9136:29b6:fc32
+  ns4.dnsv5.com.          172800  IN      A       52.198.159.146
+  ns4.dnsv5.com.          172800  IN      A       59.36.120.147
+
+  ;; Query time: 516 msec
+  ;; SERVER: 192.5.6.30#53(192.5.6.30) (UDP)
+  ;; WHEN: Sat Apr 16 21:15:45 CST 2022
+  ;; MSG SIZE  rcvd: 408
+#+end_src
+
+It also doesn't know the A record of =zhihu.com=, but it returns the NS record.
+Ask one of the authortive servers (162.14.18.188) again and finally get the
+answer.
+#+begin_src text
+  $ dig +short @162.14.18.188 A zhihu.com
+  103.41.167.234
+#+end_src

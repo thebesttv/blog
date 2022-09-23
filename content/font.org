@@ -1,0 +1,22 @@
+#+title: Linux字体探索
+
+我的 Arch 使用 Fontconfig 来管理字体, 这里记录一下.
+
+- [[http://behdad.org/text/][State of Text Rendering]]
+- [[https://en.wikipedia.org/wiki/Fontconfig][Fontconfig - Wiki]]
+- [[https://wiki.archlinux.org/title/font_configuration][Font configuration - Arch Wiki]]
+- [[https://www.linuxfromscratch.org/blfs/view/svn/x/tuning-fontconfig.html][Tuning Fontconfig]]
+- [[https://unix.stackexchange.com/questions/338047/how-does-fontconfig-actually-work][How does fontconfig actually work?]]
+
+- [[https://superuser.com/questions/116859/font-substitution-with-fonts-conf][Font substitution with ~/.fonts.conf]]
+
+各种文件的路径见 =man fonts-conf=, 其中
+- 字体
+  - System-wide 的字体存放在 *=/usr/share/fonts/=*
+- 字体配置 (主要用于 font matching)
+  - 已经启用的在 *=/etc/fonts/conf.d=*
+  - 例子在 =/usr/share/fontconfig/conf.default/=
+  - Custom config 位于 =$XDG_CONFIG_HOME/fontconfig/conf.d=,
+    其中 =$XDG_CONFIG_HOME= 应该在 =/etc/profile= 里,
+    默认是 =$HOME/.config=.
+

@@ -1,0 +1,261 @@
+#+title: Ch4 --- The Processor
+
+* Simple Implementation
+
+This is a simple implementation that covers a subset of the core
+RISC-V instruction set:
+- The memory-reference instructions load doubleword (=ld=) and store
+  doubleword (=sd=).
+- The arithmetic-logical instructions =add=, =sub=, =and=, and =or=.
+- The conditional branch instruction branch if equal (=beq=).
+
+
+{{{image(100)}}}
+[[./ch4/simple.png]]
+
+For every instruction, the first two steps are identical:
+1. Send the program counter (=PC=) to the memory that contains the
+   code and fetch the instruction from that memory.
+2. Read one or two registers, using fields of the instruction to
+   select the registers to read.  For the =ld= instruction, we need to
+   read only one register, but most other instructions require reading
+   two registers.
+
+After these two steps, the actions required to complete the
+instruction depend on the instruction class.  Fortunately, for each of
+the three instruction classes (memory-reference, arithmetic-logical,
+and branches), the actions are _largely the same_, independent of the
+exact instruction.  The simplicity and regularity of the RISC-V
+instruction set simplify the implementation by making the execution of
+many of the instruction classes similar.
+
+For example, all instruction classes use the arithmetic-logical unit
+(ALU) after reading the registers.  The memory-reference instructions
+use the ALU for an address calculation, the arithmetic-logical
+instructions for the operation execution, and conditional branches for
+the equality test.  After using the ALU, the actions required to
+complete various instruction classes differ.  A memory-reference
+instruction will need to access the memory either to read data for a
+load or write data for a store.  An arithmetic-logical or load
+instruction must write the data from the ALU or memory back into a
+register.  Lastly, for a conditional branch instruction, we may need
+to change the next instruction address based on the comparison;
+otherwise, the =PC= should be incremented by four to get the address
+of the subsequent instruction.
+
+{{{image(100)}}}
+[[./ch4/simple-with-control.png]]
+
+* Logic Design Conventions
+
+The datapath elements in the RISC-V implementation consist of two different
+types of logic elements:
+- *combinational element*: elements that *operate on data values*.
+  _Their outputs depend only on the current inputs._ Given the same
+  input, a combinational element always produces the same output.  For
+  example, an AND gate or an ALU.
+- *state element* or *sequential[时序] element*: elements that
+  *contain state*.  Their outputs depend on _both their inputs and the
+  contents of the internal state_.  The state elements completely
+  characterize the computer---if we saved and restored the state
+  elements, it would be as if the computer had never lost power.  The
+  instruction and data memories, as well as the registers, are all
+  examples of state elements.
+
+Because only state elements can store a data value, any collection of
+combinational logic must have _its inputs come from a set of state
+elements and its outputs written into a set of state elements_.
+
+*Clocking methodology*: the approach used to determine when data are
+valid and stable relative to the clock.  Clocking methodology *makes
+hardware predictable*.
+
+*Control signal*: signal used for _multiplexor selection_ or for
+_directing the operation of a functional unit_; contrasts with a /data
+signal/, which contains information that is _operated on by a
+functional unit_.  In figures, control signal is indicated with [[color:blue][color]].
+
+We will use the word /asserted/ to indicate a signal that is
+_logically high_ and /assert/ to specify that a signal should be
+driven logically high, and /deassert/ or deasserted to represent
+_logically low_.  We use the terms assert and deassert because when we
+implement hardware, at times 1 represents logically high and at times
+it can represent logically low.
+- *asserted*: signal is logically high or *true*.
+- *deasserted*: signal is logically low or *false*.
+
+
+*Bus*: signal that's wider than 1 bit.
+
+* Building a Datapath
+
+** Instruction Fetch
+
+*Program Counter (=PC=)*: The register containing the address of the
+instruction in the program being executed.
+
+To execute any instruction, we must start by fetching the instruction
+from memory.  Instruction memory gets address from =PC= sends out
+instruction.
+
+To prepare for executing the next instruction, we must also increment
+=PC= so that it points at the next instruction, 4 bytes later.  Adder
+adds 4 to =PC= and writes back.
+
+{{{image(80)}}}
+[[./ch4/fetch-elements.png]]
+
+{{{image(80)}}}
+[[./ch4/fetch-combined.png]]
+
+** Decode Instruction
+
+{{{image(100)}}}
+[[./ch4/instruction-formats.png]]
+
+*Register file*: state element that consists of a set of registers
+that can be read and written by supplying a register number to be
+accessed.
+
+*** R-format
+{{{image(80)}}}
+[[./ch4/r-format-elements.png]]
+
+*** Load-Store
+{{{image(80)}}}
+[[./ch4/load-store-elements.png]]
+
+*** Branch
+
+*Sign-extend*: To increase the size of a data item by replicating the
+high-order sign bit of the original data item in the high- order bits
+of the larger, destination data item.
+
+*Branch target address*: The address specified in a branch, which
+becomes the new =PC= if the branch is /taken/.  In the RISC-V
+architecture, the branch target is given by the sum of the offset
+field of the instruction and the address of the branch.
+- *branch taken*: A branch where the branch condition is satisfied and
+  =PC= becomes the branch target.  _All unconditional branches are
+  taken branches._
+- *branch not taken* or *untaken branch*: A branch where the branch
+  condition is false and =PC= becomes the address of the instruction
+  that sequentially follows the branch (normally, =PC+=4=).
+
+
+To implement the =beq= instruction (of the form =beq x1, x2, offset=),
+we must compute the branch target address by adding the sign-extended
+offset field of the instruction to =PC=.  Note that in branch
+instructions:
+- The instruction set architecture specifies that the *base* for the
+  branch address calculation is *the address of the branch
+  instruction* (the current =PC=).
+- The architecture also states that *the offset field is shifted left
+  1 bit* so that it is a half word offset; this shift increases the
+  effective range of the offset field by a factor of 2.
+
+* Pipeline
+
+*pipelining*: An implementation technique in which multiple
+instructions are overlapped in execution, much like an assembly line.
+Pipelining improves performance by *increasing instruction
+throughput*, in contrast to /decreasing the execution time of an
+individual instruction/, but _instruction throughput is the important
+metric_ because real programs execute billions of instructions.
+
+Pipelining is a technique that exploits _*parallelism* between the
+instructions in a sequential instruction stream_.  It has the
+substantial advantage that, unlike programming a multiprocessor, it is
+fundamentally *invisible to the programmer*.
+
+*stages* in pipelining: As long as we have _separate resources for
+each stage_, we can pipeline the tasks.  If all the stages take about
+the same amount of time and there is enough work to do, then the
+speed-up due to pipelining is equal to the number of stages in the
+pipeline
+
+RISC-V instructions classically take five steps:
+1. IF: instruction fetch stage.  Fetch instruction from memory.
+2. ID: instruction decode / register file read stage.  Read registers
+   and decode the instruction.
+3. EX: execution stage.  Execute the operation or calculate an
+   address.
+4. MEM: memory access stage.  Access an operand in data memory (if
+   necessary).
+5. WB: write-back stage.  Write the result into a register (if
+   necessary).
+
+{{{image(100)}}}
+[[./ch4/instruction-total-time.png]]
+
+All the pipeline stages take a single clock cycle, so the clock cycle
+must be *long enough to accommodate the slowest operation*.
+
+** Pipeline Hazards
+
+There are situations in pipelining when the next instruction cannot
+execute in the following clock cycle.  These events are called
+hazards, and there are three different types.
+
+*** Structural Hazard
+
+*structural hazard*: When a planned instruction cannot execute in the
+proper clock cycle because *the hardware* does not support the
+combination of instructions that are set to execute.
+
+*** Data Hazard
+
+*(pipeline) data hazard*: When a planned instruction cannot execute in
+the proper clock cycle because *data that are needed to execute the
+instruction are not yet available*.  Data hazards arise from the
+dependence of one instruction on an earlier one that is still in the
+pipeline.
+
+#+begin_src asm
+  add x19, x0, x1
+  sub x2, x19, x3
+#+end_src
+The =add= instruction doesn't write its result until the fifth stage,
+meaning that we would have to waste three clock cycles in the
+pipeline.
+
+{{{image(80)}}}
+[[./ch4/instruction-pipeline.png]]
+
+*forwarding*, *bypassing*: A method of resolving a data hazard by
+retrieving the missing data element *from internal buffers* rather
+than waiting for it to arrive from programmer-visible registers or
+memory.  Forwarding paths are valid only if the destination stage is
+*later in time* than the source stage.
+
+{{{image(80)}}}
+[[./ch4/forwarding.png]]
+
+*load-use data hazard*: A specific form of data hazard in which the
+data being loaded by a load instruction have not yet become available
+when they are needed by another instruction.
+
+*pipeline stall*, *bubble*: A stall initiated in order to resolve a
+hazard.
+
+{{{image(80)}}}
+[[./ch4/stall.png]]
+
+*** Control Hazard
+
+*control hazard*, *branch hazard*: When the proper instruction cannot
+execute in the proper pipeline clock cycle because the instruction
+that was fetched is not the one that is needed; that is, the flow of
+instruction addresses is not what the pipeline expected.
+
+*branch prediction*: A method of resolving a branch hazard that
+assumes a given outcome for the conditional branch and proceeds from
+that assumption rather than waiting to ascertain the actual outcome.
+When the guess is wrong, the pipeline control must ensure that the
+instructions following the wrongly guessed conditional branch have *no
+effect* and must *restart* the pipeline from the proper branch
+address.
+
+
+TODO:
+看完4.5就去看第五章了,组原真是太痛苦了😣

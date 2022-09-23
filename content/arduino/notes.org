@@ -1,0 +1,103 @@
+#+title: Arduino Notes
+
+Boards
+#+begin_src text
+  http://arduino.esp8266.com/stable/package_esp8266com_index.json
+  https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
+#+end_src
+
+Mainly Arduino for ESP8266.
+
+[[https://arduino-esp8266.readthedocs.io/en/latest/index.html][ESP8266 Arduino Core’s documentation]]
+
+* Serial communication
+
+#+begin_src cpp
+  void setup() {
+    Serial.begin(115200); // opens serial port, sets data rate to 9600 bps
+    Serial.println("Ok");
+  }
+
+  String str = "";
+
+  void loop() {
+    // send data only when you receive data:
+    while (Serial.available()) {
+      // read the incoming byte:
+      char ch = Serial.read();
+      Serial.println(ch, DEC);
+      if (ch == '\n' || ch == '\r') {
+        if (str) {
+          Serial.println(str);
+          str = "";
+        }
+      } else {
+        str += ch;
+      }
+    }
+  }
+#+end_src
+
+* Wifi Connection
+
+#+begin_src cpp
+  #include <ESP8266WiFi.h>
+
+  const char* ssid = "....";
+  const char* password = "....";
+
+  void setup() {
+    Serial.begin(115200);
+    Serial.println();
+    Serial.println("Power on");
+
+    WiFi.begin(ssid, password);
+
+    Serial.println("Connecting to WiFi");
+    while (WiFi.status() != WL_CONNECTED) {
+      Serial.print(".");
+      delay(100);
+    }
+    Serial.println();
+    Serial.print("Connected, IP address: ");
+    Serial.println(WiFi.localIP());
+  }
+
+  void loop() {
+  }
+#+end_src
+
+* UDP
+
+#+begin_src cpp
+  #include <ESP8266WiFi.h>
+  #include <WiFiUdp.h>
+
+  WiFiUDP Udp;
+  unsigned int localUdpPort = 37020;
+  char incomingPacket[256];
+  char replyPacket[] = "Hi there! Got the message :-)";
+
+  void setup() {
+    // ...
+    Udp.begin(localUdpPort);
+  }
+
+  void loop() {
+    int packetSize = Udp.parsePacket();
+    if (packetSize) {
+      Serial.printf("Received %d bytes from %s, port %d\n",
+                    packetSize, Udp.remoteIP().toString().c_str(), Udp.remotePort());
+      int len = Udp.read(incomingPacket, 255);
+      if (len > 0) {
+        incomingPacket[len] = '\0';
+      }
+      Serial.printf("UDP packet contents: %s\n", incomingPacket);
+    }
+
+    Udp.beginPacket(0xffffffff, localUdpPort); // broadcast
+    Udp.write(replyPacket);
+    Udp.endPacket();
+    delay(1000);
+  }
+#+end_src

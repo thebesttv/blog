@@ -1,0 +1,5 @@
+#+title: 在ESP32C3上跑CoreMark
+
+- [[https://github.com/eembc/coremark][CoreMark repo]]
+- [[https://github.com/ochrin/coremark][CoreMark benchmark on ESP8266, ESP32 and more]]
+- [[https://github.com/eembc/coremark-pro][coremark-pro]]

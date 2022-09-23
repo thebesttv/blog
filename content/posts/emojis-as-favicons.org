@@ -1,0 +1,4 @@
+#+title: Emojis as Favicons
+
+看到阮一峰的周报上的一篇文章 [[https://css-tricks.com/emojis-as-favicons/][Emojis as Favicons]]，感觉挺有意思的，就记
+录下。

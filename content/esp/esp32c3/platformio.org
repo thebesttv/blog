@@ -1,0 +1,21 @@
+#+title: PlatformIO 安装小记
+
+根据 [[https://wiki.archlinux.org/title/Visual_Studio_Code][Visual Studio Code]], 想用MS的VS Code需要装 AUR 的 [[https://aur.archlinux.org/packages/visual-studio-code-bin][visual-studio-code-bin]]
+
+然后在 code 的设置里搜 proxy, 把 Http: Proxy 设为
+=http://127.0.0.1:8889=
+
+然后再装 Platform IO
+
+=platformio.ini=:
+#+begin_src text
+  [env:esp32-c3-devkitm-1]
+  platform = espressif32
+  board = esp32-c3-devkitm-1
+  framework = espidf
+  monitor_port = /dev/ttyCH343USB0
+  monitor_speed = 115200
+
+  upload_port = /dev/ttyCH343USB0
+#+end_src
+

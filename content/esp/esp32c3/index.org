@@ -1,0 +1,9 @@
+#+title: ESP32C3
+
+- [[https://hackaday.com/2021/02/08/hands-on-the-risc-v-esp32-c3-will-be-your-new-esp8266/][Hands-On: The RISC-V ESP32-C3 Will Be Your New ESP8266]]
+- [[https://wiki.luatos.com/chips/esp32c3/board.html][合宙的 ESP32C3-CORE 开发板]]
+- [[https://cdn.openluat-luatcommunity.openluat.com/attachment/CORE-ESP32-C3%E8%AE%BE%E8%AE%A1%E5%8E%9F%E7%90%86%E5%9B%BE_V1.2.pdf][原理图]]
+
+TODO
+
+http://goingbacktoelectronic.blogspot.com/2021/09/playing-with-another-riscv-chip-esp32c3.html

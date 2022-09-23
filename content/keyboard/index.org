@@ -1,0 +1,21 @@
+#+title: DIY键盘
+
+- 圈圈教你学USB
+
+* 开源方案
+
+- [[https://oshwhub.com/OSHWHubkai-yuan-ying-jian/li-chuangeda-ke-zhi-hua87-jian-ji-xie-jian-pan][立创EDA客制化87键机械键盘]]
+- [[https://oshwhub.com/yangzen/xing-huo-ji-hua-zui-gai-17-4-chu-mo-ji-xie-jian-pan-pro][【星火计划】最丐17+4+触摸机械键盘PRO]]
+- [[https://oshwhub.com/mo-ming-dian-zi/ji-yu-HT82K629Ashuo-zi-xiao-jian][基于HT82K629A数字小键盘]]
+- [[https://oshwhub.com/TheLight/zi-ding-yi-jian-pan#P4][客制pc小键盘，CH552单片机HID键盘，电脑多媒体小键盘]]
+
+* 热插拔
+
+- PCB
+- 定位板(PCB)
+- 轴体
+- 键帽
+- 外壳
+- 平衡杠/卫星轴
+  - PCB卫星轴
+  - 钢板卫星轴

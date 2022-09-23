@@ -1,0 +1,22 @@
+#+title: WiFi setup
+
+- [[https://www.cnblogs.com/juwan/p/15708664.html][【D1 Lichee RV & WIFI】RTL8723DS & BS 的 WiFi 移植记录]]
+- [[https://linux-sunxi.org/Sipeed_Lichee_RV][Sipeed Lichee RV]]
+
+If can't find =wlan0= in =ifconfig=:
+#+begin_src bash
+  connmanctl enable wifi
+#+end_src
+
+config /etc/wpa_supplicant.conf
+
+#+begin_src bash
+  sudo killall wpa_supplicant
+  sudo wpa_supplicant -iwlan0 -c/etc/wpa_supplicant.conf &
+  sudo dhclient
+#+end_src
+
+If don't have the privilege to use =ping=:
+#+begin_src bash
+  sudo chmod 4711 /bin/ping
+#+end_src

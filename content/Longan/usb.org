@@ -1,0 +1,6 @@
+#+title: USB
+
+- [[https://wiki.osdev.org/Universal_Serial_Bus][Universal Serial Bus]]
+- [[https://wiki.osdev.org/USB_Human_Interface_Devices][USB Human Interface Devices]]
+- [[https://www.win.tue.nl/~aeb/linux/kbd/scancodes-14.html][Keyboared Scandcode]]
+- [[https://eleccelerator.com/tutorial-about-usb-hid-report-descriptors/][Tutorial about USB HID Report Descriptors]]

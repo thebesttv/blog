@@ -1,0 +1,237 @@
+#+title: Bluetooth Basic
+
+Bluetooth is a way for devices to _wirelessly communicate over *short*
+distances_.
+
+* Essential Bluetooth Programming Concepts
+
+The actual process of establishing a connection depends on whether the
+device in question is establishing an *outgoing* or an *incoming*
+connection.  Roughly, this is the difference between which device
+*sends* the first data packet to initiate communications and which
+device *receives* that packet.  We'll often refer to these as the
+*client* (i.e. the sender) and *server* (the receiver), respectively.
+
+Devices initiating an *outgoing* connection need to choose a *target
+device* and a *transport protocol*, before establishing a connection
+and transferring data.  Devices establishing an *incoming* connection
+need to choose a *transport protocol*, and then *listen* before
+accepting a connection and transferring data.
+
+{{{image(80)}}}
+[[./basic/outgoing.png]]
+
+{{{image(80)}}}
+[[./basic/incoming.png]]
+
+**  Choosing a Target Device
+
+Every Bluetooth chip ever manufactured is imprinted with a globally
+unique 48-bit address, referred to as the *Bluetooth address* or
+*device address*. This is identical in nature to the Machine Address
+Code (MAC) address for Ethernet.  These Bluetooth addresses, assigned
+at manufacture time, are intended to be unique and remain static for
+the lifetime of the chip.  It conveniently serves as the *basic
+addressing unit* in all of Bluetooth programming.
+
+In general, a Bluetooth *device* refers to *any machine* capable of
+Bluetooth communication.  When we're talking about writing programs,
+*adapter* refers specifically to *the Bluetooth device on the local
+computer* (the one that's running the program).
+
+Bluetooth devices will almost always have a user-friendly name (also
+called the *display name*).
+
+*Device discovery*, also known as *device inquiry*, is the process of
+searching for and detecting nearby Bluetooth devices.  It is simple in
+theory: To figure out what's nearby, broadcast a "discovery" message
+and wait for replies.  Each reply consists of the address of the
+responding device and an integer identifying the *general class* of
+the device (e.g., cell phone, desktop PC, headset, etc.).  More
+detailed information, such as the name of a device, can then be
+obtained by contacting each device *individually*.
+
+Note: A common misconception is that when a Bluetooth device enters an
+area, it somehow "announces" its presence so that other devices will
+know that it's around.  *This never happens* (even though it's not a
+bad idea), and the only way for one device to detect the presence of
+another is to *conduct a device discovery*.
+
+*** Discoverability and Connectability
+
+| Inquiry Scan | Page Scan | Interpretation                                                                                                                                                                                    |
+| On           | On        | The local device is detectable by other Bluetooth devices, and will accept incoming connection requests. This is often the default setting.                                                       |
+| Off          | On        | Although not detectable by other Bluetooth devices, the local device still responds to connection requests by devices that already have its Bluetooth address. This is often the default setting. |
+| On           | Off       | The local device is detectable by other Bluetooth devices, but it will not accept any incoming connections. This is mostly useless.                                                               |
+| Off          | Off       | The local device is not detectable by other Bluetooth devices, and will not accept any incoming connections. This could be useful if the local device will only establish outgoing connections.   |
+
+For privacy and power concerns, all Bluetooth devices have two options
+that determine whether or not the device responds to device
+*inquiries* and (incoming) *connection* attempts.  The *Inquiry Scan*
+option controls the former, and the *Page Scan* option controls the
+latter.  The reasoning behind these names is that these options
+control whether the local device *scans for* device inquiries and
+connection attempts.  A device is in discoverable mode when inquiry
+scan is on.
+
+** Choosing a Transport Protocol
+
+The two factors that distinguish the protocols here are *guarantees* and
+*semantics*.
+
+The guarantees of a protocol state _how hard it tries to deliver a
+packet_ sent by the application.  A *reliable* protocol, like TCP,
+takes the "deliver-or-die" mentality; it ensures that all sent packets
+get delivered, or dies trying (terminates the connection).  A
+*best-effort* protocol, like UDP, makes a reasonable attempt at
+delivering transmitted packets, but ignores the case when the packets
+do not arrive, say, due to signal noise, a crashed router, an act of
+god, and so on.
+
+The semantics of a protocol can be either *packet-based* or
+*streams-based*.  A *packet-based* protocol like UDP sends data _in
+individual datagrams of fixed maximum length_.  A *streams-based*
+protcol, like TCP, on the other hand, just sends data without worrying
+about where one packet ends and the next one starts.  This choice is
+more a matter of preference than any specific requirements, because
+with a little arm-twisting, a packet-based protocol can be used like a
+streams-based protocol, and vice versa.
+
+*** RFCOMM
+
+The Radio Frequency Communications (RFCOMM) protocol is a *reliable
+streams-based* protocol.  It provides roughly the same service and
+reliability guarantees as TCP.  The Bluetooth specification states
+that it was designed to emulate RS-232 serial ports (to make it easier
+for manufacturers to add Bluetooth capabilities to their existing
+serial port devices), but we prefer to turn that definition around and
+say that _RFCOMM is a general-purpose transport protocol that happens
+to work well for emulating serial ports_.
+
+The choice of port numbers is the biggest difference between TCP and
+RFCOMM from a network programmer's perspective.  Whereas TCP supports
+up to 65,535 open ports on a single machine, RFCOMM allows only 30.
+This has a significant impact on how to choose port numbers for server
+applications.
+
+*** L2CAP
+
+The Logical Link Control and Adaption Protocol (L2CAP) is a
+*packet-based* protocol that can be configured with *varying levels of
+reliability*.  The default maximum packet size is 672 bytes, but this
+can be negotiated up to 65,535 bytes after a connection is
+established.
+
+Reliability is acheived by a transmit/acknowledgment scheme in which
+unacknowledged packets may or may not be retransmitted.  There are
+three possible retransmit policies:
+- *never retransmit* (but make a best effort)
+- always *retransmit until success* or total connection failure
+  (reliable, the default)
+- drop a packet and move on to queued data if a packet hasn't been
+  acknowledged *after a specified time limit* (0--1279 ms).  This is
+  useful when data must be transmitted in a timely manner (and it
+  assumes a best effort).
+
+
+*** ACL
+
+The Asynchronous Connection-oriented Logical (ACL) transport protocol
+is one that you'll probably never use, but is worth mentioning because
+all L2CAP connections are encapsulated within ACL connections.  Since
+RFCOMM connections are transported within L2CAP connections, they are
+also encapsulated within ACL connections.  Two Bluetooth devices can
+have at most a single ACL connection between them, which is used to
+transport all L2CAP and RFCOMM traffic.
+
+ACL is similar to IP in that it is a fundamental protocol that is
+rarely used to directly transport data. Instead, it is almost always
+used to encapsulate higher level protocol packets.
+
+#+begin_details Note
+In the previous section, we said that L2CAP can be configured for
+varying levels of reliability.  It is more accurate to say that the
+ACL connection between two devices can be configured for varying
+levels of reliability, which in turn affects all L2CAP and RFCOMM
+traffic between these devices.  We prefer to say it about L2CAP
+because conceptually it doesn't make a difference, and then you don't
+have to think about ACL at all.  Since ACL carries only L2CAP-related
+traffic, modifying the packet timeout for the ACL link is effectively
+the same as modifying the packet timeout for all L2CAP traffic.
+#+end_details
+
+*** SCO
+
+The last transport protocol that we mention is the Synchronous
+Connection-Oriented (SCO) logical transport.  This strange beast is a
+best-effort packetbased protocol that is exclusively used to *transmit
+voice-quality audio*---not just any audio, but voice-quality audio, at
+exactly 64 kb/s.  It is useless for transmitting CD-quality audio
+because the transmission rate isn't high enough, but it is _just right
+for making phone calls_.  If you've used a Bluetooth headset, then
+your voice data is probably transmitted over an SCO connection.  If
+you've used Bluetooth headphones to listen to your Bluetooth MP3
+player, then the audio is probably transmitted over an L2CAP
+connection.
+
+SCO packets are not reliable and never retransmitted, but there is a
+separate quality of service guarantee.  An SCO connection is always
+guaranteed to have a 64 kb/s transmission rate.  If other applications
+and connections on a device are contending for radio time to, say,
+transmit a file or synchronize a calendar, the SCO connection will be
+*given priority*.
+
+** Port Numbers
+
+A port is used to allow *multiple applications* on the same device to
+simultaneously utilize the same transport protocol.  Almost all
+Internet transport protocols in common usage are designed with the
+notion of port numbers.  Bluetooth is no exception, but uses slightly
+different terminology.  In L2CAP, ports are called /Protocol Service
+Multiplexers/ (PSM), and can take on odd- numbered values between 1
+and 32,767.  Don't ask why they have to be odd-numbered values,
+because you probably won't get a convincing answer.  In RFCOMM,
+channels 1--30 are available for use.  Throughout the rest of this
+book, the word /port/ is used instead of protocol service multiplexer
+and channel, mostly for clarity.
+
+*** Reserved/Well-Known Ports
+
+Many transport protocols are designed with specific applications in
+mind, and at the very outset of designing the protocol, some of the
+ports are _set aside and reserved for these applications_.  This set
+of ports is often referred to as the /well-known/, or /reserved/,
+ports for that protocol.  It is expected that custom applications will
+not use any of the well-known ports, unless they are implementing a
+standardized service assigned to that port number.  For example, in
+TCP/IP, port 80 is reserved for Web traffic, 23 is used for e-mail,
+and so on.
+
+Bluetooth is no exception, and L2CAP reserves ports 1--1023 for
+standardized usage.  For example, the Service Discovery Protocol (SDP;
+introduced next) uses port 1, and RFCOMM connections are *multiplexed
+on L2CAP port 3*.  It turns out that _RFCOMM does not have any
+reserved ports_, which may not be that surprising given that it has so
+few port numbers in the first place.
+
+#+caption: Port numbers and their terminology for various protocols.  Since two devices can have at most one SCO connection between them, there is no notion of ports in SCO.
+| Protocol | Terminology | Reserved/Well-Known Ports | Unreserved Ports          |
+| TCP      | Port        | 1--1024                   | 1025--65,535              |
+| UDP      | Port        | 1--1024                   | 1025--65,535              |
+| RFCOMM   | Channel     | None                      | 1--30                     |
+| L2CAP    | PSM         | Odd numbered 1--4095      | Odd numbered 4097--32,765 |
+| SCO      | N/A         | N/A                       | N/A                       |
+
+** Service Discovery Protocol
+
+Bluetooth tries to avoid the problem of hard-coded port numbers by
+introducing the SDP.  The basic premise is that every Bluetooth device
+maintains an SDP server listening on a well-known port number.  When a
+server application starts up, it *registers* a description of itself
+and a port number with the SDP server on the local device.  Then, when
+a remote client application first connects to the device, it provides
+a description of the service it’s searching for to the SDP server, and
+the SDP server provides a listing of all services that match.
+
+{{{image(80)}}}
+[[./basic/port-number.png]]

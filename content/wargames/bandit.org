@@ -1,0 +1,262 @@
+
+- [[https://zhishihezi.net/b/b826e3c021c5dc367665f743ae5fa14b][网络空间安全竞技]]
+- [[https://github.com/ctf-wiki/ctf-wiki][ctf-wiki]], [[file:~/ctf/ctf-wiki][本地]]
+- [[https://adworld.xctf.org.cn/][攻防世界]]
+- [[https://ctftime.org/][ctftime]]
+
+* 1
+
+A file named =-= is accessed with:
+#+begin_src bash
+  cat ./-
+#+end_src
+
+See [[https://stackoverflow.com/a/42187582/11938767][this]] Stacks Overflow answer.
+
+* 6
+
+Find a file of size 33 bytes, owned by user =bandit7=, group
+=bandit6=:
+#+begin_src bash
+  find . -size 33c -user bandit7 -group bandit6
+#+end_src
+
+This is ok, but it emits a lot of "permission denied" errors for
+directories owned by root or other users:
+#+begin_src text
+  find: ‘./root’: Permission denied
+  find: ‘./home/bandit28-git’: Permission denied
+  find: ‘./home/bandit30-git’: Permission denied
+  find: ‘./home/bandit5/inhere’: Permission denied
+  find: ‘./home/bandit27-git’: Permission denied
+  find: ‘./home/bandit29-git’: Permission denied
+  find: ‘./home/bandit31-git’: Permission denied
+#+end_src
+
+To avoid these error messages, redirect =stderr= to =/dev/null= using
+IO redirection (=2>=):
+#+begin_src bash
+  find . -size 33c -user bandit7 -group bandit6 2>/dev/null
+#+end_src
+
+* 8
+
+To find the unique line in a file:
+#+begin_src bash
+  sort data.txt | uniq -u
+#+end_src
+
+* 9
+
+The command =strings= prints the sequences of printable characters in
+files:
+#+begin_src bash
+  strings data.txt | grep =
+#+end_src
+
+* 10
+
+#+begin_src text
+  NAME
+         base64 - base64 encode/decode data and print to standard output
+
+  SYNOPSIS
+         base64 [OPTION]... [FILE]
+
+  DESCRIPTION
+         Base64 encode or decode FILE, or standard input, to standard output.
+
+         With no FILE, or when FILE is -, read standard input.
+
+         Mandatory arguments to long options are mandatory for short options too.
+
+         -d, --decode
+                decode data
+#+end_src
+
+* 11
+
+Use python to find out what =a= becomes:
+#+begin_src text
+  >>> chr(ord('a') + 13)
+  'n'
+#+end_src
+
+Then use =tr= to translate character sets.  Note that both lower and
+upper characters need to be replaced.
+#+begin_src bash
+  cat data.txt | tr 'a-zA-Z' 'n-za-mN-ZA-M'
+#+end_src
+
+* 12
+
+真的套了好多好多层 @_@
+
+ps. 哈哈哈哈怎么真的有人在 =/tmp/myname123= 里干活
+
+* 13
+
+# password for =bandit13=: 8ZjyCRiBWFYkneahHwxCv3wb2a1ORpYL
+
+#+begin_quote
+The password for the next level is stored in
+=/etc/bandit_pass/bandit14= and can only be read by user =bandit14=.
+For this level, you don't get the next password, but you get a private
+SSH key that can be used to log into the next level.
+#+end_quote
+
+Once logged into =bandit13=, there's a file named =sshkey.private=.
+Copy it to your local machine, use =ssh-add= to add it to your ssh
+agent, then simply log in as =bandit14=.
+#+begin_src bash
+  ssh-add sshkey.private
+  ssh bandit14@bandit.labs.overthewire.org -p 2220
+#+end_src
+
+[[https://www.ruanyifeng.com/blog/2011/12/ssh_remote_login.html][SSH原理与运用 --- 阮一峰]]
+
+
+* 14
+
+# password for =bandit14=: 4wcYUJFw0k0XLShlDzztnTBHiqxU3b3e
+
+#+begin_quote
+The password for the next level can be retrieved by submitting the
+password of the current level to port 30000 on localhost.
+#+end_quote
+
+Retrieve password for =bandit14=:
+#+begin_src bash
+  cat /etc/bandit_pass/bandit14
+#+end_src
+Then use =nc= to submit it to port 30000:
+#+begin_src bash
+  echo "4wcYUJFw0k0XLShlDzztnTBHiqxU3b3e" | nc localhost 30000
+#+end_src
+
+* 15
+
+# password for =bandit15=: BfMYroe26WYalil77FoDi9qh59eK5xNr
+
+#+begin_quote
+The password for the next level can be retrieved by submitting the
+password of the current level to port 30001 on localhost *using SSL
+encryption*.
+#+end_quote
+
+#+begin_src bash
+  $ echo "BfMYroe26WYalil77FoDi9qh59eK5xNr" | openssl s_client -connect :30001 -quiet
+  depth=0 CN = localhost
+  verify error:num=18:self signed certificate
+  verify return:1
+  depth=0 CN = localhost
+  verify return:1
+  Correct!
+  cluFn7wTiGryunymYOu4RcffSxQluehd
+#+end_src
+
+* 16
+
+# password for =bandit16=: cluFn7wTiGryunymYOu4RcffSxQluehd
+
+#+begin_quote
+The credentials for the next level can be retrieved by submitting the
+password of the current level to a port on localhost in the range
+31000 to 32000.  First find out which of these ports have a server
+listening on them.  Then find out which of those speak SSL and which
+don’t.  There is only 1 server that will give the next credentials,
+the others will simply send back to you whatever you send to it.
+#+end_quote
+
+Find open ports:
+#+begin_src bash
+  $ nmap localhost -p 31000-32000
+  Starting Nmap 7.40 ( https://nmap.org ) at 2021-12-03 03:49 CET
+  Nmap scan report for localhost (127.0.0.1)
+  Host is up (0.00024s latency).
+  Not shown: 996 closed ports
+  PORT      STATE SERVICE
+  31046/tcp open  unknown
+  31518/tcp open  unknown
+  31691/tcp open  unknown
+  31790/tcp open  unknown
+  31960/tcp open  unknown
+
+  Nmap done: 1 IP address (1 host up) scanned in 0.09 seconds
+#+end_src
+Find service type:
+#+begin_src bash
+  $ nmap -sV --script ssl-enum-ciphers localhost -p 31046,31518,31691,31790,31960
+  Starting Nmap 7.40 ( https://nmap.org ) at 2021-12-03 03:54 CET
+  Nmap scan report for localhost (127.0.0.1)
+  Host is up (0.00027s latency).
+  PORT      STATE SERVICE     VERSION
+  31046/tcp open  echo
+  31518/tcp open  ssl/echo
+  31691/tcp open  echo
+  31790/tcp open  ssl/unknown
+  31960/tcp open  echo
+#+end_src
+Get key:
+#+begin_src bash
+  $ echo "cluFn7wTiGryunymYOu4RcffSxQluehd" | openssl s_client -connect :31790 -quiet
+  depth=0 CN = localhost
+  verify error:num=18:self signed certificate
+  verify return:1
+  depth=0 CN = localhost
+  verify return:1
+  Correct!
+  -----BEGIN RSA PRIVATE KEY-----
+  MIIEogIBAAKCAQEAvmOkuifmMg6HL2YPIOjon6iWfbp7c3jx34YkYWqUH57SUdyJ
+  imZzeyGC0gtZPGujUSxiJSWI/oTqexh+cAMTSMlOJf7+BrJObArnxd9Y7YT2bRPQ
+  Ja6Lzb558YW3FZl87ORiO+rW4LCDCNd2lUvLE/GL2GWyuKN0K5iCd5TbtJzEkQTu
+  DSt2mcNn4rhAL+JFr56o4T6z8WWAW18BR6yGrMq7Q/kALHYW3OekePQAzL0VUYbW
+  JGTi65CxbCnzc/w4+mqQyvmzpWtMAzJTzAzQxNbkR2MBGySxDLrjg0LWN6sK7wNX
+  x0YVztz/zbIkPjfkU1jHS+9EbVNj+D1XFOJuaQIDAQABAoIBABagpxpM1aoLWfvD
+  KHcj10nqcoBc4oE11aFYQwik7xfW+24pRNuDE6SFthOar69jp5RlLwD1NhPx3iBl
+  J9nOM8OJ0VToum43UOS8YxF8WwhXriYGnc1sskbwpXOUDc9uX4+UESzH22P29ovd
+  d8WErY0gPxun8pbJLmxkAtWNhpMvfe0050vk9TL5wqbu9AlbssgTcCXkMQnPw9nC
+  YNN6DDP2lbcBrvgT9YCNL6C+ZKufD52yOQ9qOkwFTEQpjtF4uNtJom+asvlpmS8A
+  vLY9r60wYSvmZhNqBUrj7lyCtXMIu1kkd4w7F77k+DjHoAXyxcUp1DGL51sOmama
+  +TOWWgECgYEA8JtPxP0GRJ+IQkX262jM3dEIkza8ky5moIwUqYdsx0NxHgRRhORT
+  8c8hAuRBb2G82so8vUHk/fur85OEfc9TncnCY2crpoqsghifKLxrLgtT+qDpfZnx
+  SatLdt8GfQ85yA7hnWWJ2MxF3NaeSDm75Lsm+tBbAiyc9P2jGRNtMSkCgYEAypHd
+  HCctNi/FwjulhttFx/rHYKhLidZDFYeiE/v45bN4yFm8x7R/b0iE7KaszX+Exdvt
+  SghaTdcG0Knyw1bpJVyusavPzpaJMjdJ6tcFhVAbAjm7enCIvGCSx+X3l5SiWg0A
+  R57hJglezIiVjv3aGwHwvlZvtszK6zV6oXFAu0ECgYAbjo46T4hyP5tJi93V5HDi
+  Ttiek7xRVxUl+iU7rWkGAXFpMLFteQEsRr7PJ/lemmEY5eTDAFMLy9FL2m9oQWCg
+  R8VdwSk8r9FGLS+9aKcV5PI/WEKlwgXinB3OhYimtiG2Cg5JCqIZFHxD6MjEGOiu
+  L8ktHMPvodBwNsSBULpG0QKBgBAplTfC1HOnWiMGOU3KPwYWt0O6CdTkmJOmL8Ni
+  blh9elyZ9FsGxsgtRBXRsqXuz7wtsQAgLHxbdLq/ZJQ7YfzOKU4ZxEnabvXnvWkU
+  YOdjHdSOoKvDQNWu6ucyLRAWFuISeXw9a/9p7ftpxm0TSgyvmfLF2MIAEwyzRqaM
+  77pBAoGAMmjmIJdjp+Ez8duyn3ieo36yrttF5NSsJLAbxFpdlc1gvtGCWW+9Cq0b
+  dxviW8+TFVEBl1O4f7HVm6EpTscdDxU+bCXWkfjuRb7Dy9GOtt9JPsX8MBTakzh3
+  vBgsyi/sN3RqRBcGU40fOoZyfAMT8s1m/uYv52O6IgeuZ/ujbjY=
+  -----END RSA PRIVATE KEY-----
+#+end_src
+
+* 17
+
+# password for =bandit17=: xLYVMN9WE5zQ5vHacb0sZEVqbrp7nBTn
+
+* 18
+
+# password for =bandit18=: kfBf3eYk5BPBRzwjqutbbfE887SVc5Yd
+
+#+begin_src bash
+  ssh bandit18@bandit.labs.overthewire.org -p 2220 "cat readme"
+#+end_src
+
+* 19
+
+# password for =bandit19=: IueksS7Ubh8G3DCwVzrTd8rAVOwq3M5x
+
+#+begin_src bash
+  $ ./bandit20-do cat /etc/bandit_pass/bandit20
+#+end_src
+
+* 20
+
+# password for =bandit20=: GbKksEFF4yrVs6il55v6gwY5aVje5f0j
+
+https://overthewire.org/wargames/bandit/bandit21.html

@@ -1,0 +1,118 @@
+#+title: Write Good Commit Messages
+
+在看 Missing Semester 的时候试了下 git blame, 然后发现我之前的 commit
+message完全没有任何意义... 全是清一色的 "update os/ostep", 真是看了个寂
+寞...
+
+{{{image(100)}}}
+#+caption: commit emssage 灾难
+[[./good-commit-messages/terrible-messages.png]]
+
+- [[https://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html][A Note About Git Commit Messages]]
+- [[https://cbea.ms/git-commit/][How to Write a Git Commit Message]]
+
+#+begin_quote
+The seven rules of a great Git commit message
+1. Separate subject from body with a blank line
+2. Limit the subject line to 50 characters
+3. *Capitalize* the subject line
+4. Do not end the subject line with a +period+
+5. Use the imperative mood (祈使语气) in the subject line
+6. Wrap the body at 72 characters
+7. Use the body to explain what and why vs. how
+   (在 body 解释 what/why 即可, 代码会解释 how)
+#+end_quote
+
+一些 notes
+- 第一行控制在50字以内 (由于 =--pretty=oneline=)
+- 不要用过去式
+
+
+一些祈使语气的例子
+- Clean your room
+- Close the door
+- Take out the trash
+- Refactor subsystem X for readability
+- Update getting started documentation
+- Remove deprecated methods
+- Release version 1.0.0
+
+
+就拿目前唯一的一个小项目 [[https://github.com/thebesttv/PonyOCR][PonyOCR]] 的 log 做个例子吧
+#+begin_src text
+   1: 3ee0fe (HEAD -> master, origin/master, origin/HEAD) monir fixes
+   2: e437c4 disable high DPI support to prevent all sorts of bugs :(
+   3: 06e947 fix high DPI bug
+   4: c46b0c add UTF8 DOM
+   5: fcf821 add UTF8 BOM
+   6: dc457b add translation
+   7: 4850de make more portable to windows
+   8: 178520 fix error msg, update logging
+   9: 8d1e7a minor fixes
+  10: 6ac21f fix bug
+  11: ab162d use syslog for Linux
+  12: 66d73e add DBus autostart script
+  13: f7fc2c add DBus interface, able to run in CLI
+  14: 0607c7 add Chinese language support
+  15: 52d04a fix dialog issue change base class of ConfigDialog to QDialog
+  16: 58dd2e add social pony XD
+  17: 1a04af add useless doc
+  18: 294975 fix log output
+  19: d3c551 update OCR.Space API & description
+  20: a1700e fix indentation
+  21: 9451ea Move markdown resources to their directory
+  22: 2e62c5 fix log path
+  23: a28f74 add show markdown preview option TODO: find replace frame
+  24: 9ff774 add output mode option
+  25: 6df1cd Add proxy support. Use two QNetworkAccessManager, one without proxy, the other with proxy. Each platform can choose whether to use proxy or not. Change NetworkBase to accommodate changes to QNAM. Thus changing all API construcors as well.
+  26: bffefe Change table output to markdown format. Update debug information.
+  27: 918055 did some weird thing...
+  28: 977cb4 delete extra files
+  29: 42bb69 initial commit
+#+end_src
+
+
+首先是第25行的 =6df1cd=, 写的时候没有在title和body之间空一行, 于是就炸了.
+用 =git cat-file= 可以看到, "Add proxy support." 和下面的 "Use two
+QNetworkAccessManager" 之间没有空行.
+#+begin_src bash
+  $ git cat-file -p 6df1cd
+  tree 72a0318b3fdb95944453316651176a4a7d82ba2d
+  parent bffefeb41bdfdd828a408135ece70769aed1e2b2
+  author thebesttv <taojuntian@outlook.com> 1588598969 +0800
+  committer thebesttv <taojuntian@outlook.com> 1588598969 +0800
+
+  Add proxy support.
+  Use two QNetworkAccessManager, one without proxy, the other with proxy.
+  Each platform can choose whether to use proxy or not.
+  Change NetworkBase to accommodate changes to QNAM.
+  Thus changing all API construcors as well.
+#+end_src
+这个 commit 的 title 描述了 what, 不错, 不过可以省略句号.
+
+感觉第21行的 =9451ea9= "Move markdown resources to their directory" 就不
+错, 一眼就能看出干了啥.
+
+* 目前的打算
+
+** blog
+
+blog的log或log graph其实用处不是很大, 我感觉用处更大的是blame, 可以看到
+当前的post经历了怎样的改动.
+
+新的 post 提一下 post name (不是文件名, 是标题的名字)
+#+begin_src text
+  New post: <name>
+#+end_src
+
+更新 post 不用提到是哪篇 post
+#+begin_src text
+  Add section XXX
+  Fix typo
+#+end_src
+
+更新收藏夹的时候这么写吧(暂定)
+TODO 确定一下
+#+begin_src text
+  C: <article/video name>
+#+end_src

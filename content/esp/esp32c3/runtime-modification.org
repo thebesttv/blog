@@ -1,0 +1,105 @@
+#+title: 在ESP32C3上的运行时修改代码
+
+ESP32C3启动分三个阶段[fn:1]
+- 1st stabe bootloader: 在 ROM 中, 不可改变
+- 2nd stage bootloader: 可以override, 此时还没有RTOS, 就在这里改[fn:2]
+- application startup
+
+用 =/esp-idf/examples/custom_bootloader/bootloader_override= 中的例子
+#+begin_src c
+  // bootloader_components/main/bootloader_start.c
+
+  /*
+   ,* SPDX-FileCopyrightText: 2015-2021 Espressif Systems (Shanghai) CO LTD
+   ,*
+   ,* SPDX-License-Identifier: Apache-2.0
+   ,*/
+  #include <stdbool.h>
+  #include "sdkconfig.h"
+  #include "esp_log.h"
+  #include "bootloader_init.h"
+  #include "bootloader_utility.h"
+  #include "bootloader_common.h"
+
+  static const char* TAG = "boot";
+
+  static int select_partition_number(bootloader_state_t *bs);
+
+  #pragma GCC push_options
+  #pragma GCC optimize ("O0")
+  int f(int x) {
+    esp_rom_printf("f called with x = %d\n", x);
+
+    return x + 1;
+  }
+  #pragma GCC pop_options
+
+  /*
+   ,* We arrive here after the ROM bootloader finished loading this second stage bootloader from flash.
+   ,* The hardware is mostly uninitialized, flash cache is down and the app CPU is in reset.
+   ,* We do have a stack, so we can do the initialization in C.
+   ,*/
+  void __attribute__((noreturn)) call_start_cpu0(void)
+  {
+      // 1. Hardware initialization
+      if (bootloader_init() != ESP_OK) {
+          bootloader_reset();
+      }
+
+  #ifdef CONFIG_BOOTLOADER_SKIP_VALIDATE_IN_DEEP_SLEEP
+      // If this boot is a wake up from the deep sleep then go to the short way,
+      // try to load the application which worked before deep sleep.
+      // It skips a lot of checks due to it was done before (while first boot).
+      bootloader_utility_load_boot_image_from_deep_sleep();
+      // If it is not successful try to load an application as usual.
+  #endif
+
+      // 2. Select the number of boot partition
+      bootloader_state_t bs = {0};
+      int boot_index = select_partition_number(&bs);
+      if (boot_index == INVALID_INDEX) {
+          bootloader_reset();
+      }
+
+      // 2.1 Print a custom message!
+      esp_rom_printf("[%s] %s\n", TAG, CONFIG_EXAMPLE_BOOTLOADER_WELCOME_MESSAGE);
+      // 从这里开始
+      esp_rom_printf("\nthebesttv is learning about 2nd stage bootloder!\n");
+
+      int x = 10;
+      esp_rom_printf("f(%d): %d\n", x, f(x));
+
+      // esp_rom_printf("f:\t\t\t\t%p\n", f);
+      // esp_rom_printf("select_partition_number:\t%p\n", select_partition_number);
+      // esp_rom_printf("call_start_cpu0:\t\t\t%p\n", call_start_cpu0);
+
+      uint16_t *p = 0x403ce024;
+      esp_rom_printf("origianl: %04x\n", *p);
+
+      /*
+       ,* imm: 0 0001
+       ,* 0000 0111 1000 0101
+       ,*    0    7    8    5
+       ,* ->
+       ,* imm: 0 1111
+       ,* 0000 0111 1011 1101
+       ,*    0    7    B    D
+       ,*/
+      ,*p = 0x07BD;
+
+      esp_rom_printf("after modification: %04x\n", *p);
+
+      esp_rom_printf("f(%d): %d\n", x, f(x));
+
+      while(1);
+
+      // 3. Load the app image for booting
+      bootloader_utility_load_boot_image(&bs, boot_index);
+  }
+#+end_src
+
+
+* Footnotes
+
+[fn:1] [[https://docs.espressif.com/projects/esp-idf/en/latest/esp32c3/api-guides/startup.html][Application Startup Flow]]
+[fn:2] [[https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-guides/bootloader.html#custom-bootloader][Custom bootloader]]

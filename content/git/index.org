@@ -1,0 +1,15 @@
+#+title: Git
+
+TODO
+- [[https://www.atlassian.com/git/tutorials/merging-vs-rebasing][Merging vs. Rebasing]]
+- [[https://salferrarello.com/git-warning-pulling-without-specifying-how-to-reconcile-divergent-branches-is-discouraged/][Git warning: Pulling without specifying how to reconcile divergent branches is discouraged]]
+
+Resources
+- [[https://missing.csail.mit.edu/2020/version-control/][The Missing Semester - Version Control (Git)]] explains the ideas behind
+  git (git data model) using pseudocode.
+  #+begin_quote
+  An ugly interface has to be memorized, but the beautiful ideas
+  underling git can actually be understood.
+  #+end_quote
+- [[https://git-scm.com/book/en/v2][Pro Git]] Chapter 10 explains git internals using real git commands.
+- [[http://onlywei.github.io/explain-git-with-d3/][Visualizing Git Concepts with D3]]

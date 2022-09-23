@@ -1,0 +1,4 @@
+#+title: End to End Argument
+
+- [[https://www.zhihu.com/question/370717865/answer/1007122933][为什么应用层还要做数据完整性校验？ - 郭忠明的回答 - 知乎]]
+- [[https://zhuanlan.zhihu.com/p/55311553][End to End Argument(可能是最重要的系统设计论文)]]
