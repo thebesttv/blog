@@ -41,10 +41,116 @@ conjure v. / 'kʌndʒə(r) /
 In /applicative order/, the interpreter first evaluates the operator &
 operands and then applies the resulting procedure to the resulting
 arguments.  But in /normal order/, the interpreter would not evaluate
-the operands _until their values were needed_.  And the value is
+the operands _until their values were needed_.  Moreover, the value is
 evaluated every time it is needed, instead of once on entrance.
 
-* Find the smallest divisior
+For example, given some procedures:
+#+begin_src scheme
+  (define (square x)
+    (* x x))
+  (define (sum-of-squares a b)
+    (+ (square a) (square b)))
+  (define (f a)
+    (sum-of-squares (+ a 1) (* a 2)))
+#+end_src
+and evaluate the expression =(f 5)=.  In applicative order, the
+interpreter "evaluate the arguments and then apply":
+#+begin_src scheme
+  (f 5)                             ; replace in body: a <- 5
+  (sum-of-squares (+ 5 1) (* 5 2))  ; evaluate operator & operands
+  (sum-of-squares 6 10)             ; replace in body: a <- 6, b <- 10
+  (+ (square 6) (square 10))        ; evaluate operator & operands
+  (+ (* 6 6) (* 10 10))
+  (+ 36 100)
+  136
+#+end_src
+In normal order, the interpreter "fully expand and then reduce":
+#+begin_src scheme
+  (f 5)
+  (sum-of-squares (+ 5 1) (* 5 2))
+  (+ (square (+ 5 1)) (square (* 5 2)))
+  (+ (* (+ 5 1) (+ 5 1)) (* (* 5 2) (* 5 2))) ; fully expanded, start reducing
+  (+ (* 6 6) (* 10 10))
+  (+ 36 100)
+  136
+#+end_src
+In applicative order, each operator (and operand) is evaluated only
+once.  The first operand of =sum-of-squares= (=(+ 5 1)=) is first
+evaluated to 6 and passed into the procedure body.  However, in normal
+order, that operand is directly passed into the body of
+=sum-of-squares=, and duplicated in the body of =square=.  As a result,
+=(+ 5 1)= is evaluated twice in normal order.
+
+Although normal order evaluation may introduce duplicated evaluation,
+its "evaluate until needed" nature allows *skipping the evaluation* of
+some of the arguments, for example:
+#+begin_src scheme
+  (define (ite condition then else)       ; if-then-else
+    (if condition then else))
+
+  (ite (> x y) (heavy-computation) 0)
+#+end_src
+Even though =ite= is only a normal function (not a special form), when
+the condition =(> x y)= is not met, the =(heavy-computation)= is not
+evaluated and 0 is returned.  For more information on different kinds of
+evaluation strategies, see this [[https://en.wikipedia.org/wiki/Evaluation_strategy][wikipedia article]].
+
+# TODO: add more content from ch3 & ch4, see footnote 16
+
+* Functions vs special forms
+
+** =define=
+
+** =if= & =cond=
+
+In Scheme, =#f= is interpreted as false, and =#t= (or any other value
+other than =#f=) is true.
+#+begin_src scheme
+  (> 1 2)                                 ; #f
+  (< 1 2)                                 ; #t
+#+end_src
+
+#+begin_src scheme
+  (define (abs x)
+    (cond [(> x 0) x]
+          [(= x 0) 0]
+          [(< x 0) (- x)]))
+  (define (abs x)
+    (cond [(< x 0) (- x)]
+          [else x]))
+#+end_src
+=else= is a special symbol that can be used as the final predicate of
+=cond=.  In fact, any value other than =#f= can be used in place of
+=else=.
+
+** =and= & =or=
+
+=and= and =or= are special forms, as not all operands are necessarily
+evaluated.  However, =not= is an ordinary procedure, as it only takes
+and evaluates one operand.
+
+=and= returns the value of the first expression that evaluates to a
+false value, or the value of the last expression, if all expressions
+evaluate to true values.
+#+begin_src scheme
+  (and (= 2 2) (> 2 1))                   ; #t
+  (and (= 2 2) (< 2 1))                   ; #f
+  (and 1 2 'c '(f g))                     ; (f g)
+  (and)                                   ; #t
+#+end_src
+
+Similarly, =or= returns the first expression that evaluate to a true
+value, or the value of the last expression (=#f=), if all expressions
+evaluate to false values.
+#+begin_src scheme
+  (or (= 2 2) (> 2 1))                    ; #t
+  (or (= 2 2) (< 2 1))                    ; #t
+  (or #f #f #f)                           ; #f
+  (or 123 (/ 3 0))                        ; 123
+#+end_src
+Note that =(/ 3 0)= is not evaluated.
+
+* Find the smallest divisor
 #+begin_src scheme
   (define (smallest-divisor n)         ; find the smallest divisior of n
     (define (find-divisior n test-divisior)
@@ -457,17 +563,15 @@ would be =(sum-of-squares 2 2)=, which is very wrong.
   (f 2 2 3)                               ; 13
 #+end_src
 
-** Ex 1.4 --- value of operator
-#+begin_quote
-Observe that our model of evaluation allows for combinations _whose
-*operators* are compound expressions_.  Use this observation to
-describe the behavior of the following procedure:
-
+In order to find the two larger ones out of three, a simpler solution:
 #+begin_src scheme
-  (define (a-plus-abs-b a b)
-    ((if (> b 0) + -) a b))
+  (define (f a b c)
+    (sum-of-squares (max a b)
+                    (max (min a b) c)))
 #+end_src
-#+end_quote
+For the first two numbers (=a=, =b=), at least one of them is in the
+result.  So the bigger one (=(max a b)=) must be in the result.  As for
+the smaller one (=(min a b)=), it needs to be compared with =c=.
 
 ** Ex 1.5 --- applicative-order & normal-order
 #+begin_quote
@@ -497,15 +601,18 @@ predicate expression is evaluated first, and the result determines
 whether to evaluate the consequent or the alternative expression.)
 #+end_quote
 
-In applicative-order evaluation, the interpreter will first evaluate
-all its operands.  This means it will evaluate =(p)=, which is, sadly,
-a recursive expression that never ends.  So the whole expression will
-not evaluate to any result.
+Using the substitution model, =(p)= infinitely expands to itself.
+Evaluating =(p)= will lead to an endless recursion.
 
-However, in normal-order evaluation, the interpreter first expands the
-expression into ~(if (= 0 0) 0 (p))~.  The operand =(p)= will not be
-evaluated until needed.  Since the predicate is =#t=, =(p)= is never
-needed.  The whole expression evaluates to =0=.
+In applicative-order evaluation, the interpreter first evaluates all its
+operands, including =(p)=.  So the whole expression will not evaluate to
+any result.
+
+However, in normal-order evaluation, not all operands will necessarily
+be evaluated (not until they are actually needed).  The expression is
+first expanded into ~(if (= 0 0) 0 (p))~.  Since the predicate is true,
+the =(p)= on the false branch is never needed.  The whole expression
+evaluates to =0=.
 
 ** Ex 1.16 --- iterative fast exponentiation
 
