@@ -95,6 +95,9 @@ the condition =(> x y)= is not met, the =(heavy-computation)= is not
 evaluated and 0 is returned.  For more information on different kinds of
 evaluation strategies, see this [[https://en.wikipedia.org/wiki/Evaluation_strategy][wikipedia article]].
 
+The article [[https://sookocheff.com/post/fp/evaluating-lambda-expressions/][Normal, Applicative and Lazy Evaluation]] contains a more
+formal definition of normal-order evaluation.
+
 # TODO: add more content from ch3 & ch4, see footnote 16
 
 * Functions vs special forms
@@ -218,7 +221,7 @@ Both =sum= and =prod= can be defined in terms of =accumulate=.
 
 * Local variables
 
-Functions take parameters.  We can use these parameters as local
+Functions take parameters, which can be used as local
 variables.  Take for example the function:
 \[ f(x, y) = x(1+xy)^2 + y(1-y) + (1+xy)(1-y). \]
 Let $a = (1+xy)$, $b = (1-y)$, so $f(x, y) = x a^2 + y b + a b$.
@@ -231,7 +234,6 @@ Let $a = (1+xy)$, $b = (1-y)$, so $f(x, y) = x a^2 + y b + a b$.
     (f-helper (+ 1 (* x y))          ; a = 1 + xy
               (- 1 y)))              ; b = 1 - y
 #+end_src
-
 The helper function is called only once, so it can be replaced with a
 lambda expression:
 #+begin_src scheme
@@ -243,7 +245,6 @@ lambda expression:
      (+ 1 (* x y))     ; a = 1 + xy
      (- 1 y)))         ; b = 1 - y
 #+end_src
-
 This is equivalent to using the =let= special form:
 #+begin_src scheme
   (define (f x y)
@@ -253,8 +254,9 @@ This is equivalent to using the =let= special form:
          (* y b)
          (* a b))))
 #+end_src
+Another way to introduce local variable is using =define=.
 
-As local variables are simply parameters to functions,
+Local variables can be implemented as function parameters.
 #+begin_quote
 No new mechanism is required in the interpreter in order to provide
 local variables.  A =let= expression is simply syntactic sugar for the
@@ -263,15 +265,16 @@ underlying lambda application.
 
 Since =let= is only syntactic sugar, the local variables are
 calculated in the same way as function parameters, meaning:
-- They are computed in parallel.  The expression
+- They are computed in parallel, not in sequence.  The expression
   #+begin_src scheme
     (let ([a 10]
           [b (+ a a)])
       b)
   #+end_src
   results in error "Unbound variable: =a=".
-  =b= cannot use the value of the preceding variable =a=.
-- As a result, the expression
+  =b= cannot use the value of the preceding variable (parameter) =a=.
+- The symbols used in their computation are from the outer scope.
+  As a result, the expression
   #+begin_src scheme
     (define x 2)                            ; [1]
     (let ([x 3]                             ; [2]
@@ -279,7 +282,7 @@ calculated in the same way as function parameters, meaning:
       (* x y))
   #+end_src
   has 12 as the result.  The value of =y= is computed using the global
-  variable =x= in [1].
+  variable =x= in [1] (outer scope), not [2].
 
 * Fixed-point & Newton's method
 
@@ -443,7 +446,7 @@ after $g$ is $f(g(x))$:
 #+end_src
 
 Applying a function $f$ $n$ times yields
-$$ f(f(\cdots f(x) \cdots)). $$
+$$ f(f(\cdots f(x) \cdots)) $$.
 We can either return $f$ when $n=1$, or return an identity function
 when $n=0$.  The latter produces the correct result even when $n=0$.
 #+begin_src scheme
