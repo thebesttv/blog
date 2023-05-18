@@ -2,11 +2,6 @@
 
 * What is meant by data?
 
-*Axiom for rational numbers*: =make-rat=, =numer= and =denom= must
-satisfy the condition that, for any integer $n$ and any non-zero
-integer $d$, if $x$ is $(\text{make-rat} \; n \; d)$, then:
-$$ \frac{(\text{numer} \; x)}{(\text{denom} \; x)} = \frac{n}{d}. $$
-
 *Axiom for pairs*: for any objects =x= and =y=, if =z = (cons x y)=,
 then =(car z) = x= and =(cdr z) = y=.  Any implementation satisfying
 this axiom can be used:
@@ -17,9 +12,28 @@ this axiom can be used:
             [(= pick 1) y])))
 
   (define (car z) (z 0))
-
   (define (cdr z) (z 1))
 #+end_src
+Here a *procedure* is returned by =cons= that captures the arguments =x=
+and =y=.  The procedure is then applied to 0 in =car= to return the
+captured =x=.  The same goes for =cdr=.  This style of programming is
+called /message passing/.
+
+#+begin_details
+@@html:<summary>Message passing explained, by ChatGPT</summary>@@
+In SICP, message passing is used as a paradigm for building programs
+using objects and classes.  Objects are defined as independent entities
+that encapsulate data and behavior, and they communicate with each other
+by sending messages.
+
+Message passing involves sending a message from one object to another,
+requesting some action or information.  The receiving object then
+responds to the message based on its internal state and the message's
+content.  This interaction between objects allows for modularity and
+encapsulation, as objects can be designed to hide their internal details
+and only expose the necessary interfaces.
+#+end_details
+
 *The ability to manipulate procedures as objects automatically
 provides the ability to represent compound data.*
 
@@ -1302,30 +1316,51 @@ direct definition of the addition procedure =+= (not in terms of
 repeated application of =add-1=).
 #+end_quote
 
+Recall the two functions =compose= and =repeated= from Ex 1.42 and 1.43:
+#+begin_src scheme
+  ((compose square inc) 6)                ; (square (inc 6)) = 49
+  ((repeated square 2) 5)                 ; (square (square 5)) = 625
+#+end_src
+A Church number =cn= (that corresponds to a normal integer =n=) is a
+function that takes a one-argument function =f=, and applies it =n=
+times.  That is, =(cn f)= is equivalent to =(repeated f n)=.
+
 First we have =zero= and =add-1=:
 #+begin_src scheme
   (define zero
     (λ (f)
       (λ (x)
-        x)))
+        x)))                              ; does not apply f
 
   (define (add-1 n)
     (λ (f)
       (λ (x)
         (f ((n f) x)))))
+
+  ((zero square) 5)                       ; 5
+  (((add-1 zero) square) 5)               ; 25
+  (((add-1 (add-1 zero)) square) 5)       ; 625
+
+  ((repeated square 0) 5)                 ; 5
+  ((repeated square 1) 5)                 ; 25
+  ((repeated square 2) 5)                 ; 625
 #+end_src
 
-Use the substitution model to calculate =one= and =two=, we get:
+=one= and =two= becomeq quite easy now that we know what Church numbers
+do:
 #+begin_src scheme
   (define one
     (λ (f)
       (λ (x)
-        (f x))))
+        (f x))))                          ; apply 1 time
 
   (define two
     (λ (f)
       (λ (x)
-        (f (f x)))))
+        (f (f x)))))                      ; apply 2 times
+
+  ((one square) 5)                        ; 25
+  ((two square) 5)                        ; 625
 #+end_src
 
 In order to get 3, we can add =one= and =two=, and obtain as result
@@ -1342,6 +1377,9 @@ So addition is:
     (λ (f)
       (λ (x)
         ((a f) ((b f) x)))))
+
+  ((two square) ((one square) 5))         ; 390625
+  (((add one two) square) 5)              ; 390625
 #+end_src
 
 One can use these as normal integers:
@@ -1357,12 +1395,12 @@ One can use these as normal integers:
   (church->int (add two three))           ; 5
 #+end_src
 
-Here's a more concise implementation of =add= that I don't quite
-understand =@_@=
+Here's a more concise implementation of =add=:
 #+begin_src scheme
   (define (add a b)
     ((a add-1) b))
 #+end_src
+Here =(a add-1)= essentially transforms =add-1= to =add-a=.
 
 ** Ex 2.20 --- dotted-tail notation
 #+begin_quote
